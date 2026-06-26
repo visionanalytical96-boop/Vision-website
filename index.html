@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vision Analytical – Precision Instruments. Maharashtra's Trusted Lab Partner.</title>
+<meta name="description" content="HPLC, GC, LCMS, UV/Vis sales, service, AMC & IQ/OQ/PQ qualification across Maharashtra & Gujarat. Shimadzu, Waters, Agilent specialists.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040608;
+  --bg2:#060a0e;
+  --surface:rgba(255,255,255,0.03);
+  --surface2:rgba(255,255,255,0.055);
+  --border:rgba(0,229,255,0.12);
+  --border2:rgba(0,229,255,0.22);
+  --blue:#2563EB;
+  --cyan:#00E5FF;
+  --cyan-dim:rgba(0,229,255,0.1);
+  --cyan-glow:rgba(0,229,255,0.25);
+  --white:#F0F4FF;
+  --muted:rgba(240,244,255,0.45);
+  --muted2:rgba(240,244,255,0.65);
+  --green:#22c55e;
+  --display:'Syne',sans-serif;
+  --body:'Space Grotesk',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{background:var(--bg);color:var(--white);font-family:var(--body);overflow-x:hidden;cursor:none}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--body)}
+
+/* ── CURSOR ── */
+#cd,#cr{position:fixed;top:0;left:0;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%)}
+#cd{width:7px;height:7px;background:var(--cyan);transition:width .15s,height .15s}
+#cr{width:34px;height:34px;border:1px solid rgba(0,229,255,.5);transition:width .2s,height .2s,border-color .2s,transform .12s ease-out}
+body.hov #cd{width:14px;height:14px}
+body.hov #cr{width:50px;height:50px;border-color:var(--cyan)}
+
+/* ── SCROLL PROGRESS ── */
+#sp{position:fixed;top:0;left:0;height:2px;z-index:1000;background:linear-gradient(90deg,var(--blue),var(--cyan));box-shadow:0 0 8px var(--cyan);transition:width .1s}
+
+/* ── CANVAS ── */
+#bgc{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 6%;
+  background:rgba(4,6,8,.5);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  transition:all .3s;
+}
+nav.sc{padding:14px 6%;background:rgba(4,6,8,.92)}
+.logo{font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--white) 0%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo em{font-style:normal;-webkit-text-fill-color:var(--cyan)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:.82rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);position:relative;transition:color .2s}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;
+  background:var(--cyan);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.nav-links a:hover{color:var(--white)}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-cta{background:linear-gradient(135deg,var(--blue),#0ea5e9);color:#fff;
+  padding:10px 22px;border-radius:8px;font-weight:700;font-size:.82rem;
+  box-shadow:0 0 20px rgba(37,99,235,.4);transition:all .3s;border:none;cursor:none}
+.nav-cta:hover{box-shadow:0 0 36px rgba(37,99,235,.7);transform:translateY(-1px)}
+@media(max-width:768px){.nav-links{display:none}nav{padding:16px 5%}}
+
+/* ── HERO ── */
+#hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:130px 6% 80px;overflow:hidden}
+
+/* hero bg gradient */
+#hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(37,99,235,.07) 0%,transparent 70%);
+  pointer-events:none}
+
+.h-eye{font-family:var(--mono);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:22px;display:flex;align-items:center;gap:14px;
+  opacity:0;animation:fadeUp .8s .3s forwards}
+.h-eye::before,.h-eye::after{content:'';flex:1;max-width:50px;height:1px;background:var(--border2)}
+
+.h1{font-family:var(--display);font-size:clamp(2.6rem,7vw,6.8rem);font-weight:800;
+  line-height:1.0;letter-spacing:-.03em;margin-bottom:26px;
+  opacity:0;animation:fadeUp .9s .5s forwards}
+.h1 .l1{display:block;color:var(--white)}
+.h1 .l2{display:block;background:linear-gradient(135deg,var(--cyan) 0%,var(--blue) 55%,#a855f7 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+.h-sub{max-width:600px;font-size:1.08rem;line-height:1.75;color:var(--muted);
+  margin-bottom:44px;opacity:0;animation:fadeUp .9s .7s forwards}
+
+.h-acts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+  opacity:0;animation:fadeUp .9s .9s forwards}
+
+.btn-p{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#000;
+  padding:14px 32px;border-radius:10px;font-weight:700;font-size:.95rem;cursor:none;
+  box-shadow:0 0 28px var(--cyan-glow);transition:all .3s;border:none;position:relative;overflow:hidden}
+.btn-p::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);
+  opacity:0;transition:opacity .3s}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 0 50px var(--cyan-glow),0 8px 30px rgba(0,229,255,.25)}
+.btn-p:hover::before{opacity:1}
+.btn-g{background:var(--surface);color:var(--white);padding:14px 32px;border-radius:10px;
+  font-weight:600;font-size:.95rem;cursor:none;
+  border:1px solid var(--border);transition:all .3s;backdrop-filter:blur(10px)}
+.btn-g:hover{border-color:var(--cyan);background:var(--cyan-dim);transform:translateY(-2px)}
+
+/* floating HUD cards */
+.hud-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hud{position:absolute;border-radius:14px;border:1px solid var(--border2);
+  background:rgba(0,0,0,.65);backdrop-filter:blur(16px);
+  padding:14px 18px;font-family:var(--mono);font-size:.68rem;color:var(--cyan);
+  opacity:0;animation:hudIn .8s ease forwards,floatY 7s ease-in-out infinite}
+.hud-lbl{font-size:.58rem;color:var(--muted);margin-bottom:4px;letter-spacing:.1em;text-transform:uppercase}
+.hud-val{font-size:1rem;font-weight:700;color:var(--white);margin-bottom:6px}
+.hud-bar{width:90px;height:2px;background:rgba(255,255,255,.08);border-radius:2px}
+.hud-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));border-radius:2px}
+.hud-status{font-size:.6rem;color:var(--green);margin-top:4px;display:flex;align-items:center;gap:4px}
+.hud-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.hud1{top:17%;left:3%;animation-delay:1s,0s;animation-duration:.8s,8s}
+.hud2{top:20%;right:4%;animation-delay:1.3s,0s;animation-duration:.8s,6.5s}
+.hud3{bottom:26%;left:5%;animation-delay:1.6s,0s;animation-duration:.8s,9s}
+.hud4{bottom:22%;right:5%;animation-delay:1.9s,0s;animation-duration:.8s,7.5s}
+
+/* hero stats */
+.h-stats{display:flex;gap:52px;margin-top:56px;flex-wrap:wrap;justify-content:center;
+  opacity:0;animation:fadeUp .9s 1.1s forwards}
+.h-stat-n{font-family:var(--display);font-size:2.1rem;font-weight:800;
+  background:linear-gradient(135deg,var(--white),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.h-stat-l{font-size:.72rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+
+/* ── GLOW DIVIDER ── */
+.gdiv{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.2}
+
+/* ── SECTIONS ── */
+section{position:relative;z-index:1;padding:100px 6%}
+.sec-eye{font-family:var(--mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px}
+.sec-h{font-family:var(--display);font-size:clamp(1.9rem,4vw,3.2rem);font-weight:800;
+  letter-spacing:-.03em;line-height:1.1;margin-bottom:14px}
+.sec-sub{color:var(--muted);font-size:1.02rem;line-height:1.72;max-width:520px;margin-bottom:56px}
+
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(36px);transition:opacity .75s ease,transform .75s ease}
+.rv.on{opacity:1;transform:translateY(0)}
+.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}
+
+/* ── BRANDS TICKER ── */
+#brands{padding:52px 0;overflow:hidden}
+.brands-lbl{text-align:center;font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+.bt-wrap{position:relative;overflow:hidden}
+.bt-wrap::before,.bt-wrap::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none}
+.bt-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.bt-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
+.bt-inner{display:flex;animation:scrollL 22s linear infinite;width:max-content}
+.brand-p{border:1px solid var(--border);border-radius:10px;padding:11px 26px;margin:0 8px;
+  font-family:var(--display);font-weight:700;font-size:.95rem;color:var(--muted);
+  background:var(--surface);white-space:nowrap;letter-spacing:.04em;transition:color .3s,border-color .3s}
+.brand-p:hover{color:var(--white);border-color:var(--cyan)}
+
+/* ── SERVICES ── */
+#services{background:radial-gradient(ellipse 80% 50% at 50% 50%,rgba(37,99,235,.04) 0%,transparent 70%)}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.svc-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:26px 22px;transition:all .4s cubic-bezier(.175,.885,.32,1.275);
+  position:relative;overflow:hidden;cursor:none;
+}
+.svc-card::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--cyan-dim),transparent);opacity:0;transition:opacity .3s}
+.svc-card:hover{transform:translateY(-8px) scale(1.02);border-color:var(--cyan);
+  box-shadow:0 20px 60px rgba(0,229,255,.1)}
+.svc-card:hover::before{opacity:1}
+.svc-icon{width:42px;height:42px;border-radius:11px;
+  background:linear-gradient(135deg,rgba(0,229,255,.12),rgba(37,99,235,.12));
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:1.25rem;margin-bottom:14px}
+.svc-name{font-family:var(--display);font-weight:700;font-size:.98rem;margin-bottom:6px}
+.svc-desc{font-size:.8rem;color:var(--muted);line-height:1.65;margin-bottom:12px}
+.svc-tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;
+  color:var(--cyan);background:rgba(0,229,255,.07);
+  border:1px solid rgba(0,229,255,.18);border-radius:4px;padding:2px 7px;display:inline-block}
+
+/* ── INSTRUMENTS ── */
+.ins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px}
+.ins-card{border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  background:var(--surface);transition:all .4s;cursor:none;position:relative}
+.ins-card:hover{transform:translateY(-8px);border-color:var(--cyan);
+  box-shadow:0 30px 80px rgba(0,229,255,.1)}
+.ins-vis{height:190px;background:linear-gradient(135deg,rgba(37,99,235,.14),rgba(0,229,255,.04));
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.ins-vis::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%,rgba(0,229,255,.06),transparent 70%)}
+.ins-body{padding:22px}
+.ins-title{font-family:var(--display);font-weight:800;font-size:1.15rem;margin-bottom:7px}
+.ins-desc{font-size:.8rem;color:var(--muted);line-height:1.65;margin-bottom:14px}
+.ins-tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-family:var(--mono);font-size:.63rem;letter-spacing:.04em;
+  background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);
+  color:var(--cyan);border-radius:4px;padding:3px 7px}
+
+/* ── STATS ── */
+#stats{background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(0,229,255,.04) 0%,transparent 70%)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1px;background:var(--border);border-radius:18px;overflow:hidden;border:1px solid var(--border)}
+.stat-cell{background:var(--bg);padding:44px 28px;text-align:center;transition:background .3s;position:relative}
+.stat-cell:hover{background:rgba(0,229,255,.04)}
+.stat-badge{position:absolute;top:14px;right:14px;font-family:var(--mono);font-size:.58rem;
+  letter-spacing:.08em;text-transform:uppercase;color:rgba(0,229,255,.35)}
+.stat-n{font-family:var(--display);font-size:3.4rem;font-weight:800;line-height:1;
+  background:linear-gradient(135deg,var(--white),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-sfx{font-size:1.7rem}
+.stat-l{font-size:.83rem;color:var(--muted);margin-top:6px;letter-spacing:.05em}
+
+/* ── WHY US ── */
+#why{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1200px;margin:0 auto;padding:100px 6%}
+@media(max-width:900px){#why{grid-template-columns:1fr;gap:48px}}
+.why-pts{list-style:none;margin-top:36px;display:flex;flex-direction:column;gap:16px}
+.why-pt{display:flex;gap:14px;align-items:flex-start;padding:18px;border-radius:14px;
+  border:1px solid var(--border);background:var(--surface);transition:all .3s;cursor:none}
+.why-pt:hover{border-color:var(--cyan);background:var(--cyan-dim);transform:translateX(6px)}
+.why-ico{width:34px;height:34px;flex-shrink:0;border-radius:9px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  display:flex;align-items:center;justify-content:center;font-size:.95rem}
+.why-pt-t{font-weight:700;font-size:.93rem;margin-bottom:3px}
+.why-pt-d{font-size:.8rem;color:var(--muted);line-height:1.6}
+
+/* oscilloscope */
+.osc-box{width:100%;max-width:480px;background:rgba(0,0,0,.7);
+  border:1px solid var(--border);border-radius:20px;padding:22px;overflow:hidden}
+.osc-hdr{display:flex;align-items:center;gap:8px;margin-bottom:16px;
+  font-family:var(--mono);font-size:.68rem;color:var(--cyan)}
+.osc-d{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.osc-cv{width:100%;height:150px}
+.osc-meta{display:flex;gap:20px;margin-top:14px}
+.osc-kv .ok{font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-bottom:2px;letter-spacing:.06em}
+.osc-kv .ov{font-family:var(--mono);font-size:.82rem;font-weight:700}
+
+/* ── AMC SECTION ── */
+#amc{background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(37,99,235,.05) 0%,transparent 70%)}
+.amc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.amc-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:32px 26px;transition:all .4s;cursor:none;position:relative;overflow:hidden}
+.amc-card.featured{border-color:var(--cyan);background:rgba(0,229,255,.05)}
+.amc-card.featured::before{content:'MOST POPULAR';position:absolute;top:14px;right:14px;
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--cyan);
+  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);border-radius:4px;padding:3px 8px}
+.amc-card:hover{transform:translateY(-6px);border-color:var(--cyan);box-shadow:0 20px 60px rgba(0,229,255,.1)}
+.amc-type{font-family:var(--mono);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:10px}
+.amc-name{font-family:var(--display);font-weight:800;font-size:1.5rem;margin-bottom:6px}
+.amc-price{font-family:var(--display);font-size:1.1rem;font-weight:700;
+  color:var(--muted2);margin-bottom:20px}
+.amc-price span{font-size:2rem;color:var(--white)}
+.amc-pts{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.amc-pts li{font-size:.83rem;color:var(--muted);display:flex;gap:8px;align-items:flex-start}
+.amc-pts li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+
+/* ── TESTIMONIALS ── */
+#testi{overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(37,99,235,.05) 0%,transparent 70%)}
+.tt-wrap{overflow:hidden;position:relative}
+.tt-wrap::before,.tt-wrap::after{content:'';position:absolute;top:0;bottom:0;width:100px;z-index:2;pointer-events:none}
+.tt-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.tt-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
+.tt{display:flex;gap:22px;animation:scrollL 32s linear infinite;width:max-content}
+.tt:hover{animation-play-state:paused}
+.tc{width:310px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:26px;backdrop-filter:blur(10px);transition:border-color .3s,transform .3s}
+.tc:hover{border-color:var(--cyan);transform:translateY(-4px)}
+.tc-q{font-size:.88rem;line-height:1.72;color:var(--muted);margin-bottom:18px}
+.tc-q::before{content:'\201C';color:var(--cyan);font-size:1.6rem;line-height:0;vertical-align:-.35em;margin-right:3px}
+.tc-auth{display:flex;align-items:center;gap:11px}
+.tc-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--blue));
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;color:#000}
+.tc-n{font-weight:700;font-size:.86rem}
+.tc-r{font-size:.73rem;color:var(--muted)}
+.tc-stars{display:flex;gap:2px;margin-bottom:12px}
+.star{color:#f59e0b;font-size:.8rem}
+
+/* ── PROCESS ── */
+#process{background:radial-gradient(ellipse 60% 40% at 0% 50%,rgba(37,99,235,.05) 0%,transparent 70%)}
+.proc-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;position:relative}
+.proc-steps::before{content:'';position:absolute;top:32px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--border2),var(--border2),transparent);
+  z-index:0}
+.proc-step{padding:0 20px 32px;position:relative;z-index:1;text-align:center}
+.proc-num{width:64px;height:64px;border-radius:50%;margin:0 auto 20px;
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--cyan);
+  transition:all .4s;position:relative}
+.proc-step:hover .proc-num{background:linear-gradient(135deg,var(--cyan),var(--blue));
+  color:#000;border-color:transparent;box-shadow:0 0 30px var(--cyan-glow)}
+.proc-title{font-family:var(--display);font-weight:700;font-size:1rem;margin-bottom:8px}
+.proc-desc{font-size:.8rem;color:var(--muted);line-height:1.65}
+
+/* ── CONTACT ── */
+#contact{background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(37,99,235,.07) 0%,transparent 70%)}
+.contact-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:56px;max-width:1100px;margin:0 auto}
+@media(max-width:900px){.contact-grid{grid-template-columns:1fr}}
+.cc{display:flex;gap:14px;align-items:center;padding:18px;border:1px solid var(--border);
+  border-radius:13px;background:var(--surface);margin-bottom:12px;transition:all .3s;cursor:none}
+.cc:hover{border-color:var(--cyan);background:var(--cyan-dim);transform:translateX(5px)}
+.cc-ico{width:42px;height:42px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(0,229,255,.18),rgba(37,99,235,.18));
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.cc-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.cc-val{font-weight:700;font-size:.93rem}
+.cf{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:34px;backdrop-filter:blur(20px)}
+.cf-h{font-family:var(--display);font-weight:700;font-size:1.2rem;margin-bottom:22px}
+.fg{margin-bottom:18px}
+.fl{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted);margin-bottom:7px;font-family:var(--mono)}
+.fi{width:100%;padding:13px 15px;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:9px;color:var(--white);font-family:var(--body);font-size:.93rem;
+  outline:none;transition:border-color .3s,box-shadow .3s}
+.fi:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,.1)}
+.fi::placeholder{color:rgba(240,244,255,.22)}
+textarea.fi{resize:vertical;min-height:96px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:550px){.fr{grid-template-columns:1fr}}
+
+/* ── COVERAGE ── */
+.cov-box{margin-top:28px;padding:18px;border:1px solid var(--border);
+  border-radius:13px;background:var(--surface)}
+.cov-h{font-family:var(--mono);font-size:.68rem;color:var(--cyan);
+  margin-bottom:10px;letter-spacing:.1em;text-transform:uppercase}
+.cov-cities{display:flex;flex-wrap:wrap;gap:6px}
+.city-tag{font-size:.76rem;color:var(--muted2);background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:6px;padding:4px 10px}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:1;padding:60px 6% 36px;
+  border-top:1px solid var(--border);
+  background:radial-gradient(ellipse 80% 40% at 50% 100%,rgba(0,229,255,.03) 0%,transparent 70%)}
+.fg-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:44px;margin-bottom:44px}
+@media(max-width:900px){.fg-grid{grid-template-columns:1fr 1fr;gap:28px}}
+@media(max-width:550px){.fg-grid{grid-template-columns:1fr}}
+.f-logo{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--white),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;display:block;margin-bottom:10px}
+.f-desc{font-size:.83rem;color:var(--muted);line-height:1.7;max-width:250px}
+.f-h{font-family:var(--mono);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:14px}
+.f-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.f-links a{font-size:.83rem;color:var(--muted);transition:color .2s}
+.f-links a:hover{color:var(--white)}
+.f-bot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+  padding-top:28px;border-top:1px solid var(--border);
+  font-size:.76rem;color:var(--muted);font-family:var(--mono)}
+.socials{display:flex;gap:10px}
+.sl{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:.82rem;transition:all .3s}
+.sl:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+
+/* ── WHATSAPP FAB ── */
+.wa-fab{position:fixed;bottom:30px;right:30px;z-index:200;
+  width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,#25D366,#128C7E);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 32px rgba(37,211,102,.4);transition:all .3s;cursor:none}
+.wa-fab:hover{transform:scale(1.1);box-shadow:0 12px 40px rgba(37,211,102,.6)}
+
+/* ── BACK TO TOP ── */
+#btt{position:fixed;bottom:100px;right:30px;z-index:200;
+  width:40px;height:40px;border-radius:10px;
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;cursor:none;transition:all .3s;
+  opacity:0;pointer-events:none}
+#btt.show{opacity:1;pointer-events:auto}
+#btt:hover{border-color:var(--cyan);background:var(--cyan-dim)}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hudIn{from{opacity:0;transform:translateY(18px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+@keyframes scrollL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,229,255,.5)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(0,229,255,0)}}
+@keyframes pulse2{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.5)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+</style>
+</head>
+<body>
+
+<div id="cd"></div>
+<div id="cr"></div>
+<div id="sp"></div>
+<canvas id="bgc"></canvas>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="logo">Vision<em>.</em>Analytical</div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#instruments">Instruments</a></li>
+    <li><a href="#amc">AMC Plans</a></li>
+    <li><a href="#testi">Clients</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="tel:+919876543210" class="nav-cta">📞 Call Now</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hud-wrap">
+    <div class="hud hud1">
+      <div class="hud-lbl">HPLC System</div>
+      <div class="hud-val">LC-2010C HT</div>
+      <div class="hud-bar"><div class="hud-fill" style="width:82%"></div></div>
+      <div class="hud-status"><span class="hud-dot"></span> SYSTEM READY</div>
+    </div>
+    <div class="hud hud2">
+      <div class="hud-lbl">UV Detector</div>
+      <div class="hud-val">λ 254 nm</div>
+      <div class="hud-bar"><div class="hud-fill" style="width:96%"></div></div>
+      <div class="hud-status"><span class="hud-dot"></span> ONLINE</div>
+    </div>
+    <div class="hud hud3">
+      <div class="hud-lbl">Column Oven</div>
+      <div class="hud-val">40.0 °C</div>
+      <div class="hud-bar"><div class="hud-fill" style="width:68%"></div></div>
+      <div class="hud-status"><span class="hud-dot"></span> STABLE</div>
+    </div>
+    <div class="hud hud4">
+      <div class="hud-lbl">GC Status</div>
+      <div class="hud-val">FID READY</div>
+      <div class="hud-bar"><div class="hud-fill" style="width:100%"></div></div>
+      <div class="hud-status"><span class="hud-dot"></span> QUALIFIED</div>
+    </div>
+  </div>
+
+  <div class="h-eye">Ambarnath · Maharashtra · Est. 2016</div>
+  <h1 class="h1">
+    <span class="l1">Maharashtra's Most Trusted</span>
+    <span class="l2">Lab Instrument Partner.</span>
+  </h1>
+  <p class="h-sub">Sales, service, AMC and IQ/OQ/PQ qualification for HPLC, GC, LCMS, GCMS and UV/Vis systems. Shimadzu · Waters · Agilent · Thermo — 24-hour response across Maharashtra & Gujarat.</p>
+  <div class="h-acts">
+    <a href="#contact" class="btn-p">Get a Free Quote →</a>
+    <a href="#services" class="btn-g">Explore Services</a>
+  </div>
+  <div class="h-stats">
+    <div>
+      <div class="h-stat-n"><span class="hctr" data-t="200">0</span>+</div>
+      <div class="h-stat-l">Instruments Serviced</div>
+    </div>
+    <div>
+      <div class="h-stat-n"><span class="hctr" data-t="50">0</span>+</div>
+      <div class="h-stat-l">Pharma Clients</div>
+    </div>
+    <div>
+      <div class="h-stat-n"><span class="hctr" data-t="8">0</span>+</div>
+      <div class="h-stat-l">Years Experience</div>
+    </div>
+    <div>
+      <div class="h-stat-n"><span class="hctr" data-t="24">0</span>hr</div>
+      <div class="h-stat-l">Response Time</div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- BRANDS -->
+<section id="brands">
+  <div class="brands-lbl">Brands We Sell, Service & Refurbish</div>
+  <div class="bt-wrap">
+    <div class="bt-inner">
+      <div class="brand-p">Shimadzu</div><div class="brand-p">Waters</div>
+      <div class="brand-p">Agilent Technologies</div><div class="brand-p">Thermo Scientific</div>
+      <div class="brand-p">PerkinElmer</div><div class="brand-p">Bruker</div>
+      <div class="brand-p">Merck</div><div class="brand-p">Shimadzu</div>
+      <div class="brand-p">Waters</div><div class="brand-p">Agilent Technologies</div>
+      <div class="brand-p">Thermo Scientific</div><div class="brand-p">PerkinElmer</div>
+      <div class="brand-p">Bruker</div><div class="brand-p">Merck</div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="rv">
+    <div class="sec-eye">What We Do</div>
+    <h2 class="sec-h">Complete Instrument<br>Lifecycle Services</h2>
+    <p class="sec-sub">From day-one installation to annual qualification, breakdown response, and end-of-life refurbishment — Vision Analytical covers every stage.</p>
+  </div>
+  <div class="svc-grid rv d1">
+    <div class="svc-card">
+      <div class="svc-icon">⚗️</div>
+      <div class="svc-name">Refurbished HPLC</div>
+      <div class="svc-desc">Certified pre-owned HPLC systems — Shimadzu, Waters, Agilent — fully tested, validated, and warranty-covered.</div>
+      <span class="svc-tag">LC-2010C · e2695</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">🔬</div>
+      <div class="svc-name">Refurbished GC</div>
+      <div class="svc-desc">Pre-owned GC systems with FID/TCD detectors, serviced to OEM specs. Ideal for pharma QC and chemical testing.</div>
+      <span class="svc-tag">GC-2010 · 7890B</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">💡</div>
+      <div class="svc-name">UV/Vis Spectrophotometers</div>
+      <div class="svc-desc">Sales and service of Shimadzu UV-1800, Thermo GENESYS, PerkinElmer Lambda series for QC and R&D labs.</div>
+      <span class="svc-tag">UV-1800 · GENESYS</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">🧬</div>
+      <div class="svc-name">LCMS / GCMS</div>
+      <div class="svc-desc">Sales and service of mass spectrometry systems. Shimadzu LCMS-2020, Waters QDa, and Shimadzu QP2010.</div>
+      <span class="svc-tag">LCMS-2020 · QDa</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">🛠️</div>
+      <div class="svc-name">AMC / CMC</div>
+      <div class="svc-desc">Annual and Comprehensive Maintenance Contracts with scheduled PMs, priority breakdown support, and detailed reports.</div>
+      <span class="svc-tag">AMC · CMC</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">⚡</div>
+      <div class="svc-name">Breakdown Service</div>
+      <div class="svc-desc">24-hour breakdown response across Maharashtra. Engineers with spares in hand — most issues resolved same visit.</div>
+      <span class="svc-tag">24hr · On-Site</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">📋</div>
+      <div class="svc-name">IQ / OQ / PQ</div>
+      <div class="svc-desc">Full pharmaceutical qualification documentation — FDA, EU GMP, Schedule M compliant. Audit-ready from day one.</div>
+      <span class="svc-tag">IQ · OQ · PQ</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">📐</div>
+      <div class="svc-name">Calibration</div>
+      <div class="svc-desc">NABL-traceable calibration for HPLC, GC, UV, and balance instruments with certified calibration reports.</div>
+      <span class="svc-tag">NABL · Traceable</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">💾</div>
+      <div class="svc-name">Software & CSV</div>
+      <div class="svc-desc">LabSolutions, Empower 3, OpenLAB — installation, IQ, and computer system validation for full data integrity.</div>
+      <span class="svc-tag">Empower · LabSolutions</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">🎓</div>
+      <div class="svc-name">Training</div>
+      <div class="svc-desc">Hands-on operator training and method development workshops for QC analysts. On-site or at our Ambarnath facility.</div>
+      <span class="svc-tag">HPLC · GC · Method</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">🔧</div>
+      <div class="svc-name">Preventive Maintenance</div>
+      <div class="svc-desc">Scheduled PM visits covering pump seals, lamp replacement, autosampler service, and system suitability verification.</div>
+      <span class="svc-tag">PM · Scheduled</span>
+    </div>
+    <div class="svc-card">
+      <div class="svc-icon">🏭</div>
+      <div class="svc-name">Installation</div>
+      <div class="svc-desc">Full instrument installation, site preparation guidance, network integration, and IQ documentation at your facility.</div>
+      <span class="svc-tag">Install · Commission</span>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- INSTRUMENTS -->
+<section id="instruments">
+  <div class="rv" style="text-align:center;margin-bottom:56px">
+    <div class="sec-eye">Instrument Portfolio</div>
+    <h2 class="sec-h">Systems We Sell & Service</h2>
+  </div>
+  <div class="ins-grid rv d1">
+    <div class="ins-card">
+      <div class="ins-vis">
+        <svg width="130" height="130" viewBox="0 0 130 130" fill="none">
+          <rect x="22" y="32" width="86" height="66" rx="10" fill="rgba(0,229,255,0.07)" stroke="rgba(0,229,255,0.3)" stroke-width="1.5"/>
+          <rect x="34" y="44" width="62" height="40" rx="5" fill="rgba(37,99,235,0.12)" stroke="rgba(0,229,255,0.18)" stroke-width="1"/>
+          <polyline points="38,64 48,52 60,62 72,45 84,58 90,54" stroke="#00E5FF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="72" cy="45" r="3" fill="#00E5FF" opacity=".8"/>
+          <rect x="46" y="97" width="38" height="4" rx="2" fill="rgba(0,229,255,0.2)"/>
+          <text x="65" y="26" fill="rgba(0,229,255,0.7)" font-size="8" text-anchor="middle" font-family="monospace" letter-spacing="1">HPLC</text>
+        </svg>
+      </div>
+      <div class="ins-body">
+        <div class="ins-title">HPLC Systems</div>
+        <div class="ins-desc">Shimadzu LC-2010C HT, Waters e2695 Alliance, Agilent 1260/1290. Complete systems with pump, detector, autosampler, column oven and software.</div>
+        <div class="ins-tags">
+          <span class="tag">Isocratic</span><span class="tag">Gradient</span><span class="tag">PDA</span><span class="tag">LabSolutions</span>
+        </div>
+      </div>
+    </div>
+    <div class="ins-card">
+      <div class="ins-vis">
+        <svg width="130" height="130" viewBox="0 0 130 130" fill="none">
+          <rect x="16" y="26" width="98" height="78" rx="12" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.25)" stroke-width="1.5"/>
+          <rect x="26" y="38" width="44" height="54" rx="5" fill="rgba(37,99,235,0.1)" stroke="rgba(0,229,255,0.15)" stroke-width="1"/>
+          <circle cx="48" cy="65" r="16" fill="none" stroke="rgba(0,229,255,0.25)" stroke-width="1.5" stroke-dasharray="4 2"/>
+          <circle cx="48" cy="65" r="7" fill="rgba(0,229,255,0.12)"/>
+          <line x1="78" y1="42" x2="104" y2="42" stroke="rgba(0,229,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="78" y1="55" x2="104" y2="55" stroke="rgba(0,229,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="78" y1="68" x2="104" y2="68" stroke="rgba(0,229,255,0.2)" stroke-width="1.5" stroke-linecap="round"/>
+          <text x="65" y="21" fill="rgba(0,229,255,0.7)" font-size="8" text-anchor="middle" font-family="monospace" letter-spacing="1">GC</text>
+        </svg>
+      </div>
+      <div class="ins-body">
+        <div class="ins-title">Gas Chromatographs</div>
+        <div class="ins-desc">Shimadzu GC-2010 Plus, Agilent 7890B series. FID, TCD, ECD detectors. Headspace and SPME configurations available.</div>
+        <div class="ins-tags">
+          <span class="tag">FID</span><span class="tag">TCD</span><span class="tag">Headspace</span><span class="tag">Split/Splitless</span>
+        </div>
+      </div>
+    </div>
+    <div class="ins-card">
+      <div class="ins-vis">
+        <svg width="130" height="130" viewBox="0 0 130 130" fill="none">
+          <rect x="12" y="22" width="106" height="86" rx="14" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.22)" stroke-width="1.5"/>
+          <path d="M32 88 Q65 28 98 88" stroke="#00E5FF" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <path d="M32 88 Q65 48 98 88" stroke="rgba(37,99,235,0.7)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M32 88 Q65 68 98 88" stroke="rgba(168,85,247,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <line x1="65" y1="28" x2="65" y2="92" stroke="rgba(0,229,255,0.18)" stroke-width="1" stroke-dasharray="3 2"/>
+          <circle cx="65" cy="30" r="4" fill="rgba(0,229,255,0.7)"/>
+          <text x="65" y="16" fill="rgba(0,229,255,0.7)" font-size="8" text-anchor="middle" font-family="monospace" letter-spacing="1">LC-MS</text>
+        </svg>
+      </div>
+      <div class="ins-body">
+        <div class="ins-title">LC-MS / GC-MS</div>
+        <div class="ins-desc">High-sensitivity mass spectrometry for pharma, forensic, environmental. Shimadzu LCMS-2020, Waters QDa, Shimadzu QP2010 Ultra.</div>
+        <div class="ins-tags">
+          <span class="tag">Single Quad</span><span class="tag">Triple Quad</span><span class="tag">Pharma</span>
+        </div>
+      </div>
+    </div>
+    <div class="ins-card">
+      <div class="ins-vis">
+        <svg width="130" height="130" viewBox="0 0 130 130" fill="none">
+          <rect x="22" y="32" width="86" height="66" rx="10" fill="rgba(0,229,255,0.05)" stroke="rgba(0,229,255,0.22)" stroke-width="1.5"/>
+          <rect x="36" y="46" width="58" height="34" rx="5" fill="rgba(37,99,235,0.1)" stroke="rgba(0,229,255,0.15)" stroke-width="1"/>
+          <line x1="52" y1="56" x2="78" y2="56" stroke="#00E5FF" stroke-width="3" stroke-linecap="round"/>
+          <line x1="46" y1="63" x2="84" y2="63" stroke="rgba(0,229,255,0.5)" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="54" y1="70" x2="76" y2="70" stroke="rgba(0,229,255,0.3)" stroke-width="1.8" stroke-linecap="round"/>
+          <text x="65" y="26" fill="rgba(0,229,255,0.7)" font-size="8" text-anchor="middle" font-family="monospace" letter-spacing="1">UV/VIS</text>
+        </svg>
+      </div>
+      <div class="ins-body">
+        <div class="ins-title">UV/Vis Spectrophotometers</div>
+        <div class="ins-desc">Shimadzu UV-1800, UV-2600, Thermo GENESYS 10S. Single and double beam for routine QC to advanced research.</div>
+        <div class="ins-tags">
+          <span class="tag">190–1100nm</span><span class="tag">1nm BW</span><span class="tag">QC</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="rv" style="text-align:center;margin-bottom:56px">
+    <div class="sec-eye">The Numbers</div>
+    <h2 class="sec-h">8 Years of Precision</h2>
+  </div>
+  <div class="stats-grid rv d1">
+    <div class="stat-cell" data-label="INSTRUMENTS">
+      <span class="stat-badge">Since 2016</span>
+      <div class="stat-n"><span class="ctr" data-t="200">0</span><span class="stat-sfx">+</span></div>
+      <div class="stat-l">Instruments Serviced</div>
+    </div>
+    <div class="stat-cell" data-label="CLIENTS">
+      <span class="stat-badge">Active</span>
+      <div class="stat-n"><span class="ctr" data-t="50">0</span><span class="stat-sfx">+</span></div>
+      <div class="stat-l">Happy Clients</div>
+    </div>
+    <div class="stat-cell" data-label="COVERAGE">
+      <span class="stat-badge">MH + GJ</span>
+      <div class="stat-n"><span class="ctr" data-t="15">0</span><span class="stat-sfx">+</span></div>
+      <div class="stat-l">Cities Served</div>
+    </div>
+    <div class="stat-cell" data-label="RESPONSE">
+      <span class="stat-badge">Guaranteed</span>
+      <div class="stat-n"><span class="ctr" data-t="24">0</span><span class="stat-sfx">hr</span></div>
+      <div class="stat-l">Breakdown Response</div>
+    </div>
+    <div class="stat-cell" data-label="TEAM">
+      <span class="stat-badge">Certified</span>
+      <div class="stat-n"><span class="ctr" data-t="3">0</span><span class="stat-sfx"></span></div>
+      <div class="stat-l">Expert Engineers</div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- WHY US -->
+<section id="why">
+  <div class="rv">
+    <div class="sec-eye">Why Vision Analytical</div>
+    <h2 class="sec-h">Your Lab's Long-Term<br>Trusted Partner</h2>
+    <ul class="why-pts">
+      <li class="why-pt">
+        <div class="why-ico">🎯</div>
+        <div><div class="why-pt-t">Instrument Specialists Only</div>
+        <div class="why-pt-d">We focus exclusively on analytical instruments — every engineer breathes HPLC, GC and UV every day. No generalists.</div></div>
+      </li>
+      <li class="why-pt">
+        <div class="why-ico">⚡</div>
+        <div><div class="why-pt-t">24-Hour Breakdown Response</div>
+        <div class="why-pt-d">When your instrument is down, your QC is stopped. Our engineers reach your site within 24 hours across Maharashtra.</div></div>
+      </li>
+      <li class="why-pt">
+        <div class="why-ico">📦</div>
+        <div><div class="why-pt-t">Spares In Stock at Ambarnath</div>
+        <div class="why-pt-d">Pump seals, autosampler needles, deuterium lamps for LC-2010C and e2695 — stocked locally, no weeks of waiting.</div></div>
+      </li>
+      <li class="why-pt">
+        <div class="why-ico">📄</div>
+        <div><div class="why-pt-t">Audit-Ready Documentation</div>
+        <div class="why-pt-d">IQ/OQ/PQ reports, calibration certificates, service records — everything your FDA or EU GMP audit team needs.</div></div>
+      </li>
+    </ul>
+  </div>
+  <div class="rv d2" style="display:flex;align-items:center;justify-content:center">
+    <div class="osc-box">
+      <div class="osc-hdr"><div class="osc-d"></div>VA · LIVE CHROMATOGRAM MONITOR</div>
+      <canvas class="osc-cv" id="osc" width="420" height="150"></canvas>
+      <div class="osc-meta">
+        <div class="osc-kv"><div class="ok">INSTRUMENT</div><div class="ov" style="color:var(--cyan)">Shimadzu LC-2010C</div></div>
+        <div class="osc-kv"><div class="ok">STATUS</div><div class="ov" style="color:var(--green)">● RUNNING</div></div>
+        <div class="osc-kv"><div class="ok">FLOW</div><div class="ov">1.0 mL/min</div></div>
+        <div class="osc-kv"><div class="ok">TEMP</div><div class="ov">40.0 °C</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- AMC PLANS -->
+<section id="amc">
+  <div class="rv" style="text-align:center;margin-bottom:56px">
+    <div class="sec-eye">Maintenance Contracts</div>
+    <h2 class="sec-h">AMC Plans for Every Lab</h2>
+    <p class="sec-sub" style="max-width:540px;margin:0 auto 0">Choose a maintenance plan that matches your instrument value, compliance requirements, and budget.</p>
+  </div>
+  <div class="amc-grid rv d1">
+    <div class="amc-card">
+      <div class="amc-type">Basic AMC</div>
+      <div class="amc-name">Labour Cover</div>
+      <div class="amc-price">HPLC from <span>₹18,000</span>/yr</div>
+      <ul class="amc-pts">
+        <li>2 scheduled PM visits per year</li>
+        <li>Labour charges fully covered</li>
+        <li>Spare parts at cost price</li>
+        <li>24-hr breakdown response</li>
+        <li>PM report after every visit</li>
+      </ul>
+      <a href="#contact" class="btn-g" style="display:block;text-align:center;padding:12px">Enquire →</a>
+    </div>
+    <div class="amc-card featured">
+      <div class="amc-type">Standard AMC</div>
+      <div class="amc-name">Labour + Parts</div>
+      <div class="amc-price">HPLC from <span>₹28,000</span>/yr</div>
+      <ul class="amc-pts">
+        <li>2 scheduled PM visits per year</li>
+        <li>Labour + minor parts covered</li>
+        <li>Priority breakdown response</li>
+        <li>System suitability verification</li>
+        <li>Digital service records</li>
+        <li>Lamp hours tracking</li>
+      </ul>
+      <a href="#contact" class="btn-p" style="display:block;text-align:center;padding:12px;border-radius:10px">Get Quote →</a>
+    </div>
+    <div class="amc-card">
+      <div class="amc-type">Comprehensive CMC</div>
+      <div class="amc-name">Full Cover</div>
+      <div class="amc-price">HPLC from <span>₹45,000</span>/yr</div>
+      <ul class="amc-pts">
+        <li>3 scheduled PM visits per year</li>
+        <li>All parts included (excl. consumables)</li>
+        <li>Same-day priority response</li>
+        <li>Annual OQ verification</li>
+        <li>Software backup included</li>
+        <li>Dedicated engineer assigned</li>
+      </ul>
+      <a href="#contact" class="btn-g" style="display:block;text-align:center;padding:12px">Enquire →</a>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="rv" style="text-align:center;margin-bottom:60px">
+    <div class="sec-eye">How We Work</div>
+    <h2 class="sec-h">Simple. Fast. Professional.</h2>
+  </div>
+  <div class="proc-steps rv d1">
+    <div class="proc-step">
+      <div class="proc-num">01</div>
+      <div class="proc-title">Call / WhatsApp</div>
+      <div class="proc-desc">Describe your instrument issue or service need. We respond within 2 hours.</div>
+    </div>
+    <div class="proc-step">
+      <div class="proc-num">02</div>
+      <div class="proc-title">Remote Diagnosis</div>
+      <div class="proc-desc">Our engineers diagnose over the phone. Many issues resolved remotely — saving you time.</div>
+    </div>
+    <div class="proc-step">
+      <div class="proc-num">03</div>
+      <div class="proc-title">Site Visit</div>
+      <div class="proc-desc">If on-site is needed, we dispatch within 24 hours with spares and test equipment.</div>
+    </div>
+    <div class="proc-step">
+      <div class="proc-num">04</div>
+      <div class="proc-title">Repair & Verify</div>
+      <div class="proc-desc">We fix the root cause and run system suitability before leaving your lab.</div>
+    </div>
+    <div class="proc-step">
+      <div class="proc-num">05</div>
+      <div class="proc-title">Documented Report</div>
+      <div class="proc-desc">Complete service report with root cause, parts replaced, and next recommended action.</div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- TESTIMONIALS -->
+<section id="testi">
+  <div class="rv" style="text-align:center;margin-bottom:52px">
+    <div class="sec-eye">Client Voices</div>
+    <h2 class="sec-h">What Our Pharma Clients Say</h2>
+  </div>
+  <div class="tt-wrap rv d1">
+    <div class="tt">
+      <div class="tc">
+        <div class="tc-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <p class="tc-q">Vision Analytical got our Shimadzu HPLC running within 24 hours. Their engineer diagnosed the pump seal issue on the phone and arrived with the exact spare. Exceptional.</p>
+        <div class="tc-auth"><div class="tc-av">RK</div><div><div class="tc-n">R. Kulkarni</div><div class="tc-r">QC Manager, Alkem Laboratories – Badlapur</div></div></div>
+      </div>
+      <div class="tc">
+        <div class="tc-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <p class="tc-q">The IQ/OQ/PQ documentation they provided for our Waters e2695 was completely audit-ready. Our FDA audit went smoothly. Highly professional and pharma-aware team.</p>
+        <div class="tc-auth"><div class="tc-av">PS</div><div><div class="tc-n">P. Sharma</div><div class="tc-r">Head QA, Cipla – Patalganga</div></div></div>
+      </div>
+      <div class="tc">
+        <div class="tc-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <p class="tc-q">We bought a refurbished Waters Alliance from Vision Analytical. It performed as well as a new system — fully validated, warranty provided, and installed within a week.</p>
+        <div class="tc-auth"><div class="tc-av">AM</div><div><div class="tc-n">A. Mehta</div><div class="tc-r">Director Operations, Eurofins – Pune</div></div></div>
+      </div>
+      <div class="tc">
+        <div class="tc-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <p class="tc-q">Our CMC with Vision Analytical has been running for 3 years — zero unexpected downtime. Preventive maintenance is always on schedule, reports are detailed.</p>
+        <div class="tc-auth"><div class="tc-av">SN</div><div><div class="tc-n">S. Nair</div><div class="tc-r">Lab Head, Sun Pharma – Silvassa</div></div></div>
+      </div>
+      <div class="tc">
+        <div class="tc-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <p class="tc-q">Vishal and his team trained our entire QC team on HPLC method development. Excellent content, very practical — our team's confidence improved significantly.</p>
+        <div class="tc-auth"><div class="tc-av">DP</div><div><div class="tc-n">D. Patil</div><div class="tc-r">R&D Lead, Emcure Pharmaceuticals</div></div></div>
+      </div>
+      <!-- Duplicates for seamless loop -->
+      <div class="tc">
+        <div class="tc-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <p class="tc-q">Vision Analytical got our Shimadzu HPLC running within 24 hours. Their engineer diagnosed the pump seal issue on the phone and arrived with the exact spare. Exceptional.</p>
+        <div class="tc-auth"><div class="tc-av">RK</div><div><div class="tc-n">R. Kulkarni</div><div class="tc-r">QC Manager, Alkem Laboratories – Badlapur</div></div></div>
+      </div>
+      <div class="tc">
+        <div class="tc-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+        <p class="tc-q">The IQ/OQ/PQ documentation they provided for our Waters e2695 was completely audit-ready. Our FDA audit went smoothly. Highly professional and pharma-aware team.</p>
+        <div class="tc-auth"><div class="tc-av">PS</div><div><div class="tc-n">P. Sharma</div><div class="tc-r">Head QA, Cipla – Patalganga</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="rv" style="text-align:center;margin-bottom:56px">
+    <div class="sec-eye">Get In Touch</div>
+    <h2 class="sec-h">Let's Solve Your<br>Lab Challenge Today</h2>
+  </div>
+  <div class="contact-grid">
+    <div class="rv">
+      <a href="tel:+919876543210" class="cc">
+        <div class="cc-ico">📞</div>
+        <div><div class="cc-lbl">Phone / Call</div><div class="cc-val">+91 98765 43210</div></div>
+      </a>
+      <a href="https://wa.me/919876543210" class="cc">
+        <div class="cc-ico">💬</div>
+        <div><div class="cc-lbl">WhatsApp</div><div class="cc-val">+91 98765 43210</div></div>
+      </a>
+      <a href="mailto:info@visionanalytical.in" class="cc">
+        <div class="cc-ico">✉️</div>
+        <div><div class="cc-lbl">Email</div><div class="cc-val">info@visionanalytical.in</div></div>
+      </a>
+      <div class="cc" style="cursor:default">
+        <div class="cc-ico">📍</div>
+        <div><div class="cc-lbl">Location</div><div class="cc-val">Ambarnath, Thane, Maharashtra</div></div>
+      </div>
+      <div class="cov-box">
+        <div class="cov-h">Service Coverage</div>
+        <div class="cov-cities">
+          <span class="city-tag">Mumbai</span><span class="city-tag">Thane</span>
+          <span class="city-tag">Navi Mumbai</span><span class="city-tag">Pune</span>
+          <span class="city-tag">Nashik</span><span class="city-tag">Aurangabad</span>
+          <span class="city-tag">Raigad</span><span class="city-tag">Surat</span>
+          <span class="city-tag">Vadodara</span><span class="city-tag">Vapi</span>
+          <span class="city-tag">Ankleshwar</span><span class="city-tag">All Maharashtra</span>
+        </div>
+      </div>
+    </div>
+    <div class="rv d2">
+      <div class="cf">
+        <div class="cf-h">Send Enquiry</div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Your Name</label><input type="text" class="fi" placeholder="Dr. Sharma"></div>
+          <div class="fg"><label class="fl">Company</label><input type="text" class="fi" placeholder="Alkem Labs"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Phone</label><input type="tel" class="fi" placeholder="+91 98765 43210"></div>
+          <div class="fg"><label class="fl">Instrument</label><input type="text" class="fi" placeholder="HPLC, GC, UV..."></div>
+        </div>
+        <div class="fg"><label class="fl">Service Required</label><textarea class="fi" placeholder="Describe your requirement — breakdown, AMC, IQ/OQ/PQ, purchase..."></textarea></div>
+        <button class="btn-p" style="width:100%;padding:16px;font-size:1rem;border:none;cursor:none"
+          onclick="this.textContent='✓ Enquiry Sent! We\'ll call within 2 hours.';this.style.background='linear-gradient(135deg,#22c55e,#16a34a)'">
+          Submit Enquiry →
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fg-grid">
+    <div>
+      <span class="f-logo">Vision<em style="font-style:normal;-webkit-text-fill-color:var(--cyan)">.</em>Analytical</span>
+      <p class="f-desc">Maharashtra's most trusted analytical instrument partner — HPLC, GC, LCMS, UV/Vis sales, service and AMC since 2016.</p>
+    </div>
+    <div>
+      <div class="f-h">Services</div>
+      <ul class="f-links">
+        <li><a href="#">Refurbished HPLC</a></li>
+        <li><a href="#">GC Systems</a></li>
+        <li><a href="#">AMC / CMC</a></li>
+        <li><a href="#">IQ / OQ / PQ</a></li>
+        <li><a href="#">Calibration</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="f-h">Brands</div>
+      <ul class="f-links">
+        <li><a href="#">Shimadzu</a></li>
+        <li><a href="#">Waters</a></li>
+        <li><a href="#">Agilent</a></li>
+        <li><a href="#">Thermo Scientific</a></li>
+        <li><a href="#">PerkinElmer</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="f-h">Company</div>
+      <ul class="f-links">
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Our Team</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="f-bot">
+    <div>© 2025 Vision Analytical · Ambarnath, Thane, Maharashtra · visionanalytical.in</div>
+    <div class="socials">
+      <a href="#" class="sl">in</a>
+      <a href="#" class="sl">𝕏</a>
+      <a href="#" class="sl">ig</a>
+      <a href="#" class="sl">yt</a>
+    </div>
+  </div>
+</footer>
+
+<!-- FABs -->
+<a href="https://wa.me/919876543210" class="wa-fab" title="WhatsApp">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+</a>
+<div id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+
+<script>
+/* ── CURSOR ── */
+const cd=document.getElementById('cd'),cr=document.getElementById('cr');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cd.style.left=mx+'px';cd.style.top=my+'px'});
+(function ar(){rx+=(mx-rx)*.11;ry+=(my-ry)*.11;cr.style.left=rx+'px';cr.style.top=ry+'px';requestAnimationFrame(ar)})();
+document.querySelectorAll('a,button,.svc-card,.ins-card,.amc-card,.why-pt,.cc,.proc-step').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
+});
+
+/* ── SCROLL ── */
+const sp=document.getElementById('sp'),nav=document.getElementById('nav'),btt=document.getElementById('btt');
+window.addEventListener('scroll',()=>{
+  const p=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;
+  sp.style.width=p+'%';
+  nav.classList.toggle('sc',window.scrollY>60);
+  btt.classList.toggle('show',window.scrollY>400);
+});
+
+/* ── REVEAL ── */
+const rvObs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('on'),i*60);rvObs.unobserve(e.target)}});
+},{threshold:.1});
+document.querySelectorAll('.rv').forEach(el=>rvObs.observe(el));
+
+/* ── COUNTER ── */
+function runCtr(el){
+  const t=parseInt(el.dataset.t),dur=1800,s=performance.now();
+  (function u(now){const p=Math.min((now-s)/dur,1),ease=1-Math.pow(1-p,4);
+    el.textContent=Math.floor(ease*t);if(p<1)requestAnimationFrame(u);else el.textContent=t;
+  })(s);
+}
+const cObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.ctr,.hctr').forEach(runCtr);cObs.unobserve(e.target)}});
+},{threshold:.3});
+document.querySelectorAll('.stats-grid,#hero').forEach(el=>cObs.observe(el));
+
+/* ── BACKGROUND CANVAS ── */
+const bc=document.getElementById('bgc'),bx=bc.getContext('2d');
+let bw,bh;
+function rbc(){bw=bc.width=window.innerWidth;bh=bc.height=window.innerHeight}
+rbc();window.addEventListener('resize',rbc);
+const pts=Array.from({length:55},()=>({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.4+.3,a:Math.random()*.35+.08}));
+function drawBg(){
+  bw=bc.width=window.innerWidth;bh=bc.height=window.innerHeight;
+  bx.clearRect(0,0,bw,bh);
+  // grid
+  bx.strokeStyle='rgba(0,229,255,0.028)';bx.lineWidth=1;
+  for(let x=0;x<bw;x+=80){bx.beginPath();bx.moveTo(x,0);bx.lineTo(x,bh);bx.stroke()}
+  for(let y=0;y<bh;y+=80){bx.beginPath();bx.moveTo(0,y);bx.lineTo(bw,y);bx.stroke()}
+  // orbs
+  const g1=bx.createRadialGradient(bw*.2,bh*.35,0,bw*.2,bh*.35,380);
+  g1.addColorStop(0,'rgba(37,99,235,0.07)');g1.addColorStop(1,'transparent');
+  bx.fillStyle=g1;bx.fillRect(0,0,bw,bh);
+  const g2=bx.createRadialGradient(bw*.82,bh*.65,0,bw*.82,bh*.65,260);
+  g2.addColorStop(0,'rgba(0,229,255,0.055)');g2.addColorStop(1,'transparent');
+  bx.fillStyle=g2;bx.fillRect(0,0,bw,bh);
+  // particles + connections
+  pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=bw;if(p.x>bw)p.x=0;if(p.y<0)p.y=bh;if(p.y>bh)p.y=0;
+    bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);bx.fillStyle=`rgba(0,229,255,${p.a})`;bx.fill()});
+  bx.strokeStyle='rgba(0,229,255,0.04)';bx.lineWidth=.5;
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<130){bx.beginPath();bx.moveTo(pts[i].x,pts[i].y);bx.lineTo(pts[j].x,pts[j].y);bx.stroke()}}
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+/* ── OSCILLOSCOPE ── */
+const oc=document.getElementById('osc');
+if(oc){
+  const ox=oc.getContext('2d');let ot=0;
+  function drawOsc(){
+    oc.width=oc.offsetWidth||420;oc.height=150;
+    ox.clearRect(0,0,oc.width,oc.height);
+    // grid
+    ox.strokeStyle='rgba(0,229,255,0.06)';ox.lineWidth=1;
+    for(let x=0;x<oc.width;x+=42){ox.beginPath();ox.moveTo(x,0);ox.lineTo(x,150);ox.stroke()}
+    for(let y=0;y<150;y+=38){ox.beginPath();ox.moveTo(0,y);ox.lineTo(oc.width,y);ox.stroke()}
+    // trace
+    const tr=ox.createLinearGradient(0,0,oc.width,0);
+    tr.addColorStop(0,'rgba(0,229,255,0)');tr.addColorStop(.08,'rgba(0,229,255,.9)');
+    tr.addColorStop(.92,'rgba(0,229,255,.9)');tr.addColorStop(1,'rgba(0,229,255,0)');
+    ox.strokeStyle=tr;ox.lineWidth=2;ox.beginPath();
+    const W=oc.width;
+    for(let x=0;x<W;x++){
+      const xn=x/W,base=112,n=Math.sin(x*.7+ot)*.9*(150*.025);
+      const p1=Math.exp(-Math.pow((xn-.25)*18,2))*82;
+      const p2=Math.exp(-Math.pow((xn-.55)*22,2))*52;
+      const p3=Math.exp(-Math.pow((xn-.80)*20,2))*40;
+      const y=base-p1-p2-p3+n;
+      x===0?ox.moveTo(x,y):ox.lineTo(x,y);
+    }
+    ox.stroke();
+    // fill
+    ox.beginPath();
+    for(let x=0;x<W;x++){
+      const xn=x/W,base=112,n=Math.sin(x*.7+ot)*.9*(150*.025);
+      const p1=Math.exp(-Math.pow((xn-.25)*18,2))*82;
+      const p2=Math.exp(-Math.pow((xn-.55)*22,2))*52;
+      const p3=Math.exp(-Math.pow((xn-.80)*20,2))*40;
+      const y=base-p1-p2-p3+n;
+      x===0?ox.moveTo(x,y):ox.lineTo(x,y);
+    }
+    ox.lineTo(W,150);ox.lineTo(0,150);ox.closePath();
+    const fg=ox.createLinearGradient(0,0,0,150);
+    fg.addColorStop(0,'rgba(0,229,255,.18)');fg.addColorStop(1,'rgba(0,229,255,0)');
+    ox.fillStyle=fg;ox.fill();
+    ot+=.014;requestAnimationFrame(drawOsc);
+  }
+  drawOsc();
+}
+
+/* ── 3D CARD TILT ── */
+document.querySelectorAll('.svc-card,.ins-card,.amc-card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    c.style.transform=`translateY(-8px) scale(1.02) rotateX(${-y*9}deg) rotateY(${x*9}deg)`;
+  });
+  c.addEventListener('mouseleave',()=>c.style.transform='');
+});
+
+/* ── PARALLAX HUD ── */
+document.addEventListener('mousemove',e=>{
+  const xf=(e.clientX/window.innerWidth-.5)*10,yf=(e.clientY/window.innerHeight-.5)*7;
+  document.querySelectorAll('.hud').forEach((h,i)=>{
+    const d=i%2===0?1:-1;h.style.transform+=` translate(${xf*d*.3}px,${yf*d*.3}px)`;
+  });
+});
+</script>
+</body>
+</html>

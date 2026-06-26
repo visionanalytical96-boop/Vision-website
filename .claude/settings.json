@@ -36,9 +36,16 @@
 				"source": "directory",
 				"path": "./.claude/plugins/n8n"
 			}
+		},
+		"ui-ux-pro-max-skill": {
+			"source": {
+				"source": "github",
+				"repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+			}
 		}
 	},
 	"enabledPlugins": {
-		"n8n@n8n": true
+		"n8n@n8n": true,
+		"ui-ux-pro-max-skill@ui-ux-pro-max-skill": true
 	}
 }

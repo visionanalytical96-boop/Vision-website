@@ -192,7 +192,7 @@ If you are using Prometheus metrics from these categories and are using a non-em
 
 ### What changed?
 
-Calling `$(...).last()` (or `$(...).first()` or `$(...).all()` respectively) without arguments is returning the the last item (or first or all items) of the output that connects the two nodes. Before it was returning the item/items of the first output of that node.
+Calling `$(...).last()` (or `$(...).first()` or `$(...).all()` respectively) without arguments is returning the last item (or first or all items) of the output that connects the two nodes. Before it was returning the item/items of the first output of that node.
 
 ### When is action necessary?
 
@@ -269,7 +269,7 @@ If you are using the flag `N8N_CACHE_ENABLED`, remove it from your settings.
 
 In regards to credentials, if you use expression in credentials, you might want to revisit them. Previously, n8n would stick to the first item only, but now it will try to match the proper paired item.
 
-If you are using the Monday.com node and refering to `column_values` property, check in table below if you are using any of the affected properties of its entries.
+If you are using the Monday.com node and referring to `column_values` property, check in table below if you are using any of the affected properties of its entries.
 
 | Resource   | Operation           | Previous        | New                 |
 | ---------- | ------------------- | --------------- | ------------------- |

@@ -4,6 +4,7 @@
 
 - Marketing homepage with multi-modal search (hotels/flights/buses/cabs/packages tabs)
 - Hotel search results (filters, sorting) + hotel detail page
+- Flight, bus, cab results pages (filter/sort over demo inventory) + holiday packages and activities listing pages + a train-search readiness placeholder
 - Multi-step checkout + payment status page
 - Hotel voucher, flight e-ticket, and GST payment receipt templates (print/PDF-ready HTML)
 - Login / register pages (email+password UI, OTP tab)
@@ -15,8 +16,8 @@
 ## Not yet built (next steps, roughly in priority order)
 
 1. **Auth wiring** — real password hashing + session/JWT issuance, OTP send/verify via SMS provider adapter, Google/Apple/Facebook OAuth.
-2. **Flights/buses/cabs/trains results pages** — search forms exist on the homepage; results + detail + passenger-details pages are not built yet.
-3. **Packages & activities listing/detail pages** — cards exist on homepage; dedicated `/packages/[slug]` and `/activities` pages are not built.
+2. **Flight/bus/cab passenger & seat-selection detail pages** — results pages exist and link into checkout with a flat amount; dedicated seat-map/passenger-details steps (per the original brief) aren't built, so checkout skips straight to guest details.
+3. **Package/activity detail pages** — `/packages` and `/activities` are listing-only; `/packages/[slug]` detail pages aren't built.
 4. **Real payment integration** — wire `PaymentProvider` interface to a real Razorpay/Cashfree/PayU/Stripe sandbox; implement webhook signature verification.
 5. **PDF generation** — server-side PDF rendering (e.g. `@react-pdf/renderer` or Puppeteer) for vouchers/receipts; QR code generation for booking verification.
 6. **Persistence** — connect Prisma schema to a real PostgreSQL instance, replace mock-data reads with DB queries + Redis caching for search.

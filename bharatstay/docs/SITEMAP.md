@@ -32,12 +32,12 @@ Legend: ✅ built in this scaffold · 🚧 planned (see `ROADMAP.md`)
 - SEO landing pages (`/hotels/goa`, `/resorts/near-mumbai`, `/farm-stays/near-pune`, ...) 🚧
 
 ## Flights / Buses / Trains / Cabs / Packages / Activities
-- `/flights` — search + results 🚧 (search UI on homepage ✅, results page 🚧)
-- `/buses` — search + results 🚧 (search UI on homepage ✅, results page 🚧)
-- `/trains` — search + redirect-to-partner readiness 🚧
-- `/cabs` — search + results 🚧 (search UI on homepage ✅, results page 🚧)
-- `/packages` — holiday packages listing 🚧 (cards on homepage ✅)
-- `/activities` — local activities & sightseeing 🚧
+- `/flights` — search + results ✅ (filter by route, direct-only, sort)
+- `/buses` — search + results ✅ (filter by route, AC-only, sort)
+- `/trains` — IRCTC-readiness placeholder page ✅ (no live search — see ROADMAP)
+- `/cabs` — search + results ✅ (filter by vehicle category)
+- `/packages` — holiday packages listing ✅ (filterable by destination via query param)
+- `/activities` — local activities & sightseeing ✅
 
 ## Booking & payments
 - `/checkout` — multi-step checkout (review → guest details → add-ons → coupon/GST → payment → confirmation) ✅

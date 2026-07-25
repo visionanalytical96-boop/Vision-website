@@ -7,3 +7,4 @@ export * from './flights';
 export * from './buses';
 export * from './cabs';
 export * from './bookings';
+export * from './activities';

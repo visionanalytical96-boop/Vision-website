@@ -1,0 +1,113 @@
+{
+	"name": "Test Proxmox",
+	"nodes": [
+		{
+			"parameters": {},
+			"name": "Execute Workflow",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [620, 440]
+		},
+		{
+			"parameters": {
+				"resource": "node",
+				"operation": "getAll"
+			},
+			"name": "Get Many Nodes",
+			"type": "n8n-nodes-base.proxmox",
+			"credentials": {
+				"proxmoxApi": {
+					"id": "1"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"resource": "virtualMachine",
+				"operation": "getAll",
+				"node": "pve"
+			},
+			"name": "Get Many VMs",
+			"type": "n8n-nodes-base.proxmox",
+			"credentials": {
+				"proxmoxApi": {
+					"id": "1"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"resource": "virtualMachine",
+				"operation": "start",
+				"node": "pve",
+				"vmid": 100
+			},
+			"name": "Start VM",
+			"type": "n8n-nodes-base.proxmox",
+			"credentials": {
+				"proxmoxApi": {
+					"id": "1"
+				}
+			}
+		}
+	],
+	"pinData": {
+		"Get Many Nodes": [
+			{
+				"json": {
+					"node": "pve",
+					"status": "online",
+					"cpu": 0.05,
+					"maxmem": 33654325248
+				}
+			},
+			{
+				"json": {
+					"node": "pve2",
+					"status": "online",
+					"cpu": 0.02,
+					"maxmem": 16777216000
+				}
+			}
+		],
+		"Get Many VMs": [
+			{
+				"json": {
+					"vmid": 100,
+					"name": "test-vm",
+					"status": "running"
+				}
+			}
+		],
+		"Start VM": [
+			{
+				"json": {
+					"taskId": "UPID:pve:00001234:00ABCDEF:00000000:qmstart:100:root@pam!n8n:"
+				}
+			}
+		]
+	},
+	"connections": {
+		"Execute Workflow": {
+			"main": [
+				[
+					{
+						"node": "Get Many Nodes",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "Get Many VMs",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "Start VM",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	}
+}

@@ -37,8 +37,10 @@ function buildHotel(seed: HotelSeed, index: number): Hotel {
     customerRating: Number((3.7 + ((index * 3) % 13) / 10).toFixed(1)),
     reviewCount: 40 + ((index * 37) % 900),
     images: [seed.image, seed.image, seed.image],
-    amenities: [seed.amenities[0], seed.amenities[1], seed.amenities[2], AMENITY_POOL[index % AMENITY_POOL.length]].filter(
-      (a): a is string => Boolean(a),
+    amenities: Array.from(
+      new Set([seed.amenities[0], seed.amenities[1], seed.amenities[2], AMENITY_POOL[index % AMENITY_POOL.length]].filter(
+        (a): a is string => Boolean(a),
+      )),
     ),
     mealPlan: seed.mealPlan,
     roomType: seed.roomType,

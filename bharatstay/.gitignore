@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# The root n8n repo's .gitignore excludes package-lock.json repo-wide (n8n uses pnpm),
+# but this app is a standalone npm project and needs its lockfile for reproducible installs.
+!/package-lock.json

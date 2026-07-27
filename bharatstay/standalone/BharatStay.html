@@ -283,6 +283,10 @@ const HSEEDS = [
  ['Munnar Hilltop Homestay','Homestay','Munnar',3,3400,'forest','Family Room','All Meals Included'],
  ['Jaipur Old City Homestay','Homestay','Jaipur',3,2800,'desert','Traditional Room','Breakfast Included'],
  ['Darjeeling Tea Garden Homestay','Homestay','Darjeeling',3,2900,'forest','Garden View Room','All Meals Included'],
+ ['Ulhas Riverside Villa','Villa','Karjat',4,6500,'forest','Private Pool Villa','Breakfast Included'],
+ ['Kondeshwar Greens Farm Stay','Farm Stay','Badlapur',3,3600,'farm','Farmhouse Room','All Meals Included'],
+ ['Matheran View Homestay','Homestay','Neral',3,2900,'mountain','Hill View Room','Breakfast Included'],
+ ['Bhivpuri Waterfall Camp','Farm Stay','Bhivpuri',3,1800,'forest','Riverside Tent','All Meals Included'],
 ];
 const HOTELS = HSEEDS.map((s,i)=>{
   const disc = 10 + (i*7)%35;
@@ -445,6 +449,38 @@ const SCENES = {
   desert: SUN+`<path d="M-6 100 Q50 78 110 98 T206 92 V120 H-6 Z" fill="${INK2}"/>
     <path d="M-6 112 Q60 96 130 110 T206 106 V120 H-6 Z" fill="${INK}"/>
     <path d="M148 92 l5 -10 l4 6 l3 -5 l5 9 v6 h-17 Z" fill="${INK}"/>`,
+  waterfall: SUN+`<path d="M-4 120 V38 L46 24 L70 40 V120 Z" fill="${INK}"/>
+    <path d="M204 120 V34 L152 22 L128 38 V120 Z" fill="${INK}"/>
+    <path d="M70 40 h58 l8 60 h-74 Z" fill="rgba(235,246,255,.9)"/>
+    <path d="M84 42 v56 M100 42 v58 M116 42 v56" stroke="rgba(170,205,240,.8)" stroke-width="3"/>
+    <ellipse cx="100" cy="106" rx="76" ry="13" fill="rgba(205,232,255,.85)"/>
+    <g fill="rgba(255,255,255,.9)"><circle cx="62" cy="103" r="3.5"/><circle cx="138" cy="105" r="3"/><circle cx="100" cy="110" r="4"/><circle cx="80" cy="108" r="2.5"/><circle cx="122" cy="109" r="2.5"/></g>
+    <circle cx="34" cy="34" r="10" fill="rgba(31,109,63,.85)"/><circle cx="52" cy="28" r="8" fill="rgba(31,109,63,.85)"/><circle cx="162" cy="30" r="10" fill="rgba(31,109,63,.85)"/><circle cx="146" cy="26" r="7" fill="rgba(31,109,63,.85)"/>`,
+  dam: SUN+`<rect y="52" width="200" height="26" fill="rgba(120,180,225,.55)"/>
+    <path d="M0 52 H200" stroke="rgba(255,255,255,.5)" stroke-width="1.4"/>
+    <path d="M0 78 h200 v10 h-200 Z" fill="${INK}"/>
+    <g fill="${INK}"><path d="M14 88 q9 22 22 32 h-30 V88 Z"/><path d="M62 88 q9 22 22 32 h-30 V88 Z"/><path d="M110 88 q9 22 22 32 h-30 V88 Z"/><path d="M158 88 q9 22 22 32 h-30 V88 Z"/></g>
+    <path d="M40 92 v24 M88 92 v24 M136 92 v24" stroke="rgba(205,232,255,.7)" stroke-width="3.5"/>
+    <path d="M-6 52 L28 30 L54 50 M206 52 L170 32 L146 50" stroke="none" fill="${INK2}"/>`,
+  caves: SUN+`<path d="M-6 120 V54 Q100 -8 206 54 V120 Z" fill="${INK2}"/>
+    <g fill="rgba(6,10,24,.95)"><path d="M42 120 V88 q12 -16 24 0 V120 Z"/><path d="M88 120 V80 q14 -20 28 0 V120 Z"/><path d="M142 120 V88 q12 -16 24 0 V120 Z"/></g>
+    <circle cx="30" cy="48" r="9" fill="rgba(31,109,63,.7)"/><circle cx="176" cy="46" r="9" fill="rgba(31,109,63,.7)"/>
+    <path d="M116 60 v42" stroke="rgba(205,232,255,.75)" stroke-width="3"/>`,
+  rafting: SUN+`<path d="M-6 120 V70 Q60 84 100 72 T206 76 V120 Z" fill="rgba(38,90,150,.75)"/>
+    <path d="M6 84 q14 -8 28 0 M58 92 q14 -8 28 0 M130 86 q14 -8 28 0 M172 96 q14 -8 28 0" stroke="rgba(255,255,255,.55)" stroke-width="2.5" fill="none"/>
+    <path d="M72 76 q28 -12 56 0 l-7 12 h-42 Z" fill="#f47e1e"/>
+    <circle cx="90" cy="66" r="5" fill="${INK}"/><circle cx="110" cy="64" r="5" fill="${INK}"/>
+    <path d="M80 60 l-12 16 M120 58 l14 16" stroke="${INK}" stroke-width="3"/>`,
+  hillfort: SUN+`<path d="M-6 120 L60 74 L120 110 L170 84 L206 104 V120 Z" fill="${INK2}"/>
+    <path d="M84 120 V56 l10 -22 h14 l10 22 V120 Z" fill="${INK}"/>
+    <path d="M84 56 h34 M90 46 h22" stroke="rgba(255,224,178,.4)" stroke-width="1.6"/>
+    <path d="M98 34 v-12 l12 4 -12 4" fill="none" stroke="${INK}" stroke-width="2.5"/>
+    <circle cx="36" cy="86" r="8" fill="rgba(31,109,63,.7)"/><circle cx="176" cy="94" r="7" fill="rgba(31,109,63,.7)"/>`,
+  toytrain: SUN+`<path d="M-6 120 V72 Q70 30 206 66 V120 Z" fill="${INK2}"/>
+    <path d="M20 92 Q100 68 190 84" stroke="${INK}" stroke-width="3.5" fill="none"/>
+    <g><rect x="52" y="66" width="26" height="17" rx="4" fill="${INK}"/><rect x="84" y="64" width="24" height="16" rx="4" fill="${INK}"/><rect x="114" y="62" width="24" height="16" rx="4" fill="${INK}"/>
+    <g fill="rgba(255,224,178,.75)"><rect x="57" y="70" width="5" height="5"/><rect x="67" y="70" width="5" height="5"/><rect x="89" y="68" width="5" height="5"/><rect x="99" y="68" width="5" height="5"/><rect x="119" y="66" width="5" height="5"/><rect x="129" y="66" width="5" height="5"/></g></g>
+    <circle cx="30" cy="60" r="9" fill="rgba(31,109,63,.75)"/><circle cx="170" cy="52" r="9" fill="rgba(31,109,63,.75)"/>`,
 };
 const DEST_SCENE = {Goa:'beach',Manali:'mountain',Shimla:'mountain',Jaipur:'fort',Udaipur:'lake',Kerala:'backwater',Mumbai:'city',Delhi:'fort',Agra:'taj',Kashmir:'lake',Ladakh:'mountain',Andaman:'beach',Rishikesh:'backwater',Lonavala:'mountain',Mahabaleshwar:'mountain'};
 const sceneBlock = (tone,kind,label,style) => `<div class="ph t-${tone}" style="${style||''}">
@@ -580,7 +616,7 @@ function homeView(){
     <p class="sub">Hotels, resorts, villas &amp; homestays · flights · buses · trains · cabs · holiday packages — book it all with BharatStay.</p>
     ${searchTabs()}
     <div style="position:relative;z-index:1;display:flex;gap:14px;flex-wrap:wrap;margin-top:22px">
-      ${[['✈️','Flights','#/flights'],['🚌','Buses','#/buses'],['🚕','Cabs & Taxi','#/cabs'],['🚆','Trains','#/trains'],['🧳','Packages','#/packages'],['🎡','Activities','#/activities']].map(s=>
+      ${[['🌊','Badlapur→Karjat Weekend','#/weekend'],['✈️','Flights','#/flights'],['🚌','Buses','#/buses'],['🚕','Cabs & Taxi','#/cabs'],['🚆','Trains','#/trains'],['🧳','Packages','#/packages']].map(s=>
       `<a href="${s[2]}" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:99px;padding:9px 18px;font-size:13.5px;font-weight:600;color:#fff">${s[0]} ${s[1]}</a>`).join('')}
     </div>
   </div></section>
@@ -604,7 +640,20 @@ function homeView(){
     </div>
   </div></section>
 
-  <section class="section" style="padding-top:0"><div class="container">
+  <section class="section" style="padding-bottom:0"><div class="container">
+    <a class="card" href="#/weekend" style="display:grid;grid-template-columns:340px 1fr;overflow:hidden;align-items:stretch" id="wkbanner">
+      ${sceneBlock('forest','waterfall','','min-height:190px')}
+      <div style="padding:26px 30px;display:flex;flex-direction:column;justify-content:center">
+        <div class="micro">Maharashtra Weekend Special</div>
+        <div style="font-size:26px;font-weight:800;margin-top:6px">Badlapur → Karjat, ek perfect weekend</div>
+        <p style="font-size:14px;color:var(--r500);margin-top:6px">Kondeshwar &amp; Bhivpuri waterfalls · Barvi Dam · Kondana Caves · Kothaligad trek · Ulhas river rafting · riverside villas — plans from <b style="color:var(--s600)">₹799</b></p>
+        <span class="btn btn-p btn-sm" style="align-self:flex-start;margin-top:14px">Plan My Weekend →</span>
+      </div>
+    </a>
+    <style>@media(max-width:760px){#wkbanner{grid-template-columns:1fr!important}}</style>
+  </div></section>
+
+  <section class="section" style="padding-bottom:0"><div class="container">
     <div class="eyebrow">Flights · Buses · Cabs</div><h2 class="sec-title" style="margin-bottom:24px">Book every leg of the journey</h2>
     <div class="grid g3">
       <div class="card" style="padding:22px;display:flex;flex-direction:column">
@@ -1052,6 +1101,81 @@ function activitiesView(){
         </div>
       </div></div>`).join('')}</div></div>`);
 }
+/* ============ MAHARASHTRA WEEKEND · BADLAPUR → KARJAT ============ */
+const WK_SPOTS = [
+ {name:'Kondeshwar Waterfall',place:'Badlapur',scene:'waterfall',tone:'forest',dist:'~6 km',tag:'Monsoon must-visit',desc:'Forest waterfall beside the ancient Kondeshwar Shiva temple — best July to September.'},
+ {name:'Barvi Dam',place:'Badlapur',scene:'dam',tone:'lake',dist:'~12 km',tag:'Picnic spot',desc:'Overflowing spillway views in monsoon, calm backwaters and picnic lawns.'},
+ {name:'Chanderi Fort',place:'Badlapur–Vangani',scene:'hillfort',tone:'mountain',dist:'~10 km',tag:'Trek',desc:'Dramatic pinnacle trek between Badlapur and Vangani with valley views.'},
+ {name:'Bhivpuri Waterfalls',place:'Bhivpuri Road',scene:'waterfall',tone:'forest',dist:'~15 km',tag:'Waterfall rappelling',desc:'Famous rappelling waterfalls right next to Bhivpuri Road station.'},
+ {name:'Ulhas River Rafting',place:'Karjat',scene:'rafting',tone:'ocean',dist:'~25 km',tag:'Adventure',desc:'White-water rafting on the Ulhas river — monsoon-season batches from Karjat.'},
+ {name:'Kondana Caves',place:'Karjat',scene:'caves',tone:'forest',dist:'~33 km',tag:'Heritage trek',desc:'1st-century BC Buddhist rock-cut caves with a waterfall at the entrance in monsoon.'},
+ {name:'Kothaligad (Peth Fort)',place:'Karjat',scene:'hillfort',tone:'mountain',dist:'~45 km',tag:'Night trek',desc:'Iconic funnel-shaped pinnacle — a favourite sunrise and night trek.'},
+ {name:'Matheran (via Neral)',place:'Neral',scene:'toytrain',tone:'mountain',dist:'~29 km',tag:'Hill station',desc:'Asia\'s only automobile-free hill station — toy train from Neral junction.'},
+];
+const WK_LINE = ['Badlapur','Vangani','Shelu','Neral','Bhivpuri Rd','Karjat'];
+const WK_PLANS = [
+ {title:'1-Day Monsoon Waterfall Dash',price:799,per:'per person',
+  steps:[['7:00 AM','Badlapur station se shuru — cab/bike to Kondeshwar'],['8:00 AM','Kondeshwar Waterfall + temple darshan'],['12:30 PM','Local Maharashtrian thali lunch'],['2:00 PM','Barvi Dam spillway & backwaters'],['5:30 PM','Chanderi viewpoint sunset'],['7:30 PM','Wapas Badlapur']]},
+ {title:'2-Day Karjat Villa Weekend',price:4999,per:'per person · stay included',
+  steps:[['Sat 9 AM','Badlapur → Karjat (local train, 25 min)'],['11 AM','Ulhas Riverside Villa check-in + pool'],['4 PM','Riverside walk, evening barbecue'],['Sun 7 AM','Kondana Caves trek'],['11 AM','Ulhas river rafting batch'],['6 PM','Wapas Badlapur, yaadein saath']]},
+];
+function weekendView(){
+  const stays = HOTELS.filter(h=>['Badlapur','Karjat','Neral','Bhivpuri'].includes(h.city));
+  return page('#/weekend', `<div class="container" style="padding:30px 20px 40px">
+    <div class="micro">Maharashtra Weekend Special</div>
+    <h1 style="font-family:inherit;font-size:34px;font-weight:800;margin-top:6px">Badlapur <span style="color:var(--s500)">→</span> Karjat</h1>
+    <p style="font-size:14.5px;color:var(--r500);margin-top:8px;max-width:640px">Ghar ke paas ka perfect weekend — waterfalls, dam, forts, caves, rafting aur riverside villas. Sab kuch Central line par, Badlapur se ek ghante ke andar.</p>
+
+    <div class="card" style="margin-top:22px;padding:20px 22px;overflow-x:auto">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--r400);margin-bottom:14px">🚂 Central Line · Local Train Route</div>
+      <div style="display:flex;align-items:center;min-width:560px">
+        ${WK_LINE.map((s,i)=>`
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1">
+            <span style="width:14px;height:14px;border-radius:50%;background:${i===0||i===WK_LINE.length-1?'var(--s500)':'#fff'};border:3px solid var(--r700)"></span>
+            <span style="font-size:12px;font-weight:700;color:var(--r700);white-space:nowrap">${s}</span>
+          </div>${i<WK_LINE.length-1?'<div style="flex:1;height:3px;background:var(--r700);margin:0 4px;margin-bottom:22px"></div>':''}`).join('')}
+      </div>
+      <div style="font-size:12px;color:var(--r400);margin-top:10px">Local train ticket ₹10–15 · har 15–20 min mein train · weekend crowd se bachne ke liye subah 7 baje se pehle niklo</div>
+    </div>
+
+    <h2 style="font-size:22px;font-weight:800;margin:34px 0 16px">Spots &amp; sightseeing <span style="font-size:13px;font-weight:600;color:var(--r400)">(distance Badlapur se)</span></h2>
+    <div class="grid g4">
+      ${WK_SPOTS.map(s=>`<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
+        ${sceneBlock(s.tone,s.scene,'','height:118px')}
+        <div style="padding:13px;flex:1;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;gap:6px;align-items:start">
+            <b style="font-size:14.5px">${s.name}</b>
+            <span style="font-size:11.5px;color:var(--s600);font-weight:700;white-space:nowrap">${s.dist}</span>
+          </div>
+          <span class="badge bg-b" style="align-self:flex-start;margin-top:6px">${s.tag}</span>
+          <p style="font-size:12.5px;color:var(--r500);margin-top:7px;flex:1">${s.desc}</p>
+          <div style="font-size:11.5px;color:var(--r400);margin-top:6px">📍 ${s.place}</div>
+        </div></div>`).join('')}
+    </div>
+
+    <h2 style="font-size:22px;font-weight:800;margin:36px 0 16px">Ready-made weekend plans</h2>
+    <div class="grid g2">
+      ${WK_PLANS.map(p=>`<div class="card" style="padding:22px;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+          <b style="font-size:17px">${p.title}</b>
+          <div style="text-align:right"><div style="font-size:19px;font-weight:800;color:var(--s600)">${INR(p.price)}</div><div style="font-size:11px;color:var(--r400)">${p.per}</div></div>
+        </div>
+        <div style="margin-top:14px;flex:1">
+          ${p.steps.map(st=>`<div style="display:flex;gap:12px;padding:7px 0;border-bottom:1px solid var(--muted)">
+            <span style="font-family:monospace;font-size:12px;color:var(--s600);font-weight:700;width:64px;flex-shrink:0">${st[0]}</span>
+            <span style="font-size:13.5px;color:var(--r600)">${st[1]}</span></div>`).join('')}
+        </div>
+        <button class="btn btn-p" style="margin-top:16px" onclick="startCheckout({type:'Package',title:'${esc(p.title)}',sub:'Badlapur → Karjat weekend',amount:${p.price},tone:'forest',emoji:'🌊'})">Book This Plan</button>
+      </div>`).join('')}
+    </div>
+
+    <h2 style="font-size:22px;font-weight:800;margin:36px 0 16px">Stays in Badlapur–Karjat belt</h2>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      ${stays.map(hotelCard).join('')}
+    </div>
+  </div>`);
+}
+
 function trainsView(){
   return page('#/trains', `<div class="container" style="padding:60px 20px">
     <div style="max-width:540px;margin:0 auto;border:1.5px dashed var(--r200);background:var(--r50);border-radius:18px;padding:36px;text-align:center">
@@ -1510,6 +1634,7 @@ function render(){
     case 'buses': html=busesView(); break;
     case 'cabs': html=cabsView(); break;
     case 'trains': html=trainsView(); break;
+    case 'weekend': html=weekendView(); break;
     case 'packages': html=packagesView(); break;
     case 'activities': html=activitiesView(); break;
     case 'checkout': html=checkoutView(); break;

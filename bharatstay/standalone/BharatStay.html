@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BharatStay — India's Complete Travel Booking Platform</title>
+<meta name="description" content="Book hotels, resorts, villas, homestays, farm-stays, flights, buses, cabs and holiday packages across India with BharatStay. Explore India. Stay Your Way.">
+<style>
+/* ============ BharatStay single-file app ============ */
+:root{
+  --r900:#0b132e;--r800:#101c44;--r700:#16265a;--r600:#1c2f6b;--r500:#2c48ac;--r400:#4f6fca;
+  --r300:#7f9cdd;--r200:#aec1eb;--r100:#d6e0f5;--r50:#eef2fb;
+  --s700:#b34c0a;--s600:#d9640f;--s500:#f47e1e;--s400:#ff9d29;--s300:#ffb454;--s100:#ffe8c4;--s50:#fff6ea;
+  --g700:#146842;--g600:#188050;--g500:#1f9d63;--g100:#d3f5e0;--g50:#eefbf3;
+  --muted:#f5f6fa;--border:#e6e8f0;--red:#dc2626;--red50:#fef2f2;
+  --shadow:0 2px 10px rgba(11,19,46,.06);--shadow-lg:0 10px 30px rgba(11,19,46,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;color:var(--r900);background:#fff;line-height:1.5}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:inherit}
+input,select,textarea{font-family:inherit;font-size:14px}
+img{max-width:100%}
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+h1,h2,h3{line-height:1.25}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:11px 20px;font-size:14px;font-weight:600;transition:.15s;white-space:nowrap}
+.btn-p{background:var(--s500);color:#fff;box-shadow:var(--shadow)}
+.btn-p:hover{background:var(--s600)}
+.btn-s{background:#fff;color:var(--r700);border:1px solid var(--r200)}
+.btn-s:hover{background:var(--r50)}
+.btn-sm{padding:7px 13px;font-size:12px;border-radius:8px}
+.btn-g{background:var(--g500);color:#fff}.btn-g:hover{background:var(--g600)}
+.btn-r{background:var(--red);color:#fff}
+.btn-blue{background:var(--r700);color:#fff}.btn-blue:hover{background:var(--r800)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+
+/* forms */
+.field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--r500);margin-bottom:5px}
+.field input,.field select{width:100%;border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:var(--r900);background:#fff;outline:none}
+.field input:focus,.field select:focus{border-color:var(--r400);box-shadow:0 0 0 3px var(--r100)}
+
+/* cards & badges */
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);transition:.15s}
+.card:hover{box-shadow:var(--shadow-lg)}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:4px 10px;font-size:11px;font-weight:700}
+.bg-g{background:var(--g50);color:var(--g700)}.bg-b{background:var(--r50);color:var(--r700)}
+.bg-o{background:var(--s50);color:var(--s700)}.bg-r{background:var(--red50);color:var(--red)}
+.eyebrow{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--s600)}
+.sec-title{font-size:26px;font-weight:800;margin-top:4px}
+.pill{border:1px solid var(--border);border-radius:99px;padding:7px 16px;font-size:13px;font-weight:600;color:var(--r600);transition:.15s}
+.pill.on{background:var(--r700);border-color:var(--r700);color:#fff}
+
+/* header */
+.topbar{background:var(--r800);color:#fff;font-size:12px}
+.topbar .container{display:flex;justify-content:space-between;align-items:center;height:34px}
+.topbar a{margin-right:16px;opacity:.9}.topbar a:hover{color:var(--s300)}
+.topbar select{background:transparent;color:#fff;border:none;font-size:12px;outline:none}
+.topbar select option{color:var(--r900)}
+header.main{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+header.main .container{display:flex;align-items:center;justify-content:space-between;height:62px;gap:12px}
+.logo{display:flex;align-items:center;gap:9px}
+.logo .mark{width:36px;height:36px;border-radius:10px;background:var(--r700);display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo .name{font-size:19px;font-weight:800;color:var(--r800)}
+.logo .name span{color:var(--s500)}
+.logo small{display:block;font-size:8.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--r400)}
+nav.links{display:flex;gap:2px;flex-wrap:wrap}
+nav.links a{padding:8px 11px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--r700)}
+nav.links a:hover,nav.links a.on{background:var(--r50)}
+nav.links a.on{font-weight:700}
+.hdr-actions{display:flex;gap:8px;align-items:center}
+@media(max-width:1000px){nav.links{display:none}.hdr-actions .btn-s{display:none}}
+
+/* hero */
+.hero{background:linear-gradient(135deg,var(--r900),var(--r800) 55%,var(--r700));color:#fff;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:var(--s500);opacity:.16;filter:blur(90px);top:-140px;left:-120px}
+.hero::after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:var(--g500);opacity:.14;filter:blur(90px);bottom:-160px;right:-60px}
+.hero .container{position:relative;padding:56px 20px 64px;z-index:1}
+.hero h1{font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-.5px;margin-top:6px}
+.hero p.sub{color:var(--r100);margin-top:10px;max-width:560px}
+.searchbox{background:#fff;color:var(--r900);border-radius:18px;box-shadow:var(--shadow-lg);margin-top:30px;overflow:hidden}
+.tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border)}
+.tabs button{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:14px 20px;font-size:14px;font-weight:600;color:var(--r300);border-bottom:2.5px solid transparent}
+.tabs button.on{color:var(--r900);border-bottom-color:var(--s500)}
+.sform{padding:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sform .span2{grid-column:span 2}.sform .span4{grid-column:span 4}
+@media(max-width:820px){.sform{grid-template-columns:repeat(2,1fr)}.sform .span2,.sform .span4{grid-column:span 2}}
+@media(max-width:480px){.sform{grid-template-columns:1fr}.sform .span2,.sform .span4{grid-column:span 1}}
+
+/* section layouts */
+.section{padding:52px 0}
+.section.alt{background:var(--muted)}
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}
+@media(max-width:1000px){.g4,.g5{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.g3,.g4,.g5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.g2,.g3,.g4,.g5{grid-template-columns:1fr}}
+
+/* placeholder imgs */
+.ph{position:relative;display:flex;align-items:flex-end;overflow:hidden;border-radius:0}
+.ph .emoji{position:absolute;top:10px;right:12px;font-size:30px;opacity:.85}
+.ph .lbl{width:100%;padding:8px 12px;font-size:13px;font-weight:600;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.62))}
+.t-ocean{background:linear-gradient(135deg,#0ea5e9,#1d4ed8)}
+.t-sunset{background:linear-gradient(135deg,#fb923c,#db2777)}
+.t-forest{background:linear-gradient(135deg,#10b981,#0f766e)}
+.t-mountain{background:linear-gradient(135deg,#64748b,#4338ca)}
+.t-royal{background:linear-gradient(135deg,#1c2f6b,#0b132e)}
+.t-saffron{background:linear-gradient(135deg,#ff9d29,#b34c0a)}
+.t-heritage{background:linear-gradient(135deg,#f59e0b,#be123c)}
+.t-desert{background:linear-gradient(135deg,#eab308,#c2410c)}
+.t-snow{background:linear-gradient(135deg,#22d3ee,#1e40af)}
+.t-gold{background:linear-gradient(135deg,#facc15,#b45309)}
+.t-lake{background:linear-gradient(135deg,#2dd4bf,#155e75)}
+.t-farm{background:linear-gradient(135deg,#84cc16,#166534)}
+
+/* listing page */
+.listing{display:grid;grid-template-columns:270px 1fr;gap:24px;align-items:start}
+@media(max-width:900px){.listing{grid-template-columns:1fr}}
+.fbox{padding:18px;position:sticky;top:80px}
+.fbox h4{font-size:13px;font-weight:800;margin-bottom:10px}
+.fgroup{margin-bottom:18px}
+.fgroup .field label{margin-bottom:7px}
+.check{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--r700);padding:3px 0;cursor:pointer}
+.check input{width:15px;height:15px;accent-color:var(--r700)}
+.hrow{display:flex;gap:0;overflow:hidden}
+.hrow .ph{width:230px;min-height:185px;flex-shrink:0}
+@media(max-width:640px){.hrow{flex-direction:column}.hrow .ph{width:100%;height:160px}}
+.hbody{flex:1;padding:16px;display:flex;flex-direction:column}
+.rating-chip{background:var(--r700);color:#fff;border-radius:8px;padding:4px 9px;font-size:13px;font-weight:700}
+.amen{background:var(--r50);color:var(--r600);border-radius:99px;padding:3px 9px;font-size:11px}
+.strike{color:var(--r300);text-decoration:line-through;font-size:12px}
+.price-lg{font-size:21px;font-weight:800}
+.sortbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;justify-content:space-between;margin-bottom:18px}
+
+/* detail */
+.gallery{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:150px 150px;gap:8px}
+.gallery .ph{border-radius:14px}
+.gallery .ph:first-child{grid-row:span 2}
+@media(max-width:700px){.gallery{grid-template-columns:1fr;grid-template-rows:220px}.gallery .ph:not(:first-child){display:none}}
+.detail{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start}
+@media(max-width:900px){.detail{grid-template-columns:1fr}}
+.bookbox{position:sticky;top:80px;padding:20px}
+.room-opt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;background:#fff}
+.room-opt.on{border-color:var(--r700);background:var(--r50)}
+.prow{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;color:var(--r600)}
+.prow.total{border-top:1px solid var(--border);margin-top:6px;padding-top:9px;font-weight:800;font-size:16px;color:var(--r900)}
+details.faq{border-bottom:1px solid var(--border);padding:13px 4px}
+details.faq summary{cursor:pointer;font-weight:600;font-size:14px}
+details.faq p{margin-top:8px;font-size:13.5px;color:var(--r500)}
+
+/* checkout */
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.step{display:flex;align-items:center;gap:7px;border-radius:99px;padding:7px 14px;font-size:12.5px;font-weight:600;background:var(--muted);color:var(--r300)}
+.step.on{background:var(--r700);color:#fff}
+.step.done{background:var(--g50);color:var(--g700)}
+.pay-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:640px){.pay-grid{grid-template-columns:repeat(2,1fr)}}
+.pay-opt{display:flex;flex-direction:column;align-items:center;gap:5px;border:1.5px solid var(--border);border-radius:12px;padding:14px 8px;font-size:12px;font-weight:600;color:var(--r600)}
+.pay-opt.on{border-color:var(--r700);background:var(--r50);color:var(--r900)}
+
+/* tables */
+table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--r400);padding:11px 12px;border-bottom:1px solid var(--border)}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl-wrap{overflow-x:auto}
+
+/* dashboard */
+.dash{display:grid;grid-template-columns:230px 1fr;gap:22px;align-items:start}
+@media(max-width:860px){.dash{grid-template-columns:1fr}}
+.dnav{padding:10px}
+.dnav a{display:flex;gap:10px;align-items:center;padding:11px 13px;border-radius:10px;font-size:14px;font-weight:500;color:var(--r600)}
+.dnav a.on{background:var(--r700);color:#fff;font-weight:600}
+.dnav a:not(.on):hover{background:var(--r50)}
+.stat{padding:16px}
+.stat .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--r400)}
+.stat .v{font-size:23px;font-weight:800;margin-top:3px}
+.bar-outer{height:8px;border-radius:99px;background:var(--r50);margin-top:5px}
+.bar-inner{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--r600),var(--s500))}
+
+/* voucher */
+.voucher{max-width:760px;margin:0 auto;padding:30px;border:1px solid var(--border);border-radius:18px;background:#fff;box-shadow:var(--shadow)}
+.vrow{display:flex;justify-content:space-between;gap:14px;padding:7px 2px;border-bottom:1px solid var(--muted);font-size:14px}
+.vrow span:first-child{color:var(--r400)}
+.vrow span:last-child{font-weight:600;text-align:right}
+.vsec{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:800;color:var(--r400);margin:20px 0 6px}
+.qr{width:86px;height:86px;border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:38px;color:var(--r800)}
+
+/* footer */
+footer{background:var(--r900);color:var(--r100);margin-top:40px}
+footer .cols{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:26px;padding:44px 0}
+@media(max-width:900px){footer .cols{grid-template-columns:repeat(2,1fr)}}
+footer h5{color:#fff;font-size:13.5px;margin-bottom:12px}
+footer a{display:block;font-size:13px;color:var(--r300);padding:3px 0}
+footer a:hover{color:var(--s300)}
+footer .base{border-top:1px solid var(--r800);padding:14px 0;font-size:12px;color:var(--r400);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+/* toast + misc */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--r800);color:#fff;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.3s;z-index:99}
+#toast.show{opacity:1}
+#toTop{position:fixed;bottom:24px;right:22px;width:44px;height:44px;border-radius:50%;background:var(--r800);color:#fff;font-size:18px;box-shadow:var(--shadow-lg);display:none;z-index:60}
+.center-note{padding:60px 20px;text-align:center;color:var(--r400)}
+.review-card{max-width:620px;margin:0 auto;background:rgba(255,255,255,.07);border-radius:18px;padding:28px}
+.stars{color:var(--s300);letter-spacing:2px}
+.auth-wrap{max-width:400px;margin:44px auto;padding:0 20px}
+.seg{display:flex;background:var(--muted);border-radius:11px;padding:4px;margin-bottom:18px}
+.seg button{flex:1;padding:9px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--r400)}
+.seg button.on{background:#fff;color:var(--r900);box-shadow:var(--shadow)}
+@media print{
+  .topbar,header.main,footer,.no-print,#toTop{display:none!important}
+  .voucher{border:none;box-shadow:none}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<button id="toTop" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+/* ================= DATA ================= */
+const INR = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const TONES = ['ocean','sunset','forest','mountain','royal','saffron','heritage','desert','snow','gold','lake','farm'];
+
+const DESTS = [
+ ['Goa','Goa','ocean','🏖️',2499,412,'Beaches, nightlife and Portuguese heritage.'],
+ ['Manali','Himachal','snow','🏔️',1899,268,'Snow peaks, adventure and cosy stays.'],
+ ['Shimla','Himachal','mountain','🚂',1699,231,'Colonial charm in the Himalayan foothills.'],
+ ['Jaipur','Rajasthan','desert','🏰',1599,356,'The Pink City — forts and bazaars.'],
+ ['Udaipur','Rajasthan','lake','🛶',2199,198,'City of Lakes and royal palaces.'],
+ ['Kerala','Kerala','forest','🌴',2899,302,'Backwaters, houseboats, tea gardens.'],
+ ['Mumbai','Maharashtra','royal','🌆',2299,589,'The City of Dreams by the sea.'],
+ ['Delhi','Delhi','heritage','🕌',1799,641,'History and heritage monuments.'],
+ ['Agra','UP','gold','🕌',1499,187,'Home of the Taj Mahal.'],
+ ['Kashmir','J&K','snow','🌸',3499,156,'Dal Lake, houseboats, alpine valleys.'],
+ ['Ladakh','Ladakh','mountain','🏍️',3999,94,'High-altitude desert and road trips.'],
+ ['Andaman','A&N','ocean','🐠',4499,78,'Turquoise waters and coral reefs.'],
+ ['Rishikesh','Uttarakhand','forest','🧘',1299,143,'Yoga capital on the Ganges.'],
+ ['Lonavala','Maharashtra','forest','🌧️',1399,176,'Monsoon getaway with waterfalls.'],
+ ['Mahabaleshwar','Maharashtra','farm','🍓',1599,129,'Strawberry farms and viewpoints.'],
+].map((d,i)=>({id:'d'+i,name:d[0],state:d[1],tone:d[2],emoji:d[3],price:d[4],count:d[5],desc:d[6]}));
+
+const OFFERS = [
+ ['Flat 25% off on Hotels','STAY25','25% OFF','Hotels','On bookings above ₹3,000.', 'royal','🏨'],
+ ['₹500 off Flight Bookings','FLY500','₹500 OFF','Flights','Domestic flights, min fare ₹4,000.','ocean','✈️'],
+ ['15% off Bus Tickets','BUS15','15% OFF','Buses','AC Sleeper and Volvo buses.','saffron','🚌'],
+ ['Weekend Stays from ₹1,999','WEEKEND','₹1,999+','Hotels','Handpicked weekend resorts.','forest','🌿'],
+ ['First Booking — 30% off','WELCOME30','30% OFF','New Users','Exclusive for new users.','gold','🎉'],
+ ['10% Instant UPI Discount','UPI10','10% OFF','UPI','All bookings paid via UPI.','royal','📱'],
+ ['Diwali Holiday Packages','DIWALI2026','₹8,999+','Packages','Festive packages across India.','sunset','🪔'],
+ ['Monsoon Getaways 20% off','MONSOON20','20% OFF','Packages','Lonavala, Munnar & Coorg.','forest','🌧️'],
+];
+
+const AMEN_POOL=['Free Wi-Fi','Swimming Pool','Air Conditioning','Parking','Restaurant','Spa','Gym','Room Service','Power Backup','Pet Friendly'];
+const HSEEDS = [
+ ['Royal Orchid Suites','Hotel','Goa',5,8500,'ocean','Deluxe Sea View','Breakfast Included'],
+ ['Taj Heritage Palace','Hotel','Jaipur',5,9200,'heritage','Heritage Room','Breakfast & Dinner'],
+ ['BharatStay Grand Central','Hotel','Mumbai',4,6800,'royal','Executive Room','Breakfast Included'],
+ ['Lakeview Residency','Hotel','Udaipur',4,5400,'lake','Lake Facing Room','Breakfast Included'],
+ ['Capital Inn Delhi','Hotel','Delhi',3,3200,'royal','Standard Room','Room Only'],
+ ['Shimla Pinewood Hotel','Hotel','Shimla',4,4900,'mountain','Mountain View Room','Breakfast Included'],
+ ['Manali Snow Crest','Hotel','Manali',4,5100,'snow','Valley View Room','Breakfast Included'],
+ ['Kashmir Dal View Hotel','Hotel','Srinagar',5,7600,'snow','Premium Lake View','All Meals Included'],
+ ['Agra Taj Gateway','Hotel','Agra',4,4700,'gold','Taj View Room','Breakfast Included'],
+ ['Kerala Backwater Suites','Hotel','Alleppey',4,6200,'forest','Backwater Suite','Breakfast Included'],
+ ['Andaman Coral Bay','Hotel','Port Blair',4,7100,'ocean','Sea Facing Room','Breakfast Included'],
+ ['Rishikesh Ganga Retreat','Hotel','Rishikesh',3,3100,'forest','River View Room','Breakfast Included'],
+ ['Palm Grove Beach Resort','Resort','Goa',5,11500,'ocean','Beach Villa','All Meals Included'],
+ ['Coconut Lagoon Resort','Resort','Kumarakom',5,13200,'forest','Lagoon Cottage','All Meals Included'],
+ ['Pine Valley Resort','Resort','Manali',4,7800,'snow','Cottage Room','Breakfast & Dinner'],
+ ['Lonavala Hilltop Resort','Resort','Lonavala',4,8100,'forest','Hill View Room','All Meals Included'],
+ ['Udaipur Lake Palace Resort','Resort','Udaipur',5,14800,'lake','Royal Lake Villa','All Meals Included'],
+ ['Blue Water Resort','Resort','Havelock',5,15400,'ocean','Beachfront Villa','All Meals Included'],
+ ['Green Valley Farm Stay','Farm Stay','Lonavala',3,4200,'farm','Farmhouse Room','All Meals Included'],
+ ['Wayanad Spice Farm Retreat','Farm Stay','Wayanad',3,4800,'farm','Plantation Cottage','All Meals Included'],
+ ['Nashik Vineyard Farm Stay','Farm Stay','Nashik',3,4500,'farm','Vineyard Room','Breakfast Included'],
+ ['Coorg Coffee Estate Stay','Farm Stay','Coorg',3,4300,'farm','Estate Bungalow','All Meals Included'],
+ ['Fontainhas Heritage Homestay','Homestay','Goa',3,3200,'heritage','Heritage Room','Breakfast Included'],
+ ['Munnar Hilltop Homestay','Homestay','Munnar',3,3400,'forest','Family Room','All Meals Included'],
+ ['Jaipur Old City Homestay','Homestay','Jaipur',3,2800,'desert','Traditional Room','Breakfast Included'],
+ ['Darjeeling Tea Garden Homestay','Homestay','Darjeeling',3,2900,'forest','Garden View Room','All Meals Included'],
+];
+const HOTELS = HSEEDS.map((s,i)=>{
+  const disc = 10 + (i*7)%35;
+  const price = Math.round(s[4]*(1-disc/100));
+  return {
+    id:'h'+i, name:s[0], type:s[1], city:s[2], star:s[3], base:s[4], tone:s[5],
+    room:s[6], meal:s[7], disc, price, tax:Math.round(price*.12),
+    rating:+(3.7+((i*3)%13)/10).toFixed(1), reviews:40+(i*37)%900,
+    freeCancel:i%3!==0, payAtHotel:i%4===0, couple:i%2===0, family:i%3!==1,
+    dist:+(0.8+(i*1.3)%12).toFixed(1),
+    amen:[...new Set(['Free Wi-Fi', AMEN_POOL[(i+1)%10], AMEN_POOL[(i+4)%10], AMEN_POOL[(i+7)%10]])],
+  };
+});
+
+const FLIGHTS = [
+ ['IndiGo','🔵','6E-204','Mumbai','BOM','Delhi','DEL','06:05','08:15',130,0,'Economy',0,15,4899],
+ ['Air India','🔴','AI-864','Delhi','DEL','Goa','GOI','09:30','12:10',160,0,'Economy',1,20,6299],
+ ['Vistara','🟣','UK-955','Bengaluru','BLR','Mumbai','BOM','14:20','16:00',100,0,'Prem. Economy',1,20,7899],
+ ['SpiceJet','🟠','SG-417','Chennai','MAA','Kolkata','CCU','11:45','14:05',140,0,'Economy',0,15,5399],
+ ['Akasa Air','🟢','QP-1302','Mumbai','BOM','Bengaluru','BLR','18:10','19:40',90,0,'Economy',0,15,4599],
+ ['IndiGo','🔵','6E-6501','Delhi','DEL','Srinagar','SXR','07:15','09:05',110,0,'Economy',0,15,6799],
+ ['Air India','🔴','AI-401','Mumbai','BOM','Kochi','COK','20:00','22:15',135,0,'Business',1,30,14999],
+ ['Vistara','🟣','UK-772','Delhi','DEL','Leh','IXL','05:45','07:15',90,0,'Economy',0,15,8299],
+ ['SpiceJet','🟠','SG-8169','Kolkata','CCU','Port Blair','IXZ','10:00','12:00',120,0,'Economy',0,15,7499],
+ ['Akasa Air','🟢','QP-1719','Hyderabad','HYD','Jaipur','JAI','16:30','18:35',125,1,'Economy',0,15,5899],
+].map((f,i)=>({id:'f'+i,airline:f[0],logo:f[1],no:f[2],from:f[3],fc:f[4],to:f[5],tc:f[6],dep:f[7],arr:f[8],dur:f[9],stops:f[10],cls:f[11],ref:!!f[12],bag:f[13],price:f[14]}));
+
+const BUSES = [
+ ['BharatStay Travels','Mumbai','Pune','22:00','01:30',210,'Volvo AC Sleeper',1,4.3,18,899],
+ ['Rajasthan Roadways','Delhi','Jaipur','07:00','12:00',300,'AC Seater',1,4.0,24,649],
+ ['SouthStar Travels','Bengaluru','Chennai','23:30','05:30',360,'Non-AC Sleeper',0,3.8,12,549],
+ ['Himgiri Express','Delhi','Manali','18:00','08:00',840,'Volvo AC Sleeper',1,4.5,9,1499],
+ ['Kaveri Travels','Hyderabad','Bengaluru','21:15','05:45',510,'AC Sleeper',1,4.1,15,999],
+ ['Konkan Coastal','Mumbai','Goa','20:30','07:00',630,'Volvo AC Sleeper',1,4.4,11,1299],
+ ['Ganga Yatra Travels','Delhi','Rishikesh','23:00','06:00',420,'AC Seater',1,3.9,20,749],
+ ['Malabar Travels','Kochi','Munnar','08:30','12:30',240,'AC Seater',1,4.2,22,549],
+].map((b,i)=>({id:'b'+i,op:b[0],from:b[1],to:b[2],dep:b[3],arr:b[4],dur:b[5],type:b[6],ac:!!b[7],rating:b[8],seats:b[9],price:b[10]}));
+
+const CABS = [
+ ['Hatchback (Swift / i20)','🚗',4,2,12,250,'Hatchback'],
+ ['Sedan (Dzire / Etios)','🚙',4,3,14,300,'Sedan'],
+ ['SUV (Ertiga / Innova)','🚐',6,4,18,350,'SUV'],
+ ['Premium SUV (Innova Crysta)','🚙',7,5,22,400,'SUV'],
+ ['Luxury Sedan (Camry / E-Class)','🚘',4,3,35,500,'Luxury'],
+ ['Tempo Traveller (12-Seater)','🚌',12,10,28,500,'Tempo'],
+ ['Tempo Traveller (17-Seater)','🚌',17,14,34,600,'Tempo'],
+ ['Electric Hatchback (Tigor EV)','🔋',4,2,11,250,'Hatchback'],
+].map((c,i)=>({id:'c'+i,name:c[0],icon:c[1],seats:c[2],bags:c[3],perKm:c[4],allow:c[5],cat:c[6]}));
+
+const PKGS = [
+ ['Goa Beach Escape','Goa','ocean','🏖️',3,4,'4-Star','Breakfast','Airport transfers',['Baga Beach','Fort Aguada','Spice Plantation'],8999],
+ ['Kashmir Paradise Tour','Kashmir','snow','🌸',5,6,'4-Star + Houseboat','All Meals','Private cab + Shikara',['Dal Lake','Gulmarg Gondola','Pahalgam'],21999],
+ ['Kerala Backwaters','Kerala','forest','🌴',4,5,'5-Star + Houseboat','Breakfast & Dinner','AC car with driver',['Alleppey','Munnar','Periyar'],18499],
+ ['Manali Snow Adventure','Manali','snow','🏔️',4,5,'3-Star','Breakfast','Volvo + sightseeing cab',['Solang Valley','Rohtang Pass','Hidimba Temple'],10999],
+ ['Royal Rajasthan','Rajasthan','desert','🏰',6,7,'4-Star Heritage','Breakfast','AC coach + transfers',['Amber Fort','City Palace','Lake Pichola'],16999],
+ ['Andaman Island Hopping','Andaman','ocean','🐠',5,6,'4-Star','Breakfast','Ferry transfers',['Radhanagar Beach','Cellular Jail','Scuba'],26999],
+ ['Ladakh Bike Expedition','Ladakh','mountain','🏍️',6,7,'Guesthouses','Breakfast & Dinner','Royal Enfield + backup',['Pangong Lake','Nubra Valley','Khardung La'],19999],
+ ['Honeymoon in Udaipur','Udaipur','lake','🛶',3,4,'5-Star Lake View','All Meals','Private transfers',['Pichola Cruise','Jag Mandir','Saheliyon Ki Bari'],24999],
+].map((p,i)=>({id:'p'+i,title:p[0],dest:p[1],tone:p[2],emoji:p[3],n:p[4],d:p[5],hotel:p[6],meal:p[7],transport:p[8],sights:p[9],price:p[10]}));
+
+const ACTS = [
+ ['Sunset Cruise on Dal Lake','Srinagar','snow','🛶',2,'Sightseeing',899],
+ ['Scuba Diving at Havelock','Andaman','ocean','🤿',3,'Adventure',4499],
+ ['Old Delhi Heritage Walk','Delhi','heritage','🚶',3,'Heritage',599],
+ ['White River Rafting','Rishikesh','forest','🚣',2,'Adventure',999],
+ ['Backwater Houseboat Cruise','Alleppey','forest','🛥️',6,'Sightseeing',2499],
+ ['Desert Safari & Camel Ride','Jaisalmer','desert','🐫',4,'Adventure',1499],
+ ['Paragliding at Solang','Manali','snow','🪂',1,'Adventure',2999],
+ ['Amber Fort Guided Tour','Jaipur','desert','🏰',2,'Heritage',699],
+].map((a,i)=>({id:'a'+i,title:a[0],city:a[1],tone:a[2],emoji:a[3],hrs:a[4],cat:a[5],price:a[6]}));
+
+const REVIEWS = [
+ ['Ananya Sharma','Delhi',5,'Hotel Booking','Seamless booking and the Udaipur hotel was exactly as shown. Check-in was instant with the digital voucher.','royal','👩'],
+ ['Rohan Mehta','Mumbai',4,'Flight Booking','Great fare on Mumbai–Goa and the e-ticket + reminders were super convenient.','ocean','👨'],
+ ['Priya Nair','Kochi',5,'Package Booking','Kerala backwaters package was perfectly planned — houseboat, transfers, everything on time.','forest','👩'],
+ ['Arjun Singh','Jaipur',5,'Bus Booking','Comfortable AC sleeper, live tracking worked and boarding point was accurate.','saffron','👨'],
+ ['Sneha Kulkarni','Pune',4,'Cab Booking','Outstation cab to Lonavala — driver on time, fare matched the quote exactly.','royal','👩'],
+ ['Vikram Rathore','Ahmedabad',5,'Hotel Booking','Free cancellation saved me when plans changed. Refund processed in 3 days.','heritage','👨'],
+];
+
+const ADMIN = {
+  stats:{bookings:18420,revenue:284500000,profit:41200000,pendingPay:128000,pendingRef:96400,cancel:6.2,conv:3.8,growth:'+8.4%'},
+  topDest:[['Goa',3120],['Manali',2210],['Jaipur',1980],['Kerala',1750],['Udaipur',1340]],
+  props:[
+   {id:'ap1',name:'Coastal Breeze Villas',partner:'Sunrise Hospitality',city:'Alibaug',type:'Villa',date:'20 Jul 2026',st:'Pending'},
+   {id:'ap2',name:'Blue Mountain Homestay',partner:'Himalayan Retreats',city:'Kasol',type:'Homestay',date:'18 Jul 2026',st:'Pending'},
+   {id:'ap3',name:'Emerald Farms Resort',partner:'Greenfield Estates',city:'Coorg',type:'Farm Stay',date:'15 Jul 2026',st:'Approved'},
+  ],
+  proofs:[
+   {id:'pp1',ref:'BST-2026-84902',cust:'Karan Malhotra',bank:'HDFC Bank',txn:'REF9928134',amt:1450,date:'24 Jul 2026',st:'Pending'},
+   {id:'pp2',ref:'BST-2026-84781',cust:'Meera Iyer',bank:'ICICI Bank',txn:'REF9911872',amt:8200,date:'22 Jul 2026',st:'Pending'},
+   {id:'pp3',ref:'BST-2026-84650',cust:'Arjun Singh',bank:'SBI',txn:'REF9902341',amt:3600,date:'19 Jul 2026',st:'Approved'},
+  ],
+  refunds:[
+   {id:'rf1',ref:'BST-2026-51772',cust:'Ananya Sharma',reason:'Change of travel plans',amt:9800,date:'14 Mar 2026',st:'Completed'},
+   {id:'rf2',ref:'BST-2026-84470',cust:'Sneha Kulkarni',reason:'Hotel overbooked by property',amt:12400,date:'21 Jul 2026',st:'Under Review'},
+   {id:'rf3',ref:'BST-2026-84512',cust:'Vikram Rathore',reason:'Flight rescheduled by airline',amt:6299,date:'23 Jul 2026',st:'Requested'},
+  ],
+};
+const REFUND_FLOW=['Requested','Under Review','Approved','Refund Initiated','Completed'];
+
+/* ================= STATE ================= */
+const S = {
+  tab:'hotels', reviewIdx:0,
+  wishlist:new Set(JSON.parse(localStorage.getItem('bs_wish')||'[]')),
+  bookings:JSON.parse(localStorage.getItem('bs_bookings')||'[]'),
+  filters:{q:'',maxPrice:20000,stars:new Set(),minRating:0,types:new Set(),amen:new Set(),freeCancel:false,payAtHotel:false,couple:false,family:false,sort:'Recommended'},
+  fl:{from:'',to:'',direct:false,sort:'Price: Low to High'},
+  bus:{from:'',to:'',ac:false,sort:'Price: Low to High'},
+  cabCat:'All', cabTrip:'Local',
+  detail:{roomIdx:0,coupon:'',couponOn:false},
+  cart:null,
+  co:{step:0,guest:{title:'Mr',first:'',last:'',email:'',phone:''},addons:{},coupon:'',couponOn:false,gst:false,gstin:'',method:'UPI'},
+  lastBooking:null, authMode:'password', otpSent:false, dashTab:'All',
+  admin:JSON.parse(JSON.stringify(ADMIN)),
+};
+const save = () => {
+  localStorage.setItem('bs_wish', JSON.stringify([...S.wishlist]));
+  localStorage.setItem('bs_bookings', JSON.stringify(S.bookings));
+};
+
+/* ================= HELPERS ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const dur = m => Math.floor(m/60)+'h '+(m%60)+'m';
+const ph = (tone,emoji,label,style) => `<div class="ph t-${tone}" style="${style||''}"><span class="emoji">${emoji}</span>${label?`<span class="lbl">${esc(label)}</span>`:''}</div>`;
+const stars = n => '★'.repeat(n);
+const bookingRef = () => 'BST-2026-' + Math.floor(10000+Math.random()*89999);
+const stBadge = st => {
+  const m={'Pending':'bg-o','Approved':'bg-g','Rejected':'bg-r','Confirmed':'bg-g','Completed':'bg-g','Success':'bg-g','Cancelled':'bg-r','Upcoming':'bg-b','Requested':'bg-o','Under Review':'bg-b','Refund Initiated':'bg-b'};
+  return `<span class="badge ${m[st]||'bg-b'}">${st}</span>`;
+};
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);}
+function go(route){location.hash = route;}
+
+/* ================= SHARED CHROME ================= */
+const NAVLINKS=[['#/hotels','Hotels'],['#/flights','Flights'],['#/buses','Buses'],['#/trains','Trains'],['#/cabs','Cabs'],['#/packages','Packages'],['#/activities','Activities']];
+function header(active){
+  return `
+  <div class="topbar no-print"><div class="container">
+    <div><a href="#/list-property">List Your Property</a><a href="#/login">Partner Login</a><a href="#/login">Agent Login</a></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <select onchange="toast('Language switched to '+this.value)"><option>English</option><option>हिन्दी</option><option>தமிழ்</option><option>বাংলা</option></select>
+      <span style="opacity:.4">|</span>
+      <select onchange="toast('Currency set to '+this.value)"><option>INR ₹</option><option>USD $</option><option>EUR €</option></select>
+    </div>
+  </div></div>
+  <header class="main no-print"><div class="container">
+    <a href="#/" class="logo"><span class="mark">📍</span><span><span class="name">Bharat<span>Stay</span></span><small>Explore India, Stay Your Way</small></span></a>
+    <nav class="links">${NAVLINKS.map(l=>`<a href="${l[0]}" class="${active===l[0]?'on':''}">${l[1]}</a>`).join('')}</nav>
+    <div class="hdr-actions">
+      <a class="btn btn-s btn-sm" href="#/dashboard">My Bookings</a>
+      <a class="btn btn-p btn-sm" href="#/login">Login / Sign Up</a>
+    </div>
+  </div></header>`;
+}
+function footer(){
+  const cols=[
+   ['Company',[['#/about','About BharatStay'],['#/careers','Careers'],['#/blog','Blog'],['#/contact','Contact Us']]],
+   ['Explore',[['#/hotels','Hotels'],['#/flights','Flights'],['#/buses','Buses'],['#/cabs','Cabs'],['#/packages','Holiday Packages']]],
+   ['Partner',[['#/list-property','List Your Property'],['#/login','Partner Login'],['#/login','Agent Login'],['#/admin','Admin Dashboard']]],
+   ['Support',[['#/support','Customer Support'],['#/dashboard','My Bookings'],['#/dashboard','Payment History'],['#/support','FAQs']]],
+  ];
+  return `<footer class="no-print"><div class="container">
+    <div class="cols">
+      <div>
+        <a href="#/" class="logo"><span class="mark">📍</span><span><span class="name" style="color:#fff">Bharat<span>Stay</span></span></span></a>
+        <p style="font-size:13px;color:var(--r300);margin-top:12px;max-width:250px">India's complete travel booking platform — hotels, flights, buses, cabs and holiday packages, all in one place.</p>
+      </div>
+      ${cols.map(c=>`<div><h5>${c[0]}</h5>${c[1].map(l=>`<a href="${l[0]}">${l[1]}</a>`).join('')}</div>`).join('')}
+    </div>
+    <div class="base"><span>© 2026 BharatStay Travels Pvt. Ltd. All rights reserved. (Demo application — all data is sample data.)</span><span>GSTIN: 27ABCDE1234F1Z5 · Mumbai, India</span></div>
+  </div></footer>`;
+}
+function page(active, inner){ return header(active) + inner + footer(); }
+
+/* ================= HOME ================= */
+function searchTabs(){
+  const T=[['hotels','🏨','Hotels'],['flights','✈️','Flights'],['buses','🚌','Buses'],['trains','🚆','Trains'],['cabs','🚕','Cabs'],['packages','🧳','Packages']];
+  const forms={
+   hotels:`<form class="sform" onsubmit="event.preventDefault();S.filters.q=this.dest.value==='Anywhere'?'':this.dest.value;go('#/hotels')">
+     <div class="field span2"><label>Destination, city or property</label><input name="dest" value="Goa"></div>
+     <div class="field"><label>Check-in</label><input type="date" value="2026-08-14"></div>
+     <div class="field"><label>Check-out</label><input type="date" value="2026-08-17"></div>
+     <div class="field"><label>Rooms</label><input type="number" min="1" value="1"></div>
+     <div class="field"><label>Adults</label><input type="number" min="1" value="2"></div>
+     <div class="field"><label>Children</label><input type="number" min="0" value="0"></div>
+     <div class="field"><label>Property type</label><select><option>Any</option><option>Hotel</option><option>Resort</option><option>Homestay</option><option>Farm Stay</option></select></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Hotels</button></div></form>`,
+   flights:`<form class="sform" onsubmit="event.preventDefault();S.fl.from=this.f.value;S.fl.to=this.t.value;go('#/flights')">
+     <div class="field"><label>From</label><input name="f" value="Mumbai"></div>
+     <div class="field"><label>To</label><input name="t" value="Delhi"></div>
+     <div class="field"><label>Departure</label><input type="date" value="2026-08-02"></div>
+     <div class="field"><label>Class</label><select><option>Economy</option><option>Premium Economy</option><option>Business</option><option>First</option></select></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Flights</button></div></form>`,
+   buses:`<form class="sform" onsubmit="event.preventDefault();S.bus.from=this.f.value;S.bus.to=this.t.value;go('#/buses')">
+     <div class="field"><label>From</label><input name="f" value="Mumbai"></div>
+     <div class="field"><label>To</label><input name="t" value="Pune"></div>
+     <div class="field"><label>Travel date</label><input type="date" value="2026-08-01"></div>
+     <div class="field"><label>Bus type</label><select><option>Any</option><option>AC Sleeper</option><option>AC Seater</option></select></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Buses</button></div></form>`,
+   trains:`<div style="padding:22px"><div style="background:var(--r50);border-radius:12px;padding:18px;font-size:14px;color:var(--r600);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+     <span>🚆 Train search connects to IRCTC-authorised partners for live availability. This demo has no live rail inventory.</span>
+     <button class="btn btn-s btn-sm" disabled>Coming soon</button></div></div>`,
+   cabs:`<form class="sform" onsubmit="event.preventDefault();go('#/cabs')">
+     <div class="field"><label>Pickup location</label><input value="Andheri, Mumbai"></div>
+     <div class="field"><label>Drop location</label><input value="Mumbai Airport (BOM)"></div>
+     <div class="field"><label>Date & time</label><input type="datetime-local" value="2026-08-01T09:00"></div>
+     <div class="field"><label>Vehicle</label><select><option>Sedan</option><option>Hatchback</option><option>SUV</option><option>Luxury</option></select></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Cabs</button></div></form>`,
+   packages:`<form class="sform" onsubmit="event.preventDefault();go('#/packages')">
+     <div class="field"><label>Destination</label><input value="Kerala"></div>
+     <div class="field"><label>Travel month</label><input type="month" value="2026-09"></div>
+     <div class="field"><label>Travellers</label><input type="number" min="1" value="2"></div>
+     <div class="field"><label>Budget</label><select><option>Any</option><option>Under ₹10,000</option><option>₹10,000–₹20,000</option><option>Above ₹20,000</option></select></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Packages</button></div></form>`,
+  };
+  return `<div class="searchbox">
+    <div class="tabs">${T.map(t=>`<button class="${S.tab===t[0]?'on':''}" onclick="S.tab='${t[0]}';render()">${t[1]} ${t[2]}</button>`).join('')}</div>
+    ${forms[S.tab]}
+  </div>`;
+}
+function homeView(){
+  const rv=REVIEWS[S.reviewIdx];
+  return page('#/', `
+  <section class="hero"><div class="container">
+    <div class="eyebrow" style="color:var(--s300)">India's Complete Travel Booking Platform</div>
+    <h1>Where Would You Like to Go?</h1>
+    <p class="sub">Hotels, resorts, villas &amp; homestays · flights · buses · trains · cabs · holiday packages — book it all with BharatStay.</p>
+    ${searchTabs()}
+  </div></section>
+
+  <section class="section"><div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:24px">
+      <div><div class="eyebrow">Exclusive Offers</div><h2 class="sec-title">Deals you don't want to miss</h2></div>
+    </div>
+    <div class="grid g4">
+      ${OFFERS.map(o=>`<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
+        ${ph(o[5],o[6],'', 'height:86px')}
+        <div style="padding:14px;flex:1;display:flex;flex-direction:column">
+          <span class="badge bg-o" style="align-self:flex-start">${o[2]}</span>
+          <div style="font-size:14px;font-weight:700;margin-top:8px">${o[0]}</div>
+          <div style="font-size:12px;color:var(--r400);margin-top:3px;flex:1">${o[4]}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1px dashed var(--r200);background:var(--r50);border-radius:9px;padding:6px 10px;margin-top:10px">
+            <code style="font-size:12px;font-weight:800;color:var(--r700)">${o[1]}</code>
+            <button class="btn btn-p btn-sm" onclick="copyCoupon('${o[1]}')">Copy</button>
+          </div>
+        </div></div>`).join('')}
+    </div>
+  </div></section>
+
+  <section class="section alt"><div class="container">
+    <div class="eyebrow">Popular Indian Destinations</div><h2 class="sec-title" style="margin-bottom:24px">Explore India, your way</h2>
+    <div class="grid g5">
+      ${DESTS.map(d=>`<a class="card" style="overflow:hidden" href="#/hotels" onclick="S.filters.q='${d.name}'">
+        ${ph(d.tone,d.emoji,d.name,'height:110px')}
+        <div style="padding:11px">
+          <div style="font-size:11.5px;color:var(--r400)">${d.count} stays</div>
+          <div style="font-size:14px;font-weight:700">From ${INR(d.price)}</div>
+          <div style="font-size:11.5px;color:var(--r400);margin-top:3px">${d.desc}</div>
+        </div></a>`).join('')}
+    </div>
+  </div></section>
+
+  <section class="section"><div class="container">
+    <div class="eyebrow">Property Categories</div><h2 class="sec-title" style="margin-bottom:24px">Find your kind of stay</h2>
+    <div class="grid g5">
+      ${[['🏨','Hotels','Hotel'],['🏝️','Resorts','Resort'],['🏡','Homestays','Homestay'],['🌾','Farm Stays','Farm Stay'],['👑','Luxury Stays','']].map(c=>
+       `<a class="card" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px" href="#/hotels" onclick="S.filters.types=new Set(${c[2]?`['${c[2]}']`:'[]'})">
+        <span style="font-size:30px">${c[0]}</span><span style="font-size:14px;font-weight:700;color:var(--r800)">${c[1]}</span></a>`).join('')}
+    </div>
+  </div></section>
+
+  <section class="section alt"><div class="container">
+    <div class="eyebrow">Trending Holiday Packages</div><h2 class="sec-title" style="margin-bottom:24px">Curated trips, zero hassle</h2>
+    <div class="grid g3">${PKGS.slice(0,6).map(pkgCard).join('')}</div>
+    <div style="text-align:center;margin-top:22px"><a class="btn btn-s" href="#/packages">View all packages →</a></div>
+  </div></section>
+
+  <section class="section"><div class="container" style="text-align:center">
+    <div class="eyebrow">Why Choose BharatStay</div><h2 class="sec-title" style="margin-bottom:24px">Built for the way India travels</h2>
+    <div class="grid g4" style="text-align:center">
+      ${[['🔒','Secure Payments','UPI, cards, net banking & wallets'],['✅','Verified Properties','Every listing manually verified'],['🧾','Transparent Pricing','Taxes shown upfront, no surprises'],['⚡','Instant Confirmation','Voucher issued in seconds'],['↩️','Easy Cancellations','Hassle-free refunds'],['💬','24/7 Support','Chat, WhatsApp, call & email'],['📄','GST Invoices','Auto-generated for every booking'],['📲','Digital Vouchers','QR-verified paperless tickets']].map(w=>
+      `<div class="card" style="padding:20px"><div style="font-size:28px">${w[0]}</div><div style="font-size:14px;font-weight:700;margin-top:8px">${w[1]}</div><div style="font-size:12px;color:var(--r400);margin-top:4px">${w[2]}</div></div>`).join('')}
+    </div>
+  </div></section>
+
+  <section class="section" style="background:var(--r900);color:#fff"><div class="container">
+    <div style="text-align:center;margin-bottom:24px"><div class="eyebrow" style="color:var(--s300)">Customer Reviews</div><h2 class="sec-title">Loved by travellers across India</h2></div>
+    <div class="review-card">
+      <div style="display:flex;align-items:center;gap:13px">
+        ${ph(rv[5],rv[6],'','width:52px;height:52px;border-radius:50%;flex-shrink:0')}
+        <div><div style="font-weight:700">${rv[0]}</div><div style="font-size:12px;color:var(--r200)">${rv[1]} · ${rv[3]}</div></div>
+        <span class="badge" style="margin-left:auto;background:rgba(31,157,99,.25);color:#a7f3d0">Verified Booking</span>
+      </div>
+      <div class="stars" style="margin-top:14px">${stars(rv[2])}<span style="opacity:.25">${stars(5-rv[2])}</span></div>
+      <p style="margin-top:10px;font-size:14.5px;color:var(--r100)">“${rv[4]}”</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
+        <button class="btn btn-sm" style="border:1px solid rgba(255,255,255,.25);color:#fff" onclick="S.reviewIdx=(S.reviewIdx+${REVIEWS.length-1})%${REVIEWS.length};render()">←</button>
+        <div style="display:flex;gap:6px">${REVIEWS.map((_,i)=>`<button style="width:${i===S.reviewIdx?22:7}px;height:7px;border-radius:99px;background:${i===S.reviewIdx?'var(--s400)':'rgba(255,255,255,.3)'}" onclick="S.reviewIdx=${i};render()"></button>`).join('')}</div>
+        <button class="btn btn-sm" style="border:1px solid rgba(255,255,255,.25);color:#fff" onclick="S.reviewIdx=(S.reviewIdx+1)%${REVIEWS.length};render()">→</button>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="container">
+    <div class="card" style="background:linear-gradient(135deg,var(--r800),var(--r900));color:#fff;padding:36px;display:grid;grid-template-columns:1fr auto;gap:26px;align-items:center">
+      <div>
+        <div class="eyebrow" style="color:var(--s300)">BharatStay Mobile App</div>
+        <h2 class="sec-title">Book on the go, travel with confidence</h2>
+        <div style="font-size:14px;color:var(--r100);margin-top:10px;line-height:2">📥 App-only offers · 🔔 Price-drop alerts · 🎟️ Digital ticket wallet</div>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:#000;color:#fff" onclick="toast('Demo — app coming soon!')">▶️ Google Play</button>
+          <button class="btn btn-sm" style="background:#000;color:#fff" onclick="toast('Demo — app coming soon!')">🍎 App Store</button>
+        </div>
+      </div>
+      <div class="qr" style="background:#fff">▦</div>
+    </div>
+  </div></section>
+
+  <section class="section alt"><div class="container">
+    <div class="card" style="max-width:620px;margin:0 auto;padding:32px;text-align:center">
+      <div class="eyebrow">Stay in the Loop</div>
+      <h2 style="font-size:22px;font-weight:800;margin-top:4px">Travel deals, price-drop alerts &amp; festival packages</h2>
+      <form style="display:flex;gap:10px;max-width:400px;margin:18px auto 0" onsubmit="event.preventDefault();toast('Subscribed! Deals coming your way 🎉');this.reset()">
+        <input required type="email" placeholder="you@example.com" style="flex:1;border:1px solid var(--border);border-radius:10px;padding:11px 13px;outline:none">
+        <button class="btn btn-p">Subscribe</button>
+      </form>
+      <div style="font-size:11px;color:var(--r400);margin-top:10px">Email &amp; WhatsApp updates. Unsubscribe anytime.</div>
+    </div>
+  </div></section>`);
+}
+function copyCoupon(code){
+  if(navigator.clipboard) navigator.clipboard.writeText(code).catch(()=>{});
+  toast('Coupon '+code+' copied!');
+}
+function pkgCard(p){
+  return `<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
+    ${ph(p.tone,p.emoji,p.dest,'height:140px')}
+    <div style="padding:16px;flex:1;display:flex;flex-direction:column">
+      <div style="font-size:15.5px;font-weight:700">${p.title}</div>
+      <div style="font-size:12px;color:var(--r400);font-weight:600;margin-top:2px">${p.n}N / ${p.d}D · ${p.hotel}</div>
+      <div style="font-size:12.5px;color:var(--r500);margin-top:8px;line-height:1.8">🍽️ ${p.meal} · 🚐 ${p.transport}<br>📍 ${p.sights.join(', ')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:end;margin-top:14px">
+        <div><div style="font-size:11px;color:var(--r400)">Per person</div><div class="price-lg">${INR(p.price)}</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-s btn-sm" onclick="toast('Enquiry sent! Our travel expert will call you.')">Enquire</button>
+          <button class="btn btn-p btn-sm" onclick="startCheckout({type:'Package',title:'${esc(p.title)}',sub:'${p.n}N/${p.d}D · ${esc(p.dest)}',amount:${p.price},tone:'${p.tone}',emoji:'${p.emoji}'})">Book Now</button>
+        </div>
+      </div>
+    </div></div>`;
+}
+
+/* ================= HOTELS ================= */
+function hotelsFiltered(){
+  const f=S.filters;
+  let list = HOTELS.filter(h=>{
+    if(f.q && !(h.city+' '+h.name+' '+h.type).toLowerCase().includes(f.q.toLowerCase())) return false;
+    if(h.price>f.maxPrice) return false;
+    if(f.stars.size && !f.stars.has(h.star)) return false;
+    if(f.minRating && h.rating<f.minRating) return false;
+    if(f.types.size && !f.types.has(h.type)) return false;
+    if(f.amen.size && ![...f.amen].every(a=>h.amen.includes(a))) return false;
+    if(f.freeCancel&&!h.freeCancel) return false;
+    if(f.payAtHotel&&!h.payAtHotel) return false;
+    if(f.couple&&!h.couple) return false;
+    if(f.family&&!h.family) return false;
+    return true;
+  });
+  const s=f.sort;
+  if(s==='Price: Low to High')list.sort((a,b)=>a.price-b.price);
+  else if(s==='Price: High to Low')list.sort((a,b)=>b.price-a.price);
+  else if(s==='Top Rated')list.sort((a,b)=>b.rating-a.rating);
+  else if(s==='Most Reviewed')list.sort((a,b)=>b.reviews-a.reviews);
+  else if(s==='Distance')list.sort((a,b)=>a.dist-b.dist);
+  else if(s==='Highest Discount')list.sort((a,b)=>b.disc-a.disc);
+  return list;
+}
+function fToggle(setName,val){ const st=S.filters[setName]; st.has(val)?st.delete(val):st.add(val); render(); }
+function hotelsView(){
+  const list=hotelsFiltered(); const f=S.filters;
+  return page('#/hotels', `<div class="container" style="padding-top:28px;padding-bottom:40px">
+    <div class="sortbar">
+      <div><h1 style="font-size:22px;font-weight:800">${f.q?`Hotels & Stays in “${esc(f.q)}”`:'All Hotels & Stays'}</h1>
+      <div style="font-size:13.5px;color:var(--r400)">${list.length} properties found</div></div>
+      <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+        <div class="field"><label>Search</label><input id="hq" value="${esc(f.q)}" placeholder="City or property" oninput="S.filters.q=this.value;renderKeepFocus('hq')"></div>
+        <div class="field"><label>Sort by</label><select onchange="S.filters.sort=this.value;render()">
+          ${['Recommended','Price: Low to High','Price: High to Low','Top Rated','Most Reviewed','Distance','Highest Discount'].map(o=>`<option ${f.sort===o?'selected':''}>${o}</option>`).join('')}
+        </select></div>
+      </div>
+    </div>
+    <div class="listing">
+      <div class="card fbox">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h4 style="margin:0">Filters</h4>
+          <button style="font-size:12px;font-weight:700;color:var(--s600)" onclick="S.filters={q:'',maxPrice:20000,stars:new Set(),minRating:0,types:new Set(),amen:new Set(),freeCancel:false,payAtHotel:false,couple:false,family:false,sort:'Recommended'};render()">Clear all</button>
+        </div>
+        <div class="fgroup"><div class="field"><label>Price per night (up to ${INR(f.maxPrice)})</label></div>
+          <input type="range" min="1500" max="20000" step="500" value="${f.maxPrice}" style="width:100%;accent-color:var(--r700)" oninput="S.filters.maxPrice=+this.value;render()"></div>
+        <div class="fgroup"><div class="field"><label>Star rating</label></div>
+          <div style="display:flex;gap:8px">${[5,4,3].map(st=>`<button class="pill ${f.stars.has(st)?'on':''}" onclick="fToggle('stars',${st})">${st}★</button>`).join('')}</div></div>
+        <div class="fgroup"><div class="field"><label>Customer rating</label></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${[4.5,4,3.5].map(r=>`<button class="pill ${f.minRating===r?'on':''}" onclick="S.filters.minRating=S.filters.minRating===${r}?0:${r};render()">${r}+</button>`).join('')}</div></div>
+        <div class="fgroup"><div class="field"><label>Property type</label></div>
+          ${['Hotel','Resort','Homestay','Farm Stay'].map(t=>`<label class="check"><input type="checkbox" ${f.types.has(t)?'checked':''} onchange="fToggle('types','${t}')">${t}</label>`).join('')}</div>
+        <div class="fgroup"><div class="field"><label>Amenities</label></div>
+          ${['Free Wi-Fi','Swimming Pool','Restaurant','Spa','Parking','Pet Friendly'].map(a=>`<label class="check"><input type="checkbox" ${f.amen.has(a)?'checked':''} onchange="fToggle('amen','${a}')">${a}</label>`).join('')}</div>
+        <div class="fgroup"><div class="field"><label>Preferences</label></div>
+          <label class="check"><input type="checkbox" ${f.freeCancel?'checked':''} onchange="S.filters.freeCancel=this.checked;render()">Free cancellation</label>
+          <label class="check"><input type="checkbox" ${f.payAtHotel?'checked':''} onchange="S.filters.payAtHotel=this.checked;render()">Pay at hotel</label>
+          <label class="check"><input type="checkbox" ${f.couple?'checked':''} onchange="S.filters.couple=this.checked;render()">Couple-friendly</label>
+          <label class="check"><input type="checkbox" ${f.family?'checked':''} onchange="S.filters.family=this.checked;render()">Family-friendly</label></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        ${list.length? list.map(hotelCard).join('') : `<div class="card center-note">No properties match your filters. Try clearing some.</div>`}
+      </div>
+    </div>
+  </div>`);
+}
+function hotelCard(h){
+  const wl=S.wishlist.has(h.id);
+  return `<div class="card hrow">
+    <div class="ph t-${h.tone}" style="position:relative">
+      <span class="emoji">🏨</span>
+      <span class="badge bg-b" style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95)">✓ Verified</span>
+      <button style="position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.92);font-size:15px;color:${wl?'var(--s600)':'var(--r400)'}" onclick="toggleWish('${h.id}')">${wl?'♥':'♡'}</button>
+    </div>
+    <div class="hbody">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;gap:8px;align-items:center"><span style="font-size:16px;font-weight:700">${h.name}</span><span style="color:var(--s500);font-size:12px">${stars(h.star)}</span></div>
+          <div style="font-size:12.5px;color:var(--r400);margin-top:2px">${h.city} · ${h.dist} km from centre · ${h.type}</div>
+        </div>
+        <div class="rating-chip">${h.rating}<span style="font-size:10px;font-weight:400">/5 (${h.reviews})</span></div>
+      </div>
+      <div style="font-size:12.5px;color:var(--r500);margin-top:6px">${h.room} · ${h.meal}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">${h.amen.map(a=>`<span class="amen">${a}</span>`).join('')}</div>
+      <div style="font-size:12px;margin-top:7px;display:flex;gap:12px">${h.freeCancel?'<span style="color:var(--g600);font-weight:600">✓ Free cancellation</span>':''}${h.payAtHotel?'<span style="color:var(--r500);font-weight:600">✓ Pay at hotel</span>':''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:end;border-top:1px solid var(--border);margin-top:auto;padding-top:10px">
+        <div style="font-size:12px;color:var(--r400)">per night incl. of taxes</div>
+        <div style="text-align:right">
+          <span class="strike">${INR(h.base)}</span>
+          <div class="price-lg">${INR(h.price)} <span style="font-size:12px;font-weight:700;color:var(--g600)">(${h.disc}% off)</span></div>
+          <a class="btn btn-p btn-sm" href="#/hotel/${h.id}" style="margin-top:6px">View Rooms</a>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function toggleWish(id){
+  S.wishlist.has(id)?S.wishlist.delete(id):S.wishlist.add(id);
+  save(); toast(S.wishlist.has(id)?'Added to wishlist ♥':'Removed from wishlist'); render();
+}
+
+/* ================= HOTEL DETAIL ================= */
+function hotelRooms(h){
+  return [
+    {name:h.room, meal:h.meal, price:h.price, cancel:h.freeCancel},
+    {name:'Premium '+h.room, meal:'Breakfast & Dinner', price:Math.round(h.price*1.25), cancel:true},
+    {name:'Executive Suite', meal:'All Meals Included', price:Math.round(h.price*1.6), cancel:true},
+  ];
+}
+function hotelDetailView(id){
+  const h=HOTELS.find(x=>x.id===id);
+  if(!h) return page('', `<div class="center-note"><h2>Property not found</h2><a class="btn btn-p" style="margin-top:14px" href="#/hotels">Back to hotels</a></div>`);
+  const d=S.detail, rooms=hotelRooms(h), r=rooms[d.roomIdx]||rooms[0];
+  const discount=d.couponOn?Math.round(r.price*.1):0, taxes=Math.round((r.price-discount)*.12), total=r.price-discount+taxes;
+  const similar=HOTELS.filter(x=>x.city===h.city&&x.id!==h.id).slice(0,3);
+  return page('#/hotels', `<div class="container" style="padding-top:26px;padding-bottom:40px">
+    <div class="gallery">${ph(h.tone,'🏨','')}${ph(h.tone,'🛏️','')}${ph(h.tone,'🛁','')}${ph(h.tone,'🏊','360° view')}</div>
+    <div class="detail" style="margin-top:26px">
+      <div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <h1 style="font-size:26px;font-weight:800">${h.name}</h1>
+          <span style="color:var(--s500)">${stars(h.star)}</span>
+          <span class="badge bg-b">✓ Verified Property</span>
+        </div>
+        <div style="font-size:14px;color:var(--r400);margin-top:4px">${h.name}, ${h.city} · <a style="text-decoration:underline" href="#/hotels">View on map</a></div>
+        <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+          <span class="rating-chip">${h.rating}/5</span><span style="font-size:13.5px;color:var(--r500)">${h.reviews} verified reviews</span>
+        </div>
+
+        <h3 style="margin-top:28px;font-size:18px">About this property</h3>
+        <p style="font-size:14px;color:var(--r500);margin-top:8px">${h.name} is a ${h.star}-star ${h.type.toLowerCase()} in ${h.city}, offering ${h.meal.toLowerCase()} stays with easy access to the city's top attractions.</p>
+
+        <h3 style="margin-top:26px;font-size:18px">Amenities</h3>
+        <div class="grid g3" style="margin-top:10px;gap:8px">${h.amen.map(a=>`<div style="background:var(--r50);border-radius:10px;padding:9px 13px;font-size:13.5px;color:var(--r700)">✓ ${a}</div>`).join('')}</div>
+
+        <h3 style="margin-top:26px;font-size:18px">Choose your room</h3>
+        <div style="margin-top:10px">${rooms.map((rm,i)=>`
+          <button class="room-opt ${d.roomIdx===i?'on':''}" onclick="S.detail.roomIdx=${i};render()">
+            <span><span style="font-weight:700;display:block">${rm.name}</span><span style="font-size:12.5px;color:var(--r400)">${rm.meal} · ${rm.cancel?'Free cancellation':'Non-refundable'}</span></span>
+            <span style="font-weight:800;font-size:17px">${INR(rm.price)}<span style="font-size:11px;font-weight:400;color:var(--r400)"> /night</span></span>
+          </button>`).join('')}</div>
+
+        <h3 style="margin-top:26px;font-size:18px">Policies</h3>
+        <div class="grid g2" style="margin-top:10px;font-size:13.5px;gap:14px">
+          <div><div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--r400)">Check-in / Check-out</div><div style="margin-top:3px">2:00 PM / 11:00 AM</div></div>
+          <div><div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--r400)">Cancellation</div><div style="margin-top:3px">${h.freeCancel?'Free cancellation up to 48 hours before check-in.':'Non-refundable after payment.'}</div></div>
+          <div><div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--r400)">Child policy</div><div style="margin-top:3px">Kids below 5 stay free using existing bedding.</div></div>
+          <div><div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--r400)">Extra bed</div><div style="margin-top:3px">₹1,200 per night per extra bed</div></div>
+        </div>
+
+        <h3 style="margin-top:26px;font-size:18px">Frequently asked questions</h3>
+        <div style="margin-top:6px">
+          ${[['What is the check-in and check-out time?','Check-in from 2:00 PM, check-out by 11:00 AM. Early/late subject to availability.'],
+             ['Is breakfast included?','Depends on the selected meal plan — Room Only, Breakfast, or All Meals.'],
+             ['Can I cancel for free?','Most bookings are free to cancel up to 24–48h before check-in.'],
+             ['Is ID proof required?','Yes, a valid government photo ID is required for all guests at check-in.']].map(f=>
+          `<details class="faq"><summary>${f[0]}</summary><p>${f[1]}</p></details>`).join('')}
+        </div>
+
+        ${similar.length?`<h3 style="margin-top:26px;font-size:18px">Similar properties in ${h.city}</h3>
+        <div class="grid g3" style="margin-top:10px">${similar.map(s=>`
+          <a class="card" style="overflow:hidden" href="#/hotel/${s.id}" onclick="S.detail={roomIdx:0,coupon:'',couponOn:false}">
+            ${ph(s.tone,'🏨','','height:96px')}
+            <div style="padding:10px"><div style="font-size:13.5px;font-weight:700">${s.name}</div><div style="font-size:12px;color:var(--r400)">${INR(s.price)} / night</div></div>
+          </a>`).join('')}</div>`:''}
+      </div>
+
+      <div class="card bookbox">
+        <span class="strike">${INR(r.price+Math.round(r.price*.15))}</span>
+        <div style="font-size:26px;font-weight:800">${INR(r.price)}</div>
+        <div style="font-size:12px;color:var(--r400)">per night · ${r.meal}</div>
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+          <div class="prow"><span>Room price</span><span>${INR(r.price)}</span></div>
+          ${d.couponOn?`<div class="prow" style="color:var(--g600)"><span>Coupon (10%)</span><span>−${INR(discount)}</span></div>`:''}
+          <div class="prow"><span>Taxes &amp; fees</span><span>${INR(taxes)}</span></div>
+          <div class="prow total"><span>Payable amount</span><span>${INR(total)}</span></div>
+        </div>
+        <div style="margin-top:12px">
+          ${d.couponOn?`<span class="badge bg-g">✓ Coupon ${esc(d.coupon.toUpperCase())} applied</span>`:
+          `<div style="display:flex;gap:8px">
+            <input id="cpn" placeholder="Coupon code" value="${esc(d.coupon)}" style="flex:1;border:1px solid var(--border);border-radius:9px;padding:9px 11px;outline:none" oninput="S.detail.coupon=this.value">
+            <button class="btn btn-s btn-sm" onclick="applyDetailCoupon()">Apply</button>
+          </div>`}
+        </div>
+        <button class="btn btn-p" style="width:100%;margin-top:14px" onclick="startCheckout({type:'Hotel',title:'${esc(h.name)}',sub:'${esc(h.city)} · ${esc(r.name)}',amount:${total},tone:'${h.tone}',emoji:'🏨'})">Book Now</button>
+        <div style="text-align:center;font-size:11px;color:var(--r400);margin-top:8px">You won't be charged yet</div>
+      </div>
+    </div>
+  </div>`);
+}
+function applyDetailCoupon(){
+  if(!S.detail.coupon.trim()){toast('Enter a coupon code first');return;}
+  S.detail.couponOn=true; toast('Coupon applied — 10% off! 🎉'); render();
+}
+
+/* ================= FLIGHTS / BUSES / CABS / PKGS / ACTS ================= */
+function flightsView(){
+  const f=S.fl;
+  let list=FLIGHTS.filter(x=>{
+    if(f.from&&!(x.from+' '+x.fc).toLowerCase().includes(f.from.toLowerCase()))return false;
+    if(f.to&&!(x.to+' '+x.tc).toLowerCase().includes(f.to.toLowerCase()))return false;
+    if(f.direct&&x.stops>0)return false; return true;});
+  if(f.sort==='Price: Low to High')list.sort((a,b)=>a.price-b.price);
+  else if(f.sort==='Price: High to Low')list.sort((a,b)=>b.price-a.price);
+  else if(f.sort==='Duration')list.sort((a,b)=>a.dur-b.dur);
+  return page('#/flights', `<div class="container" style="padding:28px 20px 40px">
+    <h1 style="font-size:22px;font-weight:800">Flight Search Results</h1>
+    <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${list.length} flights found</div>
+    <div class="card" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:16px;margin-bottom:18px">
+      <div class="field"><label>From</label><input id="flf" value="${esc(f.from)}" placeholder="Any" oninput="S.fl.from=this.value;renderKeepFocus('flf')"></div>
+      <div class="field"><label>To</label><input id="flt" value="${esc(f.to)}" placeholder="Any" oninput="S.fl.to=this.value;renderKeepFocus('flt')"></div>
+      <label class="check" style="padding-bottom:10px"><input type="checkbox" ${f.direct?'checked':''} onchange="S.fl.direct=this.checked;render()">Direct only</label>
+      <div class="field" style="margin-left:auto"><label>Sort</label><select onchange="S.fl.sort=this.value;render()">${['Price: Low to High','Price: High to Low','Duration'].map(o=>`<option ${f.sort===o?'selected':''}>${o}</option>`).join('')}</select></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+    ${list.length?list.map(x=>`<div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:16px">
+      <div style="display:flex;gap:10px;align-items:center;width:160px"><span style="font-size:22px">${x.logo}</span><div><div style="font-weight:700;font-size:14px">${x.airline}</div><div style="font-size:12px;color:var(--r400)">${x.no}</div></div></div>
+      <div style="flex:1;display:flex;align-items:center;gap:16px;justify-content:center;min-width:240px">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.dep}</div><div style="font-size:12px;color:var(--r400)">${x.from} (${x.fc})</div></div>
+        <div style="flex:1;text-align:center;color:var(--r300);font-size:12px">${dur(x.dur)}<div style="height:1px;background:var(--r200);margin:4px 0"></div>${x.stops===0?'Non-stop':x.stops+' stop'}</div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.arr}</div><div style="font-size:12px;color:var(--r400)">${x.to} (${x.tc})</div></div>
+      </div>
+      <div style="text-align:right;min-width:150px">
+        <div style="font-size:11.5px;color:var(--r400)">${x.cls} · ${x.ref?'Refundable':'Non-refundable'} · ${x.bag}kg bag</div>
+        <div class="price-lg">${INR(x.price)}</div>
+        <button class="btn btn-p btn-sm" style="margin-top:5px" onclick="startCheckout({type:'Flight',title:'${x.from} → ${x.to} · ${x.no}',sub:'${x.airline} · ${x.cls}',amount:${x.price},tone:'royal',emoji:'✈️'})">Book Now</button>
+      </div>
+    </div>`).join(''):`<div class="card center-note">No flights match. Try another route.</div>`}
+    </div></div>`);
+}
+function busesView(){
+  const f=S.bus;
+  let list=BUSES.filter(x=>{
+    if(f.from&&!x.from.toLowerCase().includes(f.from.toLowerCase()))return false;
+    if(f.to&&!x.to.toLowerCase().includes(f.to.toLowerCase()))return false;
+    if(f.ac&&!x.ac)return false;return true;});
+  if(f.sort==='Price: Low to High')list.sort((a,b)=>a.price-b.price);
+  else if(f.sort==='Price: High to Low')list.sort((a,b)=>b.price-a.price);
+  else if(f.sort==='Rating')list.sort((a,b)=>b.rating-a.rating);
+  return page('#/buses', `<div class="container" style="padding:28px 20px 40px">
+    <h1 style="font-size:22px;font-weight:800">Bus Search Results</h1>
+    <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${list.length} buses found</div>
+    <div class="card" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:16px;margin-bottom:18px">
+      <div class="field"><label>From</label><input id="bf" value="${esc(f.from)}" placeholder="Any" oninput="S.bus.from=this.value;renderKeepFocus('bf')"></div>
+      <div class="field"><label>To</label><input id="bt" value="${esc(f.to)}" placeholder="Any" oninput="S.bus.to=this.value;renderKeepFocus('bt')"></div>
+      <label class="check" style="padding-bottom:10px"><input type="checkbox" ${f.ac?'checked':''} onchange="S.bus.ac=this.checked;render()">AC only</label>
+      <div class="field" style="margin-left:auto"><label>Sort</label><select onchange="S.bus.sort=this.value;render()">${['Price: Low to High','Price: High to Low','Rating'].map(o=>`<option ${f.sort===o?'selected':''}>${o}</option>`).join('')}</select></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+    ${list.length?list.map(x=>`<div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:16px">
+      <div style="width:180px"><div style="font-weight:700;font-size:14px">${x.op}</div><div style="font-size:12px;color:var(--r400)">${x.type}</div><div style="font-size:12px;color:var(--s600);font-weight:700;margin-top:2px">★ ${x.rating}</div></div>
+      <div style="flex:1;display:flex;align-items:center;gap:16px;justify-content:center;min-width:220px">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.dep}</div><div style="font-size:12px;color:var(--r400)">${x.from}</div></div>
+        <div style="flex:1;text-align:center;color:var(--r300);font-size:12px">${dur(x.dur)}<div style="height:1px;background:var(--r200);margin:4px 0"></div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.arr}</div><div style="font-size:12px;color:var(--r400)">${x.to}</div></div>
+      </div>
+      <div style="text-align:right;min-width:140px">
+        <div style="font-size:11.5px;color:var(--r400)">${x.seats} seats left</div>
+        <div class="price-lg">${INR(x.price)}</div>
+        <button class="btn btn-p btn-sm" style="margin-top:5px" onclick="startCheckout({type:'Bus',title:'${x.from} → ${x.to}',sub:'${esc(x.op)} · ${esc(x.type)}',amount:${x.price},tone:'saffron',emoji:'🚌'})">Select Seats</button>
+      </div>
+    </div>`).join(''):`<div class="card center-note">No buses match. Try another route.</div>`}
+    </div></div>`);
+}
+function cabsView(){
+  const cats=['All','Hatchback','Sedan','SUV','Luxury','Tempo'];
+  const list=S.cabCat==='All'?CABS:CABS.filter(c=>c.cat===S.cabCat);
+  return page('#/cabs', `<div class="container" style="padding:28px 20px 40px">
+    <h1 style="font-size:22px;font-weight:800">Cab Search Results</h1>
+    <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${S.cabTrip} · Estimated for a 25 km trip</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      ${['Local','Airport Transfer','Outstation One-Way','Outstation Round Trip'].map(t=>`<button class="pill ${S.cabTrip===t?'on':''}" onclick="S.cabTrip='${t}';render()">${t}</button>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      ${cats.map(c=>`<button class="pill ${S.cabCat===c?'on':''}" onclick="S.cabCat='${c}';render()">${c}</button>`).join('')}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+    ${list.map(c=>{const est=c.perKm*25+c.allow;return `<div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:16px">
+      <div style="width:64px;height:52px;border-radius:12px;background:var(--r50);display:flex;align-items:center;justify-content:center;font-size:28px">${c.icon}</div>
+      <div style="flex:1;min-width:200px"><div style="font-weight:700;font-size:14.5px">${c.name}</div>
+      <div style="font-size:12.5px;color:var(--r400)">${c.seats} seats · ${c.bags} bags · ₹${c.perKm}/km + ₹${c.allow} driver allowance</div></div>
+      <div style="text-align:right"><div class="price-lg">${INR(est)}</div>
+      <button class="btn btn-p btn-sm" style="margin-top:5px" onclick="startCheckout({type:'Cab',title:'${esc(c.name)}',sub:'${S.cabTrip} · 25 km est.',amount:${est},tone:'royal',emoji:'🚕'})">Book Now</button></div>
+    </div>`}).join('')}
+    </div></div>`);
+}
+function packagesView(){
+  return page('#/packages', `<div class="container" style="padding:28px 20px 40px">
+    <h1 style="font-size:22px;font-weight:800">Holiday Packages</h1>
+    <div style="font-size:13.5px;color:var(--r400);margin-bottom:20px">${PKGS.length} curated packages</div>
+    <div class="grid g3">${PKGS.map(pkgCard).join('')}</div></div>`);
+}
+function activitiesView(){
+  return page('#/activities', `<div class="container" style="padding:28px 20px 40px">
+    <h1 style="font-size:22px;font-weight:800">Local Sightseeing &amp; Activities</h1>
+    <div style="font-size:13.5px;color:var(--r400);margin-bottom:20px">${ACTS.length} curated experiences</div>
+    <div class="grid g4">${ACTS.map(a=>`<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
+      ${ph(a.tone,a.emoji,a.city,'height:104px')}
+      <div style="padding:13px;flex:1;display:flex;flex-direction:column">
+        <span class="badge bg-b" style="align-self:flex-start">${a.cat}</span>
+        <div style="font-size:14px;font-weight:700;margin-top:7px;flex:1">${a.title}</div>
+        <div style="font-size:12px;color:var(--r400);margin-top:3px">${a.city} · ~${a.hrs}h</div>
+        <div style="display:flex;justify-content:space-between;align-items:end;margin-top:10px">
+          <div style="font-size:16px;font-weight:800">${INR(a.price)}</div>
+          <button class="btn btn-p btn-sm" onclick="startCheckout({type:'Activity',title:'${esc(a.title)}',sub:'${esc(a.city)} · ${a.hrs}h',amount:${a.price},tone:'${a.tone}',emoji:'${a.emoji}'})">Book</button>
+        </div>
+      </div></div>`).join('')}</div></div>`);
+}
+function trainsView(){
+  return page('#/trains', `<div class="container" style="padding:60px 20px">
+    <div style="max-width:540px;margin:0 auto;border:1.5px dashed var(--r200);background:var(--r50);border-radius:18px;padding:36px;text-align:center">
+      <div style="font-size:40px">🚆</div>
+      <h1 style="font-size:22px;font-weight:800;margin-top:10px">Train search is on the way</h1>
+      <p style="font-size:14px;color:var(--r500);margin-top:10px">BharatStay's train search will connect to IRCTC-authorised data partners for live seat availability. This demo has no live rail inventory connected.</p>
+      <a class="btn btn-p" style="margin-top:18px" href="#/hotels">Explore Hotels Instead</a>
+    </div></div>`);
+}
+
+/* ================= CHECKOUT ================= */
+const ADDONS=[['breakfast','Breakfast upgrade',600],['early','Early check-in',800],['pickup','Airport pickup transfer',900],['insurance','Travel insurance',249]];
+const METHODS=[['UPI','📱'],['Credit Card','💳'],['Debit Card','💳'],['Net Banking','🏦'],['Wallet','👛'],['EMI','🧾'],['Pay Later','⏳'],['Bank Transfer','🏧']];
+function startCheckout(item){
+  S.cart=item;
+  S.co={step:0,guest:{title:'Mr',first:'',last:'',email:'',phone:''},addons:{},coupon:'',couponOn:false,gst:false,gstin:'',method:'UPI'};
+  go('#/checkout');
+}
+function coTotals(){
+  const base=S.cart?S.cart.amount:0;
+  const add=ADDONS.reduce((s,a)=>s+(S.co.addons[a[0]]?a[2]:0),0);
+  const disc=S.co.couponOn?Math.round(base*.05):0;
+  const sub=base+add-disc;
+  const gst=Math.round(sub*(S.co.gst?.18:.12));
+  return {base,add,disc,gst,total:sub+gst};
+}
+function checkoutView(){
+  if(!S.cart) return page('', `<div class="center-note"><h2>Your cart is empty</h2><p style="margin-top:6px">Pick a hotel, flight, bus, cab or package first.</p><a class="btn btn-p" style="margin-top:16px" href="#/hotels">Browse Hotels</a></div>`);
+  const c=S.co, t=coTotals();
+  const STEPS=['Review','Guest Details','Add-ons','Coupon & GST','Payment'];
+  const stepBody=[
+   `<div class="card" style="padding:20px">
+      <h3 style="font-size:17px;margin-bottom:12px">Review your booking</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--muted);border-radius:12px;padding:16px">
+        <div><div style="font-weight:700">${esc(S.cart.title)}</div><div style="font-size:13px;color:var(--r400)">${esc(S.cart.sub)} · ${S.cart.type} booking</div></div>
+        <div style="font-size:18px;font-weight:800">${INR(t.base)}</div>
+      </div>
+      <button class="btn btn-p" style="margin-top:16px" onclick="S.co.step=1;render()">Continue</button></div>`,
+   `<div class="card" style="padding:20px">
+      <h3 style="font-size:17px;margin-bottom:12px">Guest / traveller details</h3>
+      <div class="grid g2" style="gap:12px">
+        <div class="field"><label>Title</label><select onchange="S.co.guest.title=this.value">${['Mr','Mrs','Ms','Dr'].map(x=>`<option ${c.guest.title===x?'selected':''}>${x}</option>`).join('')}</select></div><div></div>
+        <div class="field"><label>First name *</label><input value="${esc(c.guest.first)}" oninput="S.co.guest.first=this.value"></div>
+        <div class="field"><label>Last name</label><input value="${esc(c.guest.last)}" oninput="S.co.guest.last=this.value"></div>
+        <div class="field"><label>Email *</label><input type="email" value="${esc(c.guest.email)}" oninput="S.co.guest.email=this.value"></div>
+        <div class="field"><label>Phone *</label><input type="tel" value="${esc(c.guest.phone)}" oninput="S.co.guest.phone=this.value"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn btn-s" onclick="S.co.step=0;render()">Back</button>
+        <button class="btn btn-p" onclick="coNext()">Continue</button></div></div>`,
+   `<div class="card" style="padding:20px">
+      <h3 style="font-size:17px;margin-bottom:12px">Add-ons</h3>
+      ${ADDONS.map(a=>`<label class="check" style="justify-content:space-between;border:1px solid var(--border);border-radius:11px;padding:11px 14px;margin-bottom:8px">
+        <span style="display:flex;gap:9px;align-items:center"><input type="checkbox" ${c.addons[a[0]]?'checked':''} onchange="S.co.addons['${a[0]}']=this.checked;render()">${a[1]}</span>
+        <b style="color:var(--r700)">+${INR(a[2])}</b></label>`).join('')}
+      <div style="display:flex;justify-content:space-between;margin-top:14px">
+        <button class="btn btn-s" onclick="S.co.step=1;render()">Back</button>
+        <button class="btn btn-p" onclick="S.co.step=3;render()">Continue</button></div></div>`,
+   `<div class="card" style="padding:20px">
+      <h3 style="font-size:17px;margin-bottom:12px">Coupon &amp; GST</h3>
+      ${c.couponOn?`<span class="badge bg-g">✓ Coupon ${esc(c.coupon.toUpperCase())} applied — 5% off</span>`:
+      `<div style="display:flex;gap:8px;max-width:340px"><input placeholder="e.g. STAY25" value="${esc(c.coupon)}" style="flex:1;border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none" oninput="S.co.coupon=this.value">
+       <button class="btn btn-s btn-sm" onclick="if(S.co.coupon.trim()){S.co.couponOn=true;toast('Coupon applied! 5% off 🎉');render()}else toast('Enter a coupon code')">Apply</button></div>`}
+      <label class="check" style="margin-top:16px"><input type="checkbox" ${c.gst?'checked':''} onchange="S.co.gst=this.checked;render()">I need a business GST invoice (18% GST)</label>
+      ${c.gst?`<div class="field" style="max-width:300px;margin-top:8px"><label>GSTIN</label><input value="${esc(c.gstin)}" oninput="S.co.gstin=this.value" placeholder="27ABCDE1234F1Z5"></div>`:''}
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn btn-s" onclick="S.co.step=2;render()">Back</button>
+        <button class="btn btn-p" onclick="S.co.step=4;render()">Continue to Payment</button></div></div>`,
+   `<div class="card" style="padding:20px">
+      <h3 style="font-size:17px;margin-bottom:12px">Choose payment method</h3>
+      <div class="pay-grid">${METHODS.map(m=>`<button class="pay-opt ${c.method===m[0]?'on':''}" onclick="S.co.method='${m[0]}';render()"><span style="font-size:22px">${m[1]}</span>${m[0]}</button>`).join('')}</div>
+      <div style="font-size:11px;color:var(--r400);margin-top:12px">Demo checkout — no real payment is processed. Production uses Razorpay/Cashfree/PayU/Stripe-ready gateway integration.</div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn btn-s" onclick="S.co.step=3;render()">Back</button>
+        <button class="btn btn-p" id="payBtn" onclick="doPay(this)">Pay ${INR(t.total)}</button></div></div>`,
+  ][c.step];
+  return page('', `<div class="container" style="padding:28px 20px 44px">
+    <h1 style="font-size:22px;font-weight:800;margin-bottom:18px">Secure Checkout</h1>
+    <div class="steps">${STEPS.map((s,i)=>`<span class="step ${i===c.step?'on':i<c.step?'done':''}">${i<c.step?'✓':(i+1)} ${s}</span>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start" class="co-grid">
+      <div>${stepBody}</div>
+      <div class="card" style="padding:18px;position:sticky;top:80px">
+        <h4 style="font-size:13.5px;font-weight:800;margin-bottom:8px">Price Summary</h4>
+        <div class="prow"><span>Base amount</span><span>${INR(t.base)}</span></div>
+        ${t.add?`<div class="prow"><span>Add-ons</span><span>${INR(t.add)}</span></div>`:''}
+        ${t.disc?`<div class="prow" style="color:var(--g600)"><span>Coupon discount</span><span>−${INR(t.disc)}</span></div>`:''}
+        <div class="prow"><span>${c.gst?'GST (18%)':'Taxes & fees (12%)'}</span><span>${INR(t.gst)}</span></div>
+        <div class="prow total"><span>Total payable</span><span>${INR(t.total)}</span></div>
+      </div>
+    </div>
+    <style>@media(max-width:860px){.co-grid{grid-template-columns:1fr!important}}</style>
+  </div>`);
+}
+function coNext(){
+  const g=S.co.guest;
+  if(!g.first.trim()||!g.email.trim()||!g.phone.trim()){toast('Please fill first name, email and phone');return;}
+  S.co.step=2; render();
+}
+function doPay(btn){
+  btn.disabled=true; btn.textContent='Processing…';
+  setTimeout(()=>{
+    const t=coTotals();
+    const b={
+      ref:bookingRef(), txn:'TXN'+Math.floor(80000000+Math.random()*9999999),
+      type:S.cart.type, title:S.cart.title, sub:S.cart.sub, tone:S.cart.tone, emoji:S.cart.emoji,
+      amount:t.total, method:S.co.method, gst:S.co.gst?S.co.gstin||'27ABCDE1234F1Z5':'',
+      guest:(S.co.guest.title+' '+S.co.guest.first+' '+S.co.guest.last).trim(),
+      email:S.co.guest.email, phone:S.co.guest.phone,
+      date:new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+      status:'Upcoming',
+    };
+    S.lastBooking=b; S.bookings.unshift(b); save();
+    go('#/status');
+  },1100);
+}
+
+/* ================= STATUS / VOUCHER / RECEIPT ================= */
+function statusView(){
+  const b=S.lastBooking;
+  if(!b) return page('', `<div class="center-note"><h2>No recent payment</h2><a class="btn btn-p" style="margin-top:14px" href="#/">Go Home</a></div>`);
+  return page('', `<div class="container" style="padding:44px 20px;max-width:640px">
+    <div style="background:var(--g50);border-radius:18px;padding:34px;text-align:center">
+      <div style="font-size:46px">✅</div>
+      <h1 style="font-size:24px;font-weight:800;color:var(--g600);margin-top:8px">Payment Successful</h1>
+      <p style="font-size:14px;color:var(--r500);margin-top:6px">Your booking is confirmed. Voucher and GST receipt are ready below.</p>
+    </div>
+    <div class="card" style="padding:22px;margin-top:18px">
+      <div class="vrow"><span>Booking ID</span><span>${b.ref}</span></div>
+      <div class="vrow"><span>Transaction ID</span><span>${b.txn}</span></div>
+      <div class="vrow"><span>Booking</span><span>${esc(b.title)}</span></div>
+      <div class="vrow"><span>Guest</span><span>${esc(b.guest)}</span></div>
+      <div class="vrow"><span>Payment method</span><span>${b.method}</span></div>
+      <div class="vrow"><span>Date &amp; time</span><span>${b.date}</span></div>
+      <div class="vrow" style="border:none"><span style="font-weight:800;color:var(--r900)">Amount paid</span><span style="font-size:19px;font-weight:800">${INR(b.amount)}</span></div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <a class="btn btn-p" href="#/voucher">🎟️ View Voucher</a>
+      <a class="btn btn-s" href="#/receipt">🧾 View GST Receipt</a>
+    </div>
+    <div style="text-align:center;margin-top:18px"><a href="#/dashboard" style="font-weight:700;color:var(--r700)">Go to My Bookings →</a></div>
+  </div>`);
+}
+function voucherView(){
+  const b=S.lastBooking||S.bookings[0];
+  if(!b) return page('', `<div class="center-note"><h2>No booking yet</h2><a class="btn btn-p" style="margin-top:14px" href="#/hotels">Book something first</a></div>`);
+  return page('', `<div class="container" style="padding:32px 20px">
+    <div style="max-width:760px;margin:0 auto 14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px" class="no-print">
+      <h1 style="font-size:20px;font-weight:800">${b.type} Voucher</h1>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-s btn-sm" onclick="print()">🖨️ Print</button>
+        <button class="btn btn-s btn-sm" onclick="print()">⬇️ Save as PDF</button>
+        <button class="btn btn-s btn-sm" onclick="toast('Demo: voucher shared on WhatsApp ✓')">💬 WhatsApp</button>
+        <button class="btn btn-s btn-sm" onclick="toast('Demo: voucher emailed ✓')">✉️ Email</button>
+      </div>
+    </div>
+    <div class="voucher">
+      <div style="display:flex;justify-content:space-between;align-items:start;border-bottom:1px dashed var(--border);padding-bottom:14px">
+        <a class="logo" href="#/"><span class="mark">📍</span><span><span class="name">Bharat<span>Stay</span></span><small>Explore India, Stay Your Way</small></span></a>
+        <span class="badge bg-g">Booking Confirmed</span>
+      </div>
+      <div class="vsec">Booking details</div>
+      <div class="vrow"><span>Booking ID</span><span>${b.ref}</span></div>
+      <div class="vrow"><span>Booking</span><span>${esc(b.title)}</span></div>
+      <div class="vrow"><span>Details</span><span>${esc(b.sub)}</span></div>
+      <div class="vrow"><span>Booked on</span><span>${b.date}</span></div>
+      <div class="vsec">Guest details</div>
+      <div class="vrow"><span>Guest</span><span>${esc(b.guest)}</span></div>
+      <div class="vrow"><span>Contact</span><span>${esc(b.email)} · ${esc(b.phone)}</span></div>
+      <div class="vsec">Payment</div>
+      <div class="vrow"><span>Amount paid</span><span>${INR(b.amount)}</span></div>
+      <div class="vrow"><span>Balance due</span><span>₹0</span></div>
+      <div style="background:var(--r50);border-radius:12px;padding:14px;font-size:12.5px;color:var(--r600);margin-top:18px">
+        <b style="color:var(--r700)">Important instructions</b>
+        <ul style="margin:6px 0 0 18px;line-height:1.9">
+          <li>Carry a valid government photo ID matching the booking name.</li>
+          <li>Cancellation policy applies as shown at booking time.</li>
+          <li>24/7 emergency support: 1800-123-4567</li>
+        </ul>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:end;border-top:1px dashed var(--border);margin-top:18px;padding-top:14px">
+        <div class="qr">▦</div>
+        <div style="text-align:right;font-size:11.5px;color:var(--r400)">BharatStay Travels Pvt. Ltd.<br>support@bharatstay.example · 1800-123-4567<br>GSTIN: 27ABCDE1234F1Z5</div>
+      </div>
+    </div>
+  </div>`);
+}
+function receiptView(){
+  const b=S.lastBooking||S.bookings[0];
+  if(!b) return page('', `<div class="center-note"><h2>No payment yet</h2><a class="btn btn-p" style="margin-top:14px" href="#/hotels">Book something first</a></div>`);
+  const base=Math.round(b.amount/1.12), tax=b.amount-base;
+  return page('', `<div class="container" style="padding:32px 20px">
+    <div style="max-width:760px;margin:0 auto 14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px" class="no-print">
+      <h1 style="font-size:20px;font-weight:800">Payment Receipt</h1>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-s btn-sm" onclick="print()">🖨️ Print</button>
+        <button class="btn btn-s btn-sm" onclick="print()">⬇️ Save as PDF</button>
+      </div>
+    </div>
+    <div class="voucher">
+      <div style="display:flex;justify-content:space-between;align-items:start;border-bottom:1px dashed var(--border);padding-bottom:14px">
+        <a class="logo" href="#/"><span class="mark">📍</span><span><span class="name">Bharat<span>Stay</span></span><small>Explore India, Stay Your Way</small></span></a>
+        <span class="badge bg-g">Payment Successful</span>
+      </div>
+      <div class="vsec">Receipt details</div>
+      <div class="vrow"><span>Receipt number</span><span>RCPT-${b.ref.replace(/\D/g,'')}</span></div>
+      <div class="vrow"><span>Booking ID</span><span>${b.ref}</span></div>
+      <div class="vrow"><span>Transaction ID</span><span>${b.txn}</span></div>
+      <div class="vrow"><span>Gateway reference</span><span>PG-${b.txn}</span></div>
+      <div class="vrow"><span>Payment method</span><span>${b.method}</span></div>
+      <div class="vrow"><span>Date &amp; time</span><span>${b.date}</span></div>
+      <div class="vsec">Customer</div>
+      <div class="vrow"><span>Name</span><span>${esc(b.guest)}</span></div>
+      <div class="vrow"><span>Contact</span><span>${esc(b.email)} · ${esc(b.phone)}</span></div>
+      <div class="vsec">Amount breakdown</div>
+      <div class="vrow"><span>Base amount</span><span>${INR(base)}</span></div>
+      <div class="vrow"><span>Taxes &amp; convenience fee</span><span>${INR(tax)}</span></div>
+      <div class="vrow"><span style="font-weight:800;color:var(--r900)">Total paid</span><span style="font-size:17px;font-weight:800">${INR(b.amount)}</span></div>
+      <div class="vsec">GST details</div>
+      <div class="vrow"><span>GSTIN</span><span>${b.gst||'27ABCDE1234F1Z5'}</span></div>
+      <div class="vrow"><span>Place of supply</span><span>Maharashtra</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:end;border-top:1px dashed var(--border);margin-top:18px;padding-top:14px">
+        <div class="qr">▦</div>
+        <div style="text-align:right;font-size:11.5px;color:var(--r400)">BharatStay Travels Pvt. Ltd.<br>Mumbai, Maharashtra, India</div>
+      </div>
+    </div>
+  </div>`);
+}
+
+/* ================= CUSTOMER DASHBOARD ================= */
+function dashboardView(){
+  const tabs=['All','Upcoming','Completed','Cancelled'];
+  const list=S.dashTab==='All'?S.bookings:S.bookings.filter(b=>b.status===S.dashTab);
+  const spent=S.bookings.reduce((s,b)=>s+(b.status!=='Cancelled'?b.amount:0),0);
+  return page('', `<div class="container" style="padding:28px 20px 44px">
+    <div class="dash">
+      <div class="card dnav">
+        <a class="on" href="#/dashboard">📊 My Dashboard</a>
+        <a href="#/admin">🛠️ Admin Dashboard</a>
+        <a href="#/login">👤 Profile &amp; Login</a>
+        <a href="#/support">💬 Support</a>
+      </div>
+      <div>
+        <h1 style="font-size:22px;font-weight:800">Welcome back, Traveller 👋</h1>
+        <div style="font-size:13.5px;color:var(--r400);margin-bottom:18px">Bookings made in this demo session appear here (saved in your browser).</div>
+        <div class="grid g4" style="margin-bottom:22px">
+          <div class="card stat"><div class="k">Total bookings</div><div class="v">${S.bookings.length}</div></div>
+          <div class="card stat"><div class="k">Upcoming trips</div><div class="v">${S.bookings.filter(b=>b.status==='Upcoming').length}</div></div>
+          <div class="card stat"><div class="k">Total spent</div><div class="v" style="color:var(--g600)">${INR(spent)}</div></div>
+          <div class="card stat"><div class="k">Wishlist</div><div class="v" style="color:var(--s600)">${S.wishlist.size} saved</div></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+          ${tabs.map(t=>`<button class="pill ${S.dashTab===t?'on':''}" onclick="S.dashTab='${t}';render()">${t}</button>`).join('')}
+        </div>
+        ${list.length?list.map((b,i)=>`<div class="card" style="display:flex;gap:14px;align-items:center;padding:14px;margin-bottom:12px;flex-wrap:wrap">
+          <div style="width:72px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px" class="t-${b.tone||'royal'} ph">${b.emoji||'🎫'}</div>
+          <div style="flex:1;min-width:180px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="font-size:14.5px">${esc(b.title)}</b>${stBadge(b.status)}</div>
+            <div style="font-size:12.5px;color:var(--r400)">${esc(b.sub)} · ${b.ref} · ${b.date}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:800;font-size:15px">${INR(b.amount)}</div>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <button class="btn btn-s btn-sm" onclick="S.lastBooking=S.bookings[${i}];go('#/voucher')">Ticket</button>
+              <button class="btn btn-s btn-sm" onclick="S.lastBooking=S.bookings[${i}];go('#/receipt')">Receipt</button>
+              ${b.status==='Upcoming'?`<button class="btn btn-sm" style="background:var(--red50);color:var(--red)" onclick="cancelBooking(${i})">Cancel</button>`:''}
+            </div>
+          </div>
+        </div>`).join(''):`<div class="card center-note">No bookings ${S.dashTab==='All'?'yet':'in this category'}. <a style="font-weight:700;color:var(--s600)" href="#/hotels">Book your first stay →</a></div>`}
+      </div>
+    </div>
+  </div>`);
+}
+function cancelBooking(i){
+  const b=S.bookings[i];
+  if(!confirm('Cancel booking '+b.ref+'? Refund will be processed to your original payment method.'))return;
+  b.status='Cancelled'; save(); toast('Booking cancelled — refund initiated ↩️'); render();
+}
+
+/* ================= ADMIN ================= */
+function adminView(){
+  const a=S.admin, st=a.stats;
+  const maxD=Math.max(...a.topDest.map(d=>d[1]));
+  return page('', `<div class="container" style="padding:28px 20px 44px">
+    <div class="dash">
+      <div class="card dnav">
+        <a href="#/dashboard">📊 My Dashboard</a>
+        <a class="on" href="#/admin">🛠️ Admin Dashboard</a>
+        <a href="#/support">💬 Support</a>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div><h1 style="font-size:22px;font-weight:800">Platform Analytics</h1>
+          <div style="font-size:13.5px;color:var(--r400)">Super-admin view · sample platform data</div></div>
+          <span class="badge bg-b">Super Admin</span>
+        </div>
+        <div class="grid g4" style="margin-bottom:22px">
+          <div class="card stat"><div class="k">Total bookings</div><div class="v">${st.bookings.toLocaleString('en-IN')}</div></div>
+          <div class="card stat"><div class="k">Total revenue</div><div class="v" style="color:var(--g600)">${INR(st.revenue)}</div></div>
+          <div class="card stat"><div class="k">Net profit</div><div class="v" style="color:var(--g600)">${INR(st.profit)}</div></div>
+          <div class="card stat"><div class="k">Pending payments</div><div class="v" style="color:var(--s600)">${INR(st.pendingPay)}</div></div>
+          <div class="card stat"><div class="k">Pending refunds</div><div class="v" style="color:var(--s600)">${INR(st.pendingRef)}</div></div>
+          <div class="card stat"><div class="k">Cancellation rate</div><div class="v">${st.cancel}%</div></div>
+          <div class="card stat"><div class="k">Conversion rate</div><div class="v">${st.conv}%</div></div>
+          <div class="card stat"><div class="k">Customer growth</div><div class="v" style="color:var(--g600)">${st.growth}</div></div>
+        </div>
+
+        <div class="card" style="padding:20px;margin-bottom:22px">
+          <h3 style="font-size:16px;margin-bottom:14px">Top destinations by bookings</h3>
+          ${a.topDest.map(d=>`<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:13.5px"><b>${d[0]}</b><span style="color:var(--r400)">${d[1].toLocaleString('en-IN')} bookings</span></div>
+            <div class="bar-outer"><div class="bar-inner" style="width:${(d[1]/maxD*100).toFixed(0)}%"></div></div>
+          </div>`).join('')}
+        </div>
+
+        <div class="card" style="padding:20px;margin-bottom:22px">
+          <h3 style="font-size:16px;margin-bottom:6px">Property approval queue</h3>
+          <div style="font-size:12.5px;color:var(--r400);margin-bottom:10px">New partner listings need admin verification before going live.</div>
+          <div class="tbl-wrap"><table class="tbl">
+            <tr><th>Property</th><th>Partner</th><th>City</th><th>Type</th><th>Status</th><th style="text-align:right">Action</th></tr>
+            ${a.props.map(p=>`<tr><td><b>${p.name}</b></td><td>${p.partner}</td><td>${p.city}</td><td>${p.type}</td><td>${stBadge(p.st)}</td>
+              <td style="text-align:right">${p.st==='Pending'?`
+                <button class="btn btn-g btn-sm" onclick="adminAct('props','${p.id}','Approved')">Approve</button>
+                <button class="btn btn-r btn-sm" onclick="adminAct('props','${p.id}','Rejected')">Reject</button>`:'<span style="font-size:12px;color:var(--r400)">Reviewed</span>'}</td></tr>`).join('')}
+          </table></div>
+        </div>
+
+        <div class="card" style="padding:20px;margin-bottom:22px">
+          <h3 style="font-size:16px;margin-bottom:6px">Offline payment proof verification</h3>
+          <div style="font-size:12.5px;color:var(--r400);margin-bottom:10px">Bank-transfer payments stay pending until an admin verifies the proof.</div>
+          <div class="tbl-wrap"><table class="tbl">
+            <tr><th>Booking</th><th>Customer</th><th>Bank</th><th>Reference</th><th>Amount</th><th>Status</th><th style="text-align:right">Action</th></tr>
+            ${a.proofs.map(p=>`<tr><td><b>${p.ref}</b></td><td>${p.cust}</td><td>${p.bank}</td><td>${p.txn}</td><td>${INR(p.amt)}</td><td>${stBadge(p.st)}</td>
+              <td style="text-align:right">${p.st==='Pending'?`
+                <button class="btn btn-g btn-sm" onclick="adminAct('proofs','${p.id}','Approved')">Approve</button>
+                <button class="btn btn-r btn-sm" onclick="adminAct('proofs','${p.id}','Rejected')">Reject</button>`:'<span style="font-size:12px;color:var(--r400)">Reviewed</span>'}</td></tr>`).join('')}
+          </table></div>
+        </div>
+
+        <div class="card" style="padding:20px">
+          <h3 style="font-size:16px;margin-bottom:6px">Refunds &amp; cancellations</h3>
+          <div style="font-size:12.5px;color:var(--r400);margin-bottom:10px">Workflow: Requested → Under Review → Approved → Refund Initiated → Completed.</div>
+          <div class="tbl-wrap"><table class="tbl">
+            <tr><th>Booking</th><th>Customer</th><th>Reason</th><th>Amount</th><th>Status</th><th style="text-align:right">Action</th></tr>
+            ${a.refunds.map(r=>{
+              const idx=REFUND_FLOW.indexOf(r.st), next=idx>-1&&idx<REFUND_FLOW.length-1?REFUND_FLOW[idx+1]:null;
+              const terminal=r.st==='Completed'||r.st==='Rejected';
+              return `<tr><td><b>${r.ref}</b></td><td>${r.cust}</td><td>${r.reason}</td><td>${INR(r.amt)}</td><td>${stBadge(r.st)}</td>
+              <td style="text-align:right">${terminal?'<span style="font-size:12px;color:var(--r400)">Closed</span>':`
+                ${next?`<button class="btn btn-blue btn-sm" onclick="adminAct('refunds','${r.id}','${next}')">→ ${next}</button>`:''}
+                <button class="btn btn-r btn-sm" onclick="adminAct('refunds','${r.id}','Rejected')">Reject</button>`}</td></tr>`;}).join('')}
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </div>`);
+}
+function adminAct(list,id,st){
+  const row=S.admin[list].find(x=>x.id===id);
+  if(row){row.st=st; toast(`${id.toUpperCase()}: status → ${st}`); render();}
+}
+
+/* ================= AUTH / MISC ================= */
+function loginView(){
+  return page('', `<div class="auth-wrap">
+    <h1 style="font-size:24px;font-weight:800">Welcome back</h1>
+    <p style="font-size:14px;color:var(--r400);margin:4px 0 20px">Log in to manage bookings and travel faster.</p>
+    <div class="seg">
+      <button class="${S.authMode==='password'?'on':''}" onclick="S.authMode='password';S.otpSent=false;render()">Email &amp; Password</button>
+      <button class="${S.authMode==='otp'?'on':''}" onclick="S.authMode='otp';render()">Mobile OTP</button>
+    </div>
+    ${S.authMode==='password'?`
+    <form onsubmit="event.preventDefault();toast('Logged in! (demo) 🎉');go('#/dashboard')" style="display:flex;flex-direction:column;gap:13px">
+      <div class="field"><label>Email address</label><input required type="email" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input required type="password" placeholder="••••••••"></div>
+      <button class="btn btn-p">Log In</button>
+    </form>`:`
+    <form onsubmit="event.preventDefault();if(!S.otpSent){S.otpSent=true;toast('OTP sent! (demo — enter any 6 digits)');render()}else{toast('Logged in! (demo) 🎉');go('#/dashboard')}" style="display:flex;flex-direction:column;gap:13px">
+      <div class="field"><label>Mobile number</label><div style="display:flex;gap:8px"><span style="border:1px solid var(--border);border-radius:9px;padding:10px 13px">+91</span><input required type="tel" placeholder="98765 43210" style="flex:1;border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none"></div></div>
+      ${S.otpSent?`<div class="field"><label>Enter OTP (valid 5 min)</label><input required maxlength="6" inputmode="numeric" placeholder="••••••" style="letter-spacing:.5em"></div>`:''}
+      <button class="btn btn-p">${S.otpSent?'Verify & Log In':'Send OTP'}</button>
+    </form>`}
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:12px;color:var(--r400)">or continue with</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
+    <div class="grid g3" style="gap:10px">
+      <button class="btn btn-s" onclick="toast('Google login — demo')">🇬 Google</button>
+      <button class="btn btn-s" onclick="toast('Apple login — demo')"> Apple</button>
+      <button class="btn btn-s" onclick="toast('Facebook login — demo')">f Facebook</button>
+    </div>
+    <div style="text-align:center;font-size:13.5px;color:var(--r400);margin-top:18px">New to BharatStay? <a href="#/register" style="font-weight:700;color:var(--r700)">Create an account</a></div>
+  </div>`);
+}
+function registerView(){
+  return page('', `<div class="auth-wrap">
+    <h1 style="font-size:24px;font-weight:800">Create your account</h1>
+    <p style="font-size:14px;color:var(--r400);margin:4px 0 20px">Join BharatStay for faster checkout and exclusive deals.</p>
+    <form onsubmit="event.preventDefault();toast('Account created! Welcome to BharatStay 🎉');go('#/dashboard')" style="display:flex;flex-direction:column;gap:13px">
+      <div class="grid g2" style="gap:10px">
+        <div class="field"><label>First name</label><input required placeholder="Ananya"></div>
+        <div class="field"><label>Last name</label><input placeholder="Sharma"></div>
+      </div>
+      <div class="field"><label>Email address</label><input required type="email" placeholder="you@example.com"></div>
+      <div class="field"><label>Mobile number</label><input required type="tel" placeholder="98765 43210"></div>
+      <div class="field"><label>Password (min 8 chars)</label><input required minlength="8" type="password" placeholder="••••••••"></div>
+      <label class="check" style="font-size:12.5px"><input required type="checkbox">I agree to the Terms &amp; Conditions and Privacy Policy</label>
+      <button class="btn btn-p">Create Account</button>
+    </form>
+    <div style="text-align:center;font-size:13.5px;color:var(--r400);margin-top:18px">Already have an account? <a href="#/login" style="font-weight:700;color:var(--r700)">Log in</a></div>
+  </div>`);
+}
+function listPropertyView(){
+  return page('', `<div class="container" style="padding:44px 20px;max-width:560px">
+    <div class="eyebrow">Partner with BharatStay</div>
+    <h1 style="font-size:26px;font-weight:800;margin-top:4px">List Your Property</h1>
+    <p style="font-size:14px;color:var(--r500);margin-top:8px">Hotels, resorts, villas, homestays and farm-stays — reach lakhs of travellers. Zero listing fee, commission only on confirmed bookings, weekly settlements and a full partner dashboard.</p>
+    <form class="card" style="padding:22px;margin-top:20px;display:flex;flex-direction:column;gap:13px" onsubmit="event.preventDefault();toast('Application submitted! Our partner team will call you within 24h ✓');this.reset()">
+      <div class="field"><label>Property name</label><input required placeholder="e.g. Sunrise Beach Villa"></div>
+      <div class="grid g2" style="gap:10px">
+        <div class="field"><label>Property type</label><select><option>Hotel</option><option>Resort</option><option>Villa</option><option>Homestay</option><option>Farm Stay</option></select></div>
+        <div class="field"><label>City</label><input required placeholder="Goa"></div>
+      </div>
+      <div class="field"><label>Owner name</label><input required></div>
+      <div class="field"><label>Phone</label><input required type="tel"></div>
+      <button class="btn btn-p">Submit for Verification</button>
+      <div style="font-size:11.5px;color:var(--r400)">Listings go live after admin verification of KYC, PAN and GST details.</div>
+    </form>
+  </div>`);
+}
+function supportView(){
+  return page('', `<div class="container" style="padding:44px 20px;max-width:640px">
+    <div class="eyebrow">24/7 Customer Support</div>
+    <h1 style="font-size:26px;font-weight:800;margin-top:4px">How can we help?</h1>
+    <div class="grid g2" style="margin-top:20px">
+      ${[['💬','Live Chat','Chat with our travel experts'],['📞','Call Us','1800-123-4567 (toll-free)'],['💚','WhatsApp','Message us on WhatsApp'],['✉️','Email','support@bharatstay.example']].map(s=>
+      `<button class="card" style="padding:18px;text-align:left" onclick="toast('${s[1]} — demo support channel')"><div style="font-size:26px">${s[0]}</div><div style="font-weight:700;margin-top:6px">${s[1]}</div><div style="font-size:12.5px;color:var(--r400)">${s[2]}</div></button>`).join('')}
+    </div>
+    <form class="card" style="padding:22px;margin-top:20px;display:flex;flex-direction:column;gap:13px" onsubmit="event.preventDefault();toast('Ticket raised! Ref: TKT-'+Math.floor(1000+Math.random()*8999));this.reset()">
+      <h3 style="font-size:16px">Raise a support ticket</h3>
+      <div class="field"><label>Category</label><select><option>Booking issue</option><option>Refund complaint</option><option>Payment issue</option><option>Property issue</option><option>Emergency travel assistance</option></select></div>
+      <div class="field"><label>Booking ID (optional)</label><input placeholder="BST-2026-XXXXX"></div>
+      <div class="field"><label>Describe your issue</label><input required placeholder="Tell us what happened"></div>
+      <button class="btn btn-p">Submit Ticket</button>
+    </form>
+  </div>`);
+}
+function simplePage(title,body){ return page('', `<div class="container" style="padding:44px 20px;max-width:640px"><h1 style="font-size:26px;font-weight:800">${title}</h1><p style="font-size:14px;color:var(--r500);margin-top:10px">${body}</p><a class="btn btn-p" style="margin-top:20px" href="#/">← Back to Home</a></div>`); }
+
+/* ================= ROUTER ================= */
+function render(){
+  const h=location.hash||'#/';
+  const [_,route,param]=h.match(/^#\/([^\/]*)\/?(.*)$/)||[,'',''];
+  let html;
+  switch(route){
+    case '': html=homeView(); break;
+    case 'hotels': html=hotelsView(); break;
+    case 'hotel': html=hotelDetailView(param); break;
+    case 'flights': html=flightsView(); break;
+    case 'buses': html=busesView(); break;
+    case 'cabs': html=cabsView(); break;
+    case 'trains': html=trainsView(); break;
+    case 'packages': html=packagesView(); break;
+    case 'activities': html=activitiesView(); break;
+    case 'checkout': html=checkoutView(); break;
+    case 'status': html=statusView(); break;
+    case 'voucher': html=voucherView(); break;
+    case 'receipt': html=receiptView(); break;
+    case 'dashboard': html=dashboardView(); break;
+    case 'admin': html=adminView(); break;
+    case 'login': html=loginView(); break;
+    case 'register': html=registerView(); break;
+    case 'list-property': html=listPropertyView(); break;
+    case 'support': html=supportView(); break;
+    case 'about': html=simplePage('About BharatStay','BharatStay is India\'s complete travel booking platform — a demo application showcasing hotels, flights, buses, cabs and holiday packages in one place. "Explore India. Stay Your Way."'); break;
+    case 'careers': html=simplePage('Careers','We\'re always looking for people who love travel and technology. (Demo page)'); break;
+    case 'blog': html=simplePage('Travel Blog','Destination guides, travel tips and festival specials coming soon. (Demo page)'); break;
+    case 'contact': html=simplePage('Contact Us','Email support@bharatstay.example or call 1800-123-4567 (toll-free, 24/7).'); break;
+    default: html=simplePage('Page not found','The page you\'re looking for doesn\'t exist.'); break;
+  }
+  $('#app').innerHTML=html;
+  if(!render._scrolled || render._lastRoute!==route){ scrollTo(0,0); }
+  render._lastRoute=route;
+}
+function renderKeepFocus(id){
+  const el=document.getElementById(id); const pos=el?el.selectionStart:0;
+  render();
+  const n=document.getElementById(id);
+  if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}
+}
+addEventListener('hashchange',render);
+addEventListener('scroll',()=>{$('#toTop').style.display=scrollY>500?'block':'none'},{passive:true});
+render();
+</script>
+</body>
+</html>

@@ -227,6 +227,16 @@ const LOGO_URI = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1B
 const INR = n => '₹' + Math.round(n).toLocaleString('en-IN');
 const TONES = ['ocean','sunset','forest','mountain','royal','saffron','heritage','desert','snow','gold','lake','farm'];
 
+/* --- APNI PHOTOS LAGAO (optional) -------------------------------
+   Is HTML file ke bagal mein "photos" naam ka folder banao, usme apni
+   photos daalo, aur neeche naam likho. Naam wahi ho jo card par hai.
+   Photo milte hi illustration ki jagah asli photo dikhegi.           */
+const PHOTOS = {
+  // 'Lonavala': 'photos/lonavala.jpg',
+  // 'Kondeshwar Waterfall': 'photos/kondeshwar.jpg',
+  // 'Konkan Katta': 'photos/konkan-katta.jpg',
+  // 'Ulhas Riverside Villa': 'photos/ulhas-villa.jpg',
+};
 const DESTS = [
  ['Lonavala','Pune dist.','forest','\ud83c\udf27\ufe0f',1399,176,'Waterfalls, ghats aur monsoon getaways.'],
  ['Mahabaleshwar','Satara','farm','\ud83c\udf53',1599,129,'Strawberry farms aur valley viewpoints.'],
@@ -463,6 +473,9 @@ const SCENES = {
     <circle cx="30" cy="60" r="9" fill="rgba(31,109,63,.75)"/><circle cx="170" cy="52" r="9" fill="rgba(31,109,63,.75)"/>`,
 };
 const DEST_SCENE = {Lonavala:'waterfall',Mahabaleshwar:'mountain',Alibaug:'beach',Matheran:'toytrain',Karjat:'rafting',Igatpuri:'mountain',Nashik:'mountain',Panchgani:'mountain',Mumbai:'city',Pune:'city',Kolhapur:'fort',Aurangabad:'caves',Tarkarli:'beach',Bhandardara:'dam','Malshej Ghat':'waterfall',Badlapur:'waterfall',Pawna:'lake'};
+const photoOr = (key,style,label,fallback) => PHOTOS[key]
+  ? `<div class="ph" style="${style||''}"><img src="${PHOTOS[key]}" alt="${esc(key)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">${label?`<span class="lbl" style="position:relative;z-index:2">${esc(label)}</span>`:''}</div>`
+  : fallback;
 const sceneBlock = (tone,kind,label,style) => `<div class="ph t-${tone}" style="${style||''}">
   <svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMax slice" style="position:absolute;inset:0;width:100%;height:100%">${SCENE_DEFS}${SCENES[kind]||SCENES.mountain}</svg>
   ${label?`<span class="lbl" style="position:relative;z-index:2">${esc(label)}</span>`:''}</div>`;
@@ -619,7 +632,7 @@ function homeView(){
 
   <section class="section" style="padding-bottom:0"><div class="container">
     <a class="card" href="#/weekend" style="display:grid;grid-template-columns:340px 1fr;overflow:hidden;align-items:stretch" id="wkbanner">
-      ${sceneBlock('forest','waterfall','','min-height:190px')}
+      ${photoOr('Kondeshwar Waterfall','min-height:190px','',sceneBlock('forest','waterfall','','min-height:190px'))}
       <div style="padding:26px 30px;display:flex;flex-direction:column;justify-content:center">
         <div class="micro">Maharashtra Weekend Special</div>
         <div style="font-size:26px;font-weight:800;margin-top:6px">Badlapur → Karjat, ek perfect weekend</div>
@@ -642,7 +655,7 @@ function homeView(){
     <div class="eyebrow">Maharashtra Destinations</div><h2 class="sec-title" style="margin-bottom:24px">Explore Maharashtra, apne style mein</h2>
     <div class="grid g5">
       ${DESTS.map(d=>`<a class="card" style="overflow:hidden" href="#/hotels" onclick="S.filters.q='${d.name}'">
-        ${sceneBlock(d.tone,DEST_SCENE[d.name],d.name,'height:126px')}
+        ${photoOr(d.name,'height:126px',d.name,sceneBlock(d.tone,DEST_SCENE[d.name],d.name,'height:126px'))}
         <div style="padding:11px">
           <div style="font-size:11.5px;color:var(--r400)">${d.count} stays</div>
           <div style="font-size:14px;font-weight:700">From ${INR(d.price)}</div>
@@ -726,7 +739,7 @@ function copyCoupon(code){
 function pkgCard(p){
   const kind = DEST_SCENE[p.dest] || {Rajasthan:'desert','Himachal Pradesh':'mountain'}[p.dest] || 'mountain';
   return `<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
-    ${sceneBlock(p.tone,kind,p.dest,'height:150px')}
+    ${photoOr(p.dest,'height:150px',p.dest,sceneBlock(p.tone,kind,p.dest,'height:150px'))}
     <div style="padding:16px;flex:1;display:flex;flex-direction:column">
       <div style="font-size:15.5px;font-weight:700">${p.title}</div>
       <div style="font-size:12px;color:var(--r400);font-weight:600;margin-top:2px">${p.n}N / ${p.d}D · ${p.hotel}</div>
@@ -812,7 +825,7 @@ function hotelCard(h){
   const wl=S.wishlist.has(h.id);
   return `<div class="card hrow">
     <div class="ph t-${h.tone}" style="position:relative">
-      <span class="emoji">🏨</span>
+      ${(PHOTOS[h.name]||PHOTOS[h.city])?`<img src="${PHOTOS[h.name]||PHOTOS[h.city]}" alt="${esc(h.name)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`:`<span class="emoji">🏨</span>`}
       <span class="badge bg-b" style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95)">✓ Verified</span>
       <button style="position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.92);font-size:15px;color:${wl?'var(--s600)':'var(--r400)'}" onclick="toggleWish('${h.id}')">${wl?'♥':'♡'}</button>
     </div>
@@ -1022,7 +1035,7 @@ function weekendView(){
     <h2 style="font-size:22px;font-weight:800;margin:34px 0 16px">Spots &amp; sightseeing <span style="font-size:13px;font-weight:600;color:var(--r400)">(distance Badlapur se)</span></h2>
     <div class="grid g4">
       ${WK_SPOTS.map(s=>`<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
-        ${sceneBlock(s.tone,s.scene,'','height:118px')}
+        ${photoOr(s.name,'height:118px','',sceneBlock(s.tone,s.scene,'','height:118px'))}
         <div style="padding:13px;flex:1;display:flex;flex-direction:column">
           <div style="display:flex;justify-content:space-between;gap:6px;align-items:start">
             <b style="font-size:14.5px">${s.name}</b>
@@ -1059,7 +1072,7 @@ function weekendView(){
 
 function restCard(r){
   return `<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
-    ${ph(r.tone,r.emoji,'','height:92px')}
+    ${photoOr(r.name,'height:92px','',ph(r.tone,r.emoji,'','height:92px'))}
     <div style="padding:13px;flex:1;display:flex;flex-direction:column">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><b style="font-size:14.5px">${r.name}</b><span class="rating-chip" style="font-size:12px;padding:3px 8px">${r.rating}</span></div>
       <div style="font-size:12px;color:var(--r400);margin-top:3px">${r.city} · ${r.cuisine}</div>

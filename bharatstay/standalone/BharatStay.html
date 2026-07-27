@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BharatStay — India's Complete Travel Booking Platform</title>
-<meta name="description" content="Book hotels, resorts, villas, homestays, farm-stays, flights, buses, cabs and holiday packages across India with BharatStay. Explore India. Stay Your Way.">
+<title>BharatStay — Maharashtra Villas, Hotels, Farmhouses & Restaurants</title>
+<meta name="description" content="Maharashtra ke villas, hotels, farmhouses, homestays aur restaurants — Lonavala se Tarkarli tak, BharatStay par book karo.">
 <style>
 /* ============ BharatStay single-file app ============ */
 :root{
@@ -228,62 +228,55 @@ const INR = n => '₹' + Math.round(n).toLocaleString('en-IN');
 const TONES = ['ocean','sunset','forest','mountain','royal','saffron','heritage','desert','snow','gold','lake','farm'];
 
 const DESTS = [
- ['Goa','Goa','ocean','🏖️',2499,412,'Beaches, nightlife and Portuguese heritage.'],
- ['Manali','Himachal','snow','🏔️',1899,268,'Snow peaks, adventure and cosy stays.'],
- ['Shimla','Himachal','mountain','🚂',1699,231,'Colonial charm in the Himalayan foothills.'],
- ['Jaipur','Rajasthan','desert','🏰',1599,356,'The Pink City — forts and bazaars.'],
- ['Udaipur','Rajasthan','lake','🛶',2199,198,'City of Lakes and royal palaces.'],
- ['Kerala','Kerala','forest','🌴',2899,302,'Backwaters, houseboats, tea gardens.'],
- ['Mumbai','Maharashtra','royal','🌆',2299,589,'The City of Dreams by the sea.'],
- ['Delhi','Delhi','heritage','🕌',1799,641,'History and heritage monuments.'],
- ['Agra','UP','gold','🕌',1499,187,'Home of the Taj Mahal.'],
- ['Kashmir','J&K','snow','🌸',3499,156,'Dal Lake, houseboats, alpine valleys.'],
- ['Ladakh','Ladakh','mountain','🏍️',3999,94,'High-altitude desert and road trips.'],
- ['Andaman','A&N','ocean','🐠',4499,78,'Turquoise waters and coral reefs.'],
- ['Rishikesh','Uttarakhand','forest','🧘',1299,143,'Yoga capital on the Ganges.'],
- ['Lonavala','Maharashtra','forest','🌧️',1399,176,'Monsoon getaway with waterfalls.'],
- ['Mahabaleshwar','Maharashtra','farm','🍓',1599,129,'Strawberry farms and viewpoints.'],
+ ['Lonavala','Pune dist.','forest','\ud83c\udf27\ufe0f',1399,176,'Waterfalls, ghats aur monsoon getaways.'],
+ ['Mahabaleshwar','Satara','farm','\ud83c\udf53',1599,129,'Strawberry farms aur valley viewpoints.'],
+ ['Alibaug','Raigad','ocean','\ud83c\udfd6\ufe0f',2499,142,'Beach villas, Kihim beach aur Kolaba fort.'],
+ ['Matheran','Raigad','mountain','\ud83d\ude82',1799,88,'Gaadi-free hill station, toy train ride.'],
+ ['Karjat','Raigad','forest','\ud83d\udea3',1999,96,'River villas, rafting aur Kondana caves.'],
+ ['Igatpuri','Nashik dist.','mountain','\u26f0\ufe0f',1699,74,'Vipassana, Tringalwadi fort aur lakes.'],
+ ['Nashik','Nashik','mountain','\ud83c\udf47',1499,168,'Vineyards, Sula aur Panchvati darshan.'],
+ ['Panchgani','Satara','mountain','\ud83c\udf53',1549,82,'Table Land aur strawberry ki kheti.'],
+ ['Mumbai','Mumbai','royal','\ud83c\udf06',2299,589,'Gateway, Marine Drive aur city stays.'],
+ ['Pune','Pune','royal','\ud83c\udfd9\ufe0f',1899,412,'Culture capital — wada se cafe tak.'],
+ ['Kolhapur','Kolhapur','heritage','\ud83c\udff0',1299,94,'Mahalaxmi mandir aur tambda-pandhra rassa.'],
+ ['Aurangabad','Marathwada','heritage','\ud83d\uded5',1599,110,'Ajanta-Ellora caves ka gateway.'],
+ ['Tarkarli','Sindhudurg','ocean','\ud83d\udc20',1999,58,'Konkan ka Maldives — scuba aur seafood.'],
+ ['Bhandardara','Ahmednagar','lake','\ud83c\udfd5\ufe0f',1899,46,'Lakeside camping aur Wilson dam.'],
+ ['Malshej Ghat','Thane dist.','forest','\ud83c\udf0a',1499,38,'Monsoon waterfalls aur flamingo point.'],
 ].map((d,i)=>({id:'d'+i,name:d[0],state:d[1],tone:d[2],emoji:d[3],price:d[4],count:d[5],desc:d[6]}));
 
 const OFFERS = [
- ['Flat 25% off on Hotels','STAY25','25% OFF','Hotels','On bookings above ₹3,000.', 'royal','🏨'],
- ['₹500 off Flight Bookings','FLY500','₹500 OFF','Flights','Domestic flights, min fare ₹4,000.','ocean','✈️'],
- ['15% off Bus Tickets','BUS15','15% OFF','Buses','AC Sleeper and Volvo buses.','saffron','🚌'],
- ['Weekend Stays from ₹1,999','WEEKEND','₹1,999+','Hotels','Handpicked weekend resorts.','forest','🌿'],
- ['First Booking — 30% off','WELCOME30','30% OFF','New Users','Exclusive for new users.','gold','🎉'],
- ['10% Instant UPI Discount','UPI10','10% OFF','UPI','All bookings paid via UPI.','royal','📱'],
- ['Diwali Holiday Packages','DIWALI2026','₹8,999+','Packages','Festive packages across India.','sunset','🪔'],
- ['Monsoon Getaways 20% off','MONSOON20','20% OFF','Packages','Lonavala, Munnar & Coorg.','forest','🌧️'],
+ ['Flat 25% off on Hotels','STAY25','25% OFF','Hotels','Maharashtra ke 500+ hotels par.','royal','\ud83c\udfe8'],
+ ['Villas & Farmhouses 20% off','VILLA20','20% OFF','Villas','Lonavala, Karjat, Alibaug ki villas par.','forest','\ud83c\udfd6\ufe0f'],
+ ['Restaurant Bill 10% off','THALI10','10% OFF','Restaurants','Table reserve karo, bill par discount pao.','saffron','\ud83c\udf7d\ufe0f'],
+ ['Weekend Stays from \u20b91,999','WEEKEND','\u20b91,999+','Hotels','Badlapur\u2013Karjat belt ke weekend stays.','farm','\ud83c\udf3e'],
+ ['First Booking \u2014 30% off','WELCOME30','30% OFF','New Users','Naye users ke liye exclusive.','gold','\ud83c\udf89'],
+ ['10% Instant UPI Discount','UPI10','10% OFF','UPI','Har UPI payment par instant discount.','royal','\ud83d\udcf1'],
+ ['Monsoon Packages 20% off','MONSOON20','20% OFF','Packages','Malshej, Bhandardara aur Lonavala plans.','forest','\ud83c\udf27\ufe0f'],
+ ['Farmhouse Stays 15% off','FARM15','15% OFF','Farmhouses','Nashik, Igatpuri, Pawna ke farm stays.','farm','\ud83c\udf47'],
 ];
 
 const AMEN_POOL=['Free Wi-Fi','Swimming Pool','Air Conditioning','Parking','Restaurant','Spa','Gym','Room Service','Power Backup','Pet Friendly'];
 const HSEEDS = [
- ['Royal Orchid Suites','Hotel','Goa',5,8500,'ocean','Deluxe Sea View','Breakfast Included'],
- ['Taj Heritage Palace','Hotel','Jaipur',5,9200,'heritage','Heritage Room','Breakfast & Dinner'],
- ['BharatStay Grand Central','Hotel','Mumbai',4,6800,'royal','Executive Room','Breakfast Included'],
- ['Lakeview Residency','Hotel','Udaipur',4,5400,'lake','Lake Facing Room','Breakfast Included'],
- ['Capital Inn Delhi','Hotel','Delhi',3,3200,'royal','Standard Room','Room Only'],
- ['Shimla Pinewood Hotel','Hotel','Shimla',4,4900,'mountain','Mountain View Room','Breakfast Included'],
- ['Manali Snow Crest','Hotel','Manali',4,5100,'snow','Valley View Room','Breakfast Included'],
- ['Kashmir Dal View Hotel','Hotel','Srinagar',5,7600,'snow','Premium Lake View','All Meals Included'],
- ['Agra Taj Gateway','Hotel','Agra',4,4700,'gold','Taj View Room','Breakfast Included'],
- ['Kerala Backwater Suites','Hotel','Alleppey',4,6200,'forest','Backwater Suite','Breakfast Included'],
- ['Andaman Coral Bay','Hotel','Port Blair',4,7100,'ocean','Sea Facing Room','Breakfast Included'],
- ['Rishikesh Ganga Retreat','Hotel','Rishikesh',3,3100,'forest','River View Room','Breakfast Included'],
- ['Palm Grove Beach Resort','Resort','Goa',5,11500,'ocean','Beach Villa','All Meals Included'],
- ['Coconut Lagoon Resort','Resort','Kumarakom',5,13200,'forest','Lagoon Cottage','All Meals Included'],
- ['Pine Valley Resort','Resort','Manali',4,7800,'snow','Cottage Room','Breakfast & Dinner'],
- ['Lonavala Hilltop Resort','Resort','Lonavala',4,8100,'forest','Hill View Room','All Meals Included'],
- ['Udaipur Lake Palace Resort','Resort','Udaipur',5,14800,'lake','Royal Lake Villa','All Meals Included'],
- ['Blue Water Resort','Resort','Havelock',5,15400,'ocean','Beachfront Villa','All Meals Included'],
- ['Green Valley Farm Stay','Farm Stay','Lonavala',3,4200,'farm','Farmhouse Room','All Meals Included'],
- ['Wayanad Spice Farm Retreat','Farm Stay','Wayanad',3,4800,'farm','Plantation Cottage','All Meals Included'],
- ['Nashik Vineyard Farm Stay','Farm Stay','Nashik',3,4500,'farm','Vineyard Room','Breakfast Included'],
- ['Coorg Coffee Estate Stay','Farm Stay','Coorg',3,4300,'farm','Estate Bungalow','All Meals Included'],
- ['Fontainhas Heritage Homestay','Homestay','Goa',3,3200,'heritage','Heritage Room','Breakfast Included'],
- ['Munnar Hilltop Homestay','Homestay','Munnar',3,3400,'forest','Family Room','All Meals Included'],
- ['Jaipur Old City Homestay','Homestay','Jaipur',3,2800,'desert','Traditional Room','Breakfast Included'],
- ['Darjeeling Tea Garden Homestay','Homestay','Darjeeling',3,2900,'forest','Garden View Room','All Meals Included'],
+ ['The Dukes Retreat','Resort','Lonavala',4,7200,'forest','Valley View Room','Breakfast Included'],
+ ['Lonavala Lake Villa','Villa','Lonavala',4,9500,'lake','4BHK Private Pool Villa','Cook + Caretaker'],
+ ['Tungarli Hilltop Homestay','Homestay','Lonavala',3,3100,'mountain','Hill View Room','Breakfast Included'],
+ ['Mahabaleshwar Strawberry Resort','Resort','Mahabaleshwar',4,6700,'farm','Garden Cottage','Breakfast & Dinner'],
+ ['Panchgani Cliff Villa','Villa','Panchgani',4,8800,'mountain','3BHK Cliff-edge Villa','Breakfast Included'],
+ ['Alibaug Beach House','Villa','Alibaug',5,12500,'ocean','Beachfront Villa','Cook + Caretaker'],
+ ['Kihim Coco Homestay','Homestay','Alibaug',3,3400,'ocean','Garden Room','Breakfast Included'],
+ ['Matheran Verandah Hotel','Hotel','Matheran',4,5600,'mountain','Valley View Room','All Meals Included'],
+ ['Igatpuri Lake Farmhouse','Farm Stay','Igatpuri',3,4800,'lake','Farmhouse Suite','All Meals Included'],
+ ['Nashik Vineyard Farm Stay','Farm Stay','Nashik',3,4500,'farm','Vineyard View Room','Breakfast Included'],
+ ['Sula Vista Hotel','Hotel','Nashik',4,4900,'desert','Deluxe Room','Breakfast Included'],
+ ['Bhandardara Lakeside Camp','Farm Stay','Bhandardara',3,2600,'lake','Lake View Tent','All Meals Included'],
+ ['Malshej Monsoon Retreat','Resort','Malshej Ghat',3,3900,'forest','Ghat View Room','All Meals Included'],
+ ['Tarkarli Beach Homestay','Homestay','Tarkarli',3,2800,'ocean','Sea Breeze Room','Breakfast + Malvani Dinner'],
+ ['Kolhapur Heritage Wada','Homestay','Kolhapur',3,2500,'heritage','Wada Room','Breakfast Included'],
+ ['Ajanta Residency','Hotel','Aurangabad',4,3800,'heritage','Executive Room','Breakfast Included'],
+ ['BharatStay Grand Mumbai','Hotel','Mumbai',5,8900,'royal','Business Suite','Breakfast Included'],
+ ['Pune Deccan Suites','Hotel','Pune',4,4200,'royal','Executive Room','Breakfast Included'],
+ ['Pawna Lakeside Glamp','Farm Stay','Pawna',3,3200,'lake','Luxury Tent','BBQ + All Meals'],
  ['Ulhas Riverside Villa','Villa','Karjat',4,6500,'forest','Private Pool Villa','Breakfast Included'],
  ['Kondeshwar Greens Farm Stay','Farm Stay','Badlapur',3,3600,'farm','Farmhouse Room','All Meals Included'],
  ['Matheran View Homestay','Homestay','Neral',3,2900,'mountain','Hill View Room','Breakfast Included'],
@@ -302,30 +295,6 @@ const HOTELS = HSEEDS.map((s,i)=>{
   };
 });
 
-const FLIGHTS = [
- ['IndiGo','🔵','6E-204','Mumbai','BOM','Delhi','DEL','06:05','08:15',130,0,'Economy',0,15,4899],
- ['Air India','🔴','AI-864','Delhi','DEL','Goa','GOI','09:30','12:10',160,0,'Economy',1,20,6299],
- ['Vistara','🟣','UK-955','Bengaluru','BLR','Mumbai','BOM','14:20','16:00',100,0,'Prem. Economy',1,20,7899],
- ['SpiceJet','🟠','SG-417','Chennai','MAA','Kolkata','CCU','11:45','14:05',140,0,'Economy',0,15,5399],
- ['Akasa Air','🟢','QP-1302','Mumbai','BOM','Bengaluru','BLR','18:10','19:40',90,0,'Economy',0,15,4599],
- ['IndiGo','🔵','6E-6501','Delhi','DEL','Srinagar','SXR','07:15','09:05',110,0,'Economy',0,15,6799],
- ['Air India','🔴','AI-401','Mumbai','BOM','Kochi','COK','20:00','22:15',135,0,'Business',1,30,14999],
- ['Vistara','🟣','UK-772','Delhi','DEL','Leh','IXL','05:45','07:15',90,0,'Economy',0,15,8299],
- ['SpiceJet','🟠','SG-8169','Kolkata','CCU','Port Blair','IXZ','10:00','12:00',120,0,'Economy',0,15,7499],
- ['Akasa Air','🟢','QP-1719','Hyderabad','HYD','Jaipur','JAI','16:30','18:35',125,1,'Economy',0,15,5899],
-].map((f,i)=>({id:'f'+i,airline:f[0],logo:f[1],no:f[2],from:f[3],fc:f[4],to:f[5],tc:f[6],dep:f[7],arr:f[8],dur:f[9],stops:f[10],cls:f[11],ref:!!f[12],bag:f[13],price:f[14]}));
-
-const BUSES = [
- ['BharatStay Travels','Mumbai','Pune','22:00','01:30',210,'Volvo AC Sleeper',1,4.3,18,899],
- ['Rajasthan Roadways','Delhi','Jaipur','07:00','12:00',300,'AC Seater',1,4.0,24,649],
- ['SouthStar Travels','Bengaluru','Chennai','23:30','05:30',360,'Non-AC Sleeper',0,3.8,12,549],
- ['Himgiri Express','Delhi','Manali','18:00','08:00',840,'Volvo AC Sleeper',1,4.5,9,1499],
- ['Kaveri Travels','Hyderabad','Bengaluru','21:15','05:45',510,'AC Sleeper',1,4.1,15,999],
- ['Konkan Coastal','Mumbai','Goa','20:30','07:00',630,'Volvo AC Sleeper',1,4.4,11,1299],
- ['Ganga Yatra Travels','Delhi','Rishikesh','23:00','06:00',420,'AC Seater',1,3.9,20,749],
- ['Malabar Travels','Kochi','Munnar','08:30','12:30',240,'AC Seater',1,4.2,22,549],
-].map((b,i)=>({id:'b'+i,op:b[0],from:b[1],to:b[2],dep:b[3],arr:b[4],dur:b[5],type:b[6],ac:!!b[7],rating:b[8],seats:b[9],price:b[10]}));
-
 const CABS = [
  ['Hatchback (Swift / i20)','🚗',4,2,12,250,'Hatchback'],
  ['Sedan (Dzire / Etios)','🚙',4,3,14,300,'Sedan'],
@@ -338,44 +307,45 @@ const CABS = [
 ].map((c,i)=>({id:'c'+i,name:c[0],icon:c[1],seats:c[2],bags:c[3],perKm:c[4],allow:c[5],cat:c[6]}));
 
 const PKGS = [
- ['Goa Beach Escape','Goa','ocean','🏖️',3,4,'4-Star','Breakfast','Airport transfers',['Baga Beach','Fort Aguada','Spice Plantation'],8999],
- ['Kashmir Paradise Tour','Kashmir','snow','🌸',5,6,'4-Star + Houseboat','All Meals','Private cab + Shikara',['Dal Lake','Gulmarg Gondola','Pahalgam'],21999],
- ['Kerala Backwaters','Kerala','forest','🌴',4,5,'5-Star + Houseboat','Breakfast & Dinner','AC car with driver',['Alleppey','Munnar','Periyar'],18499],
- ['Manali Snow Adventure','Manali','snow','🏔️',4,5,'3-Star','Breakfast','Volvo + sightseeing cab',['Solang Valley','Rohtang Pass','Hidimba Temple'],10999],
- ['Royal Rajasthan','Rajasthan','desert','🏰',6,7,'4-Star Heritage','Breakfast','AC coach + transfers',['Amber Fort','City Palace','Lake Pichola'],16999],
- ['Andaman Island Hopping','Andaman','ocean','🐠',5,6,'4-Star','Breakfast','Ferry transfers',['Radhanagar Beach','Cellular Jail','Scuba'],26999],
- ['Ladakh Bike Expedition','Ladakh','mountain','🏍️',6,7,'Guesthouses','Breakfast & Dinner','Royal Enfield + backup',['Pangong Lake','Nubra Valley','Khardung La'],19999],
- ['Honeymoon in Udaipur','Udaipur','lake','🛶',3,4,'5-Star Lake View','All Meals','Private transfers',['Pichola Cruise','Jag Mandir','Saheliyon Ki Bari'],24999],
+ ['Lonavala Monsoon Weekend','Lonavala','forest','\ud83c\udf27\ufe0f',2,3,'4-Star Resort','Breakfast','Pickup Mumbai/Pune se',['Bhushi Dam','Tiger Point','Lohagad Fort'],5999],
+ ['Mahabaleshwar\u2013Panchgani','Mahabaleshwar','farm','\ud83c\udf53',3,4,'4-Star','Breakfast & Dinner','AC cab sightseeing',['Venna Lake','Table Land','Strawberry Farm'],7499],
+ ['Alibaug Beach Villa Weekend','Alibaug','ocean','\ud83c\udfd6\ufe0f',2,3,'Private Villa','Cook Included','Ro-Ro ferry + cab',['Kihim Beach','Kolaba Fort','Water Sports'],8999],
+ ['Tarkarli Scuba & Konkan','Tarkarli','ocean','\ud83d\udc20',3,4,'Beach Homestay','Malvani Meals','Cab from Kudal stn',['Scuba Diving','Sindhudurg Fort','Devbagh Beach'],9999],
+ ['Ajanta\u2013Ellora Heritage','Aurangabad','heritage','\ud83d\uded5',2,3,'4-Star','Breakfast','AC cab + guide',['Ajanta Caves','Ellora Caves','Daulatabad Fort'],8499],
+ ['Bhandardara Lakeside Camping','Bhandardara','lake','\ud83c\udfd5\ufe0f',1,2,'Lakeside Tents','All Meals + BBQ','Shared transport',['Wilson Dam','Randha Falls','Stargazing'],2999],
+ ['Malshej Monsoon Special','Malshej Ghat','forest','\ud83c\udf0a',1,2,'Ghat Resort','All Meals','MTDC route cab',['Waterfalls','Flamingo Point','Harishchandragad base'],2499],
+ ['Matheran Toy Train Getaway','Matheran','mountain','\ud83d\ude82',2,3,'Heritage Hotel','All Meals','Neral toy train tickets',['Panorama Point','Charlotte Lake','Echo Point'],6499],
 ].map((p,i)=>({id:'p'+i,title:p[0],dest:p[1],tone:p[2],emoji:p[3],n:p[4],d:p[5],hotel:p[6],meal:p[7],transport:p[8],sights:p[9],price:p[10]}));
 
 const ACTS = [
- ['Sunset Cruise on Dal Lake','Srinagar','snow','🛶',2,'Sightseeing',899],
- ['Scuba Diving at Havelock','Andaman','ocean','🤿',3,'Adventure',4499],
- ['Old Delhi Heritage Walk','Delhi','heritage','🚶',3,'Heritage',599],
- ['White River Rafting','Rishikesh','forest','🚣',2,'Adventure',999],
- ['Backwater Houseboat Cruise','Alleppey','forest','🛥️',6,'Sightseeing',2499],
- ['Desert Safari & Camel Ride','Jaisalmer','desert','🐫',4,'Adventure',1499],
- ['Paragliding at Solang','Manali','snow','🪂',1,'Adventure',2999],
- ['Amber Fort Guided Tour','Jaipur','desert','🏰',2,'Heritage',699],
+ ['Kolad River Rafting','Kolad','forest','\ud83d\udea3',3,'Adventure',1299],
+ ['Kamshet Paragliding','Kamshet','mountain','\ud83e\ude82',1,'Adventure',2799],
+ ['Bhivpuri Waterfall Rappelling','Bhivpuri','forest','\ud83e\uddd7',3,'Adventure',999],
+ ['Harishchandragad Trek','Malshej Ghat','mountain','\u26f0\ufe0f',8,'Trek',1199],
+ ['Tarkarli Scuba Diving','Tarkarli','ocean','\ud83e\udd3f',2,'Adventure',2499],
+ ['Ajanta\u2013Ellora Guided Tour','Aurangabad','heritage','\ud83d\uded5',6,'Heritage',1499],
+ ['Alibaug Water Sports Combo','Alibaug','ocean','\ud83d\udea4',2,'Beach',1099],
+ ['Mumbai Heritage Walk','Mumbai','royal','\ud83d\udeb6',3,'Heritage',599],
 ].map((a,i)=>({id:'a'+i,title:a[0],city:a[1],tone:a[2],emoji:a[3],hrs:a[4],cat:a[5],price:a[6]}));
 
-const TRAINS = [
- ['12123','Deccan Queen','Mumbai CSMT','Pune','17:10','20:25','CC · EC','Daily',310],
- ['11007','Deccan Express','Mumbai CSMT','Pune','07:00','10:40','SL · CC','Daily',140],
- ['12127','Intercity Express','Mumbai CSMT','Pune','06:40','10:00','CC · 2S','Daily',120],
- ['11029','Koyna Express','Mumbai CSMT','Satara','08:40','15:30','SL · 3A','Daily · via Karjat',210],
- ['10103','Mandovi Express','Mumbai CSMT','Madgaon (Goa)','07:10','19:00','SL · 3A · 2A','Daily',420],
- ['12951','Mumbai Rajdhani','Mumbai Central','New Delhi','17:00','08:32','3A · 2A · 1A','Daily',2120],
- ['12009','Shatabdi Express','Mumbai Central','Ahmedabad','06:20','12:45','CC · EC','Daily',890],
- ['L-96','Badlapur–Karjat Local','Badlapur','Karjat','Har 20 min','~25 min','Second · First','Daily',10],
-].map((t,i)=>({id:'t'+i,no:t[0],name:t[1],from:t[2],to:t[3],dep:t[4],arr:t[5],cls:t[6],days:t[7],price:t[8]}));
+const RESTAURANTS = [
+ ['Shree Datta Misal House','Badlapur','Maharashtrian \u00b7 Misal Pav',300,4.4,'farm','\ud83c\udf5b','Pure Veg'],
+ ['Riverside Tadka','Karjat','North Indian \u00b7 Tandoor',700,4.2,'forest','\ud83c\udf72','Veg & Non-veg'],
+ ['German Bakery Lonavala','Lonavala','Cafe \u00b7 Bakery \u00b7 Chikki',600,4.3,'mountain','\ud83e\uddc1','Pure Veg'],
+ ['Konkan Katta','Alibaug','Malvani \u00b7 Seafood Thali',900,4.6,'ocean','\ud83d\udc1f','Seafood Special'],
+ ['Strawberry Farm Cafe','Mahabaleshwar','Cafe \u00b7 Desserts',500,4.5,'farm','\ud83c\udf53','Pure Veg'],
+ ['Shabri Thali House','Pune','Maharashtrian Thali',450,4.4,'heritage','\ud83c\udf7d\ufe0f','Pure Veg'],
+ ['Sula Tasting Room','Nashik','Continental \u00b7 Vineyard',1400,4.5,'desert','\ud83c\udf47','Veg & Non-veg'],
+ ['Kolhapuri Rassa Mandal','Kolhapur','Kolhapuri \u00b7 Tambda Rassa',550,4.7,'heritage','\ud83c\udf5b','Non-veg Special'],
+].map((r,i)=>({id:'r'+i,name:r[0],city:r[1],cuisine:r[2],for2:r[3],rating:r[4],tone:r[5],emoji:r[6],veg:r[7]}));
+
 const REVIEWS = [
- ['Ananya Sharma','Delhi',5,'Hotel Booking','Seamless booking and the Udaipur hotel was exactly as shown. Check-in was instant with the digital voucher.','royal','👩'],
- ['Rohan Mehta','Mumbai',4,'Flight Booking','Great fare on Mumbai–Goa and the e-ticket + reminders were super convenient.','ocean','👨'],
- ['Priya Nair','Kochi',5,'Package Booking','Kerala backwaters package was perfectly planned — houseboat, transfers, everything on time.','forest','👩'],
- ['Arjun Singh','Jaipur',5,'Bus Booking','Comfortable AC sleeper, live tracking worked and boarding point was accurate.','saffron','👨'],
- ['Sneha Kulkarni','Pune',4,'Cab Booking','Outstation cab to Lonavala — driver on time, fare matched the quote exactly.','royal','👩'],
- ['Vikram Rathore','Ahmedabad',5,'Hotel Booking','Free cancellation saved me when plans changed. Refund processed in 3 days.','heritage','👨'],
+ ['Ananya Sharma','Thane',5,'Villa Booking','Lonavala ki pool villa bilkul photos jaisi thi \u2014 cook ka khana zabardast, check-in instant.','royal','\ud83d\udc69'],
+ ['Rohan Mehta','Mumbai',4,'Farmhouse Booking','Karjat ka farmhouse weekend perfect tha \u2014 BBQ, river walk, sab kuch sorted.','forest','\ud83d\udc68'],
+ ['Priya Kulkarni','Pune',5,'Restaurant Reservation','Table reservation se Mahabaleshwar mein wait nahi karna pada \u2014 deposit bill mein adjust ho gaya.','farm','\ud83d\udc69'],
+ ['Arjun Patil','Kalyan',5,'Homestay Booking','Tarkarli ke homestay ka Malvani khana ab tak yaad hai. Paisa vasool!','ocean','\ud83d\udc68'],
+ ['Sneha Joshi','Badlapur',4,'Package Booking','Badlapur\u2013Karjat weekend plan follow kiya \u2014 Kondeshwar waterfall best tha.','forest','\ud83d\udc69'],
+ ['Vikram Deshmukh','Nashik',5,'Hotel Booking','Free cancellation ne plan badalne par bacha liya \u2014 refund 3 din mein aa gaya.','heritage','\ud83d\udc68'],
 ];
 
 const ADMIN = {
@@ -401,13 +371,11 @@ const REFUND_FLOW=['Requested','Under Review','Approved','Refund Initiated','Com
 
 /* ================= STATE ================= */
 const S = {
-  tab:'hotels', reviewIdx:0,
+  tab:'stays', reviewIdx:0,
   wishlist:new Set(JSON.parse(localStorage.getItem('bs_wish')||'[]')),
   bookings:JSON.parse(localStorage.getItem('bs_bookings')||'[]'),
   filters:{q:'',maxPrice:20000,stars:new Set(),minRating:0,types:new Set(),amen:new Set(),freeCancel:false,payAtHotel:false,couple:false,family:false,sort:'Recommended'},
-  fl:{from:'',to:'',direct:false,sort:'Price: Low to High'},
-  bus:{from:'',to:'',ac:false,sort:'Price: Low to High'},
-  tr:{from:'',to:''},
+  rest:{city:'',vegOnly:false},
   cabCat:'All', cabTrip:'Local',
   detail:{roomIdx:0,coupon:'',couponOn:false},
   cart:null,
@@ -494,7 +462,7 @@ const SCENES = {
     <g fill="rgba(255,224,178,.75)"><rect x="57" y="70" width="5" height="5"/><rect x="67" y="70" width="5" height="5"/><rect x="89" y="68" width="5" height="5"/><rect x="99" y="68" width="5" height="5"/><rect x="119" y="66" width="5" height="5"/><rect x="129" y="66" width="5" height="5"/></g></g>
     <circle cx="30" cy="60" r="9" fill="rgba(31,109,63,.75)"/><circle cx="170" cy="52" r="9" fill="rgba(31,109,63,.75)"/>`,
 };
-const DEST_SCENE = {Goa:'beach',Manali:'mountain',Shimla:'mountain',Jaipur:'fort',Udaipur:'lake',Kerala:'backwater',Mumbai:'city',Delhi:'fort',Agra:'taj',Kashmir:'lake',Ladakh:'mountain',Andaman:'beach',Rishikesh:'backwater',Lonavala:'mountain',Mahabaleshwar:'mountain'};
+const DEST_SCENE = {Lonavala:'waterfall',Mahabaleshwar:'mountain',Alibaug:'beach',Matheran:'toytrain',Karjat:'rafting',Igatpuri:'mountain',Nashik:'mountain',Panchgani:'mountain',Mumbai:'city',Pune:'city',Kolhapur:'fort',Aurangabad:'caves',Tarkarli:'beach',Bhandardara:'dam','Malshej Ghat':'waterfall',Badlapur:'waterfall',Pawna:'lake'};
 const sceneBlock = (tone,kind,label,style) => `<div class="ph t-${tone}" style="${style||''}">
   <svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMax slice" style="position:absolute;inset:0;width:100%;height:100%">${SCENE_DEFS}${SCENES[kind]||SCENES.mountain}</svg>
   ${label?`<span class="lbl" style="position:relative;z-index:2">${esc(label)}</span>`:''}</div>`;
@@ -516,7 +484,7 @@ function go(route){
 }
 
 /* ================= SHARED CHROME ================= */
-const NAVLINKS=[['#/hotels','Hotels'],['#/flights','Flights'],['#/buses','Buses'],['#/trains','Trains'],['#/cabs','Cabs'],['#/packages','Packages'],['#/activities','Activities']];
+const NAVLINKS=[['#/hotels','Stays'],['#/villas','Villas & Farmhouses'],['#/restaurants','Restaurants'],['#/weekend','Weekend Trip'],['#/packages','Packages'],['#/activities','Activities'],['#/cabs','Cabs']];
 function header(active){
   return `
   <div class="topbar no-print"><div class="container">
@@ -539,7 +507,7 @@ function header(active){
 function footer(){
   const cols=[
    ['Company',[['#/about','About BharatStay'],['#/careers','Careers'],['#/blog','Blog'],['#/contact','Contact Us']]],
-   ['Explore',[['#/hotels','Hotels'],['#/flights','Flights'],['#/buses','Buses'],['#/cabs','Cabs'],['#/packages','Holiday Packages']]],
+   ['Explore',[['#/hotels','Stays'],['#/villas','Villas & Farmhouses'],['#/restaurants','Restaurants'],['#/weekend','Weekend Trip'],['#/packages','Packages']]],
    ['Partner',[['#/list-property','List Your Property'],['#/login','Partner Login'],['#/login','Agent Login'],['#/admin','Admin Dashboard']]],
    ['Support',[['#/support','Customer Support'],['#/dashboard','My Bookings'],['#/dashboard','Payment History'],['#/support','FAQs']]],
   ];
@@ -547,7 +515,7 @@ function footer(){
     <div class="cols">
       <div>
         <a href="#/" class="logo"><img src="${LOGO_URI}" alt="BharatStay" style="height:64px;background:#fff;border-radius:14px;padding:7px;display:block"></a>
-        <p style="font-size:13px;color:var(--r300);margin-top:12px;max-width:250px">India's complete travel booking platform — hotels, flights, buses, cabs and holiday packages, all in one place.</p>
+        <p style="font-size:13px;color:var(--r300);margin-top:12px;max-width:250px">Maharashtra ka apna stay &amp; food platform — villas, hotels, farmhouses, homestays aur restaurants, sab ek jagah.</p>
       </div>
       ${cols.map(c=>`<div><h5>${c[0]}</h5>${c[1].map(l=>`<a href="${l[0]}">${l[1]}</a>`).join('')}</div>`).join('')}
     </div>
@@ -558,48 +526,42 @@ function page(active, inner){ return header(active) + inner + footer(); }
 
 /* ================= HOME ================= */
 function searchTabs(){
-  const T=[['hotels','🏨','Hotels'],['flights','✈️','Flights'],['buses','🚌','Buses'],['trains','🚆','Trains'],['cabs','🚕','Cabs'],['packages','🧳','Packages']];
+  const T=[['stays','\ud83c\udfe8','Stays'],['villas','\ud83c\udfd6\ufe0f','Villas & Farmhouses'],['restaurants','\ud83c\udf7d\ufe0f','Restaurants'],['packages','\ud83e\uddf3','Packages'],['cabs','\ud83d\ude95','Cabs']];
   const forms={
-   hotels:`<form class="sform" onsubmit="event.preventDefault();S.filters.q=this.dest.value==='Anywhere'?'':this.dest.value;go('#/hotels')">
-     <div class="field span2"><label>Destination, city or property</label><input name="dest" value="Goa"></div>
+   stays:`<form class="sform" onsubmit="event.preventDefault();S.filters.q=this.dest.value;const v=this.pt.value;S.filters.types=v==='Any'?new Set():new Set([v]);go('#/hotels')">
+     <div class="field span2"><label>Sheher ya jagah (Maharashtra)</label><input name="dest" value="Lonavala"></div>
      <div class="field"><label>Check-in</label><input type="date" value="2026-08-14"></div>
-     <div class="field"><label>Check-out</label><input type="date" value="2026-08-17"></div>
+     <div class="field"><label>Check-out</label><input type="date" value="2026-08-16"></div>
      <div class="field"><label>Rooms</label><input type="number" min="1" value="1"></div>
      <div class="field"><label>Adults</label><input type="number" min="1" value="2"></div>
      <div class="field"><label>Children</label><input type="number" min="0" value="0"></div>
-     <div class="field"><label>Property type</label><select><option>Any</option><option>Hotel</option><option>Resort</option><option>Homestay</option><option>Farm Stay</option></select></div>
-     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Hotels</button></div></form>`,
-   flights:`<form class="sform" onsubmit="event.preventDefault();S.fl.from=this.f.value;S.fl.to=this.t.value;go('#/flights')">
-     <div class="field"><label>From</label><input name="f" value="Mumbai"></div>
-     <div class="field"><label>To</label><input name="t" value="Delhi"></div>
-     <div class="field"><label>Departure</label><input type="date" value="2026-08-02"></div>
-     <div class="field"><label>Class</label><select><option>Economy</option><option>Premium Economy</option><option>Business</option><option>First</option></select></div>
-     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Flights</button></div></form>`,
-   buses:`<form class="sform" onsubmit="event.preventDefault();S.bus.from=this.f.value;S.bus.to=this.t.value;go('#/buses')">
-     <div class="field"><label>From</label><input name="f" value="Mumbai"></div>
-     <div class="field"><label>To</label><input name="t" value="Pune"></div>
-     <div class="field"><label>Travel date</label><input type="date" value="2026-08-01"></div>
-     <div class="field"><label>Bus type</label><select><option>Any</option><option>AC Sleeper</option><option>AC Seater</option></select></div>
-     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Buses</button></div></form>`,
-   trains:`<form class="sform" onsubmit="event.preventDefault();S.tr.from=this.f.value;S.tr.to=this.t.value;go('#/trains')">
-     <div class="field"><label>From station</label><input name="f" value="Mumbai CSMT"></div>
-     <div class="field"><label>To station</label><input name="t" value="Pune"></div>
-     <div class="field"><label>Journey date</label><input type="date" value="2026-08-01"></div>
-     <div class="field"><label>Class</label><select><option>All Classes</option><option>SL — Sleeper</option><option>CC — Chair Car</option><option>3A — AC 3 Tier</option><option>2A — AC 2 Tier</option></select></div>
-     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Trains</button></div></form>`,
-   cabs:`<form class="sform" onsubmit="event.preventDefault();go('#/cabs')">
-     <div class="field"><label>Pickup location</label><input value="Andheri, Mumbai"></div>
-     <div class="field"><label>Drop location</label><input value="Mumbai Airport (BOM)"></div>
-     <div class="field"><label>Date & time</label><input type="datetime-local" value="2026-08-01T09:00"></div>
-     <div class="field"><label>Vehicle</label><select><option>Sedan</option><option>Hatchback</option><option>SUV</option><option>Luxury</option></select></div>
-     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Cabs</button></div></form>`,
+     <div class="field"><label>Property type</label><select name="pt"><option>Any</option><option>Hotel</option><option>Resort</option><option>Villa</option><option>Homestay</option><option>Farm Stay</option></select></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Stays</button></div></form>`,
+   villas:`<form class="sform" onsubmit="event.preventDefault();S.filters.q=this.loc.value;S.filters.types=new Set(['Villa','Farm Stay']);go('#/hotels')">
+     <div class="field span2"><label>Kahan? (Lonavala, Karjat, Alibaug...)</label><input name="loc" value="Karjat"></div>
+     <div class="field"><label>Check-in</label><input type="date" value="2026-08-14"></div>
+     <div class="field"><label>Guests</label><input type="number" min="1" value="6"></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Villas &amp; Farmhouses</button></div></form>`,
+   restaurants:`<form class="sform" onsubmit="event.preventDefault();S.rest.city=this.c.value==='Any city'?'':this.c.value;go('#/restaurants')">
+     <div class="field"><label>Sheher</label><input name="c" value="Lonavala"></div>
+     <div class="field"><label>Date</label><input type="date" value="2026-08-01"></div>
+     <div class="field"><label>Time</label><select><option>8:00 PM</option><option>1:00 PM</option><option>9:00 PM</option></select></div>
+     <div class="field"><label>Guests</label><input type="number" min="1" value="4"></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Find Restaurants</button></div></form>`,
    packages:`<form class="sform" onsubmit="event.preventDefault();go('#/packages')">
-     <div class="field"><label>Destination</label><input value="Kerala"></div>
+     <div class="field"><label>Destination</label><input value="Mahabaleshwar"></div>
      <div class="field"><label>Travel month</label><input type="month" value="2026-09"></div>
      <div class="field"><label>Travellers</label><input type="number" min="1" value="2"></div>
-     <div class="field"><label>Budget</label><select><option>Any</option><option>Under ₹10,000</option><option>₹10,000–₹20,000</option><option>Above ₹20,000</option></select></div>
+     <div class="field"><label>Budget</label><select><option>Any</option><option>Under \u20b95,000</option><option>\u20b95,000\u2013\u20b910,000</option><option>Above \u20b910,000</option></select></div>
      <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Packages</button></div></form>`,
+   cabs:`<form class="sform" onsubmit="event.preventDefault();go('#/cabs')">
+     <div class="field"><label>Pickup location</label><input value="Badlapur"></div>
+     <div class="field"><label>Drop location</label><input value="Karjat"></div>
+     <div class="field"><label>Date &amp; time</label><input type="datetime-local" value="2026-08-01T09:00"></div>
+     <div class="field"><label>Vehicle</label><select><option>Sedan</option><option>Hatchback</option><option>SUV</option><option>Tempo Traveller</option></select></div>
+     <div class="span4"><button class="btn btn-p" style="padding:12px 38px">Search Cabs</button></div></form>`,
   };
+  if(!forms[S.tab]) S.tab='stays';
   return `<div class="searchbox">
     <div class="tabs">${T.map(t=>`<button class="${S.tab===t[0]?'on':''}" onclick="S.tab='${t[0]}';render()">${t[1]} ${t[2]}</button>`).join('')}</div>
     ${forms[S.tab]}
@@ -626,12 +588,12 @@ function homeView(){
       </g>
     </svg>
     <div class="container">
-    <div class="eyebrow" style="color:var(--s300)">India's Complete Travel Booking Platform</div>
-    <h1>Where Would You Like to Go?</h1>
-    <p class="sub">Hotels, resorts, villas &amp; homestays · flights · buses · trains · cabs · holiday packages — book it all with BharatStay.</p>
+    <div class="eyebrow" style="color:var(--s300)">Maharashtra Travel &amp; Stay Platform</div>
+    <h1>Weekend Pe Kahan Chalna Hai?</h1>
+    <p class="sub">Villas · hotels · farmhouses · homestays · restaurants — Lonavala se Tarkarli tak, poora Maharashtra BharatStay par.</p>
     ${searchTabs()}
     <div style="position:relative;z-index:1;display:flex;gap:14px;flex-wrap:wrap;margin-top:22px">
-      ${[['🌊','Badlapur→Karjat Weekend','#/weekend'],['✈️','Flights','#/flights'],['🚌','Buses','#/buses'],['🚕','Cabs & Taxi','#/cabs'],['🚆','Trains','#/trains'],['🧳','Packages','#/packages']].map(s=>
+      ${[['🌊','Badlapur→Karjat Weekend','#/weekend'],['🏖️','Villas','#/villas'],['🌾','Farmhouses','#/villas'],['🍽️','Restaurants','#/restaurants'],['🧳','Packages','#/packages'],['🚕','Cabs','#/cabs']].map(s=>
       `<a href="${s[2]}" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:99px;padding:9px 18px;font-size:13.5px;font-weight:600;color:#fff">${s[0]} ${s[1]}</a>`).join('')}
     </div>
   </div></section>
@@ -669,43 +631,15 @@ function homeView(){
   </div></section>
 
   <section class="section" style="padding-bottom:0"><div class="container">
-    <div class="eyebrow">Flights · Buses · Cabs</div><h2 class="sec-title" style="margin-bottom:24px">Book every leg of the journey</h2>
-    <div class="grid g3">
-      <div class="card" style="padding:22px;display:flex;flex-direction:column">
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">✈️</span><b style="font-size:17px">Top Flight Routes</b></div>
-        <div style="margin-top:14px;flex:1">
-          ${[['Mumbai → Delhi','IndiGo · Non-stop',4899],['Delhi → Goa','Air India · Non-stop',6299],['Mumbai → Bengaluru','Akasa Air · Non-stop',4599]].map(r=>
-          `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-            <span><b style="font-size:14px">${r[0]}</b><br><span style="font-size:12px;color:var(--r400)">${r[1]}</span></span>
-            <b style="color:var(--s600)">${INR(r[2])}</b></div>`).join('')}
-        </div>
-        <a class="btn btn-p btn-sm" style="margin-top:14px" href="#/flights">Search All Flights →</a>
-      </div>
-      <div class="card" style="padding:22px;display:flex;flex-direction:column">
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">🚌</span><b style="font-size:17px">Popular Bus Routes</b></div>
-        <div style="margin-top:14px;flex:1">
-          ${[['Mumbai → Pune','Volvo AC Sleeper',899],['Delhi → Manali','Volvo AC Sleeper',1499],['Mumbai → Goa','Volvo AC Sleeper',1299]].map(r=>
-          `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-            <span><b style="font-size:14px">${r[0]}</b><br><span style="font-size:12px;color:var(--r400)">${r[1]}</span></span>
-            <b style="color:var(--s600)">${INR(r[2])}</b></div>`).join('')}
-        </div>
-        <a class="btn btn-p btn-sm" style="margin-top:14px" href="#/buses">Search All Buses →</a>
-      </div>
-      <div class="card" style="padding:22px;display:flex;flex-direction:column">
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">🚕</span><b style="font-size:17px">Cab &amp; Taxi Service</b></div>
-        <div style="margin-top:14px;flex:1">
-          ${[['Sedan (Dzire / Etios)','Local · Airport · Outstation','₹14/km'],['SUV (Ertiga / Innova)','6 seats · family trips','₹18/km'],['Luxury (Camry / E-Class)','premium rides','₹35/km']].map(r=>
-          `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-            <span><b style="font-size:14px">${r[0]}</b><br><span style="font-size:12px;color:var(--r400)">${r[1]}</span></span>
-            <b style="color:var(--s600)">${r[2]}</b></div>`).join('')}
-        </div>
-        <a class="btn btn-p btn-sm" style="margin-top:14px" href="#/cabs">Book a Cab →</a>
-      </div>
+    <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:24px">
+      <div><div class="eyebrow">Khaana-Peena</div><h2 class="sec-title">Maharashtra ke top restaurants</h2></div>
+      <a href="#/restaurants" class="btn btn-s btn-sm">View all →</a>
     </div>
+    <div class="grid g4">${RESTAURANTS.slice(0,4).map(restCard).join('')}</div>
   </div></section>
 
   <section class="section alt"><div class="container">
-    <div class="eyebrow">Popular Indian Destinations</div><h2 class="sec-title" style="margin-bottom:24px">Explore India, your way</h2>
+    <div class="eyebrow">Maharashtra Destinations</div><h2 class="sec-title" style="margin-bottom:24px">Explore Maharashtra, apne style mein</h2>
     <div class="grid g5">
       ${DESTS.map(d=>`<a class="card" style="overflow:hidden" href="#/hotels" onclick="S.filters.q='${d.name}'">
         ${sceneBlock(d.tone,DEST_SCENE[d.name],d.name,'height:126px')}
@@ -720,7 +654,7 @@ function homeView(){
   <section class="section"><div class="container">
     <div class="eyebrow">Property Categories</div><h2 class="sec-title" style="margin-bottom:24px">Find your kind of stay</h2>
     <div class="grid g5">
-      ${[['🏨','Hotels','Hotel'],['🏝️','Resorts','Resort'],['🏡','Homestays','Homestay'],['🌾','Farm Stays','Farm Stay'],['👑','Luxury Stays','']].map(c=>
+      ${[['🏨','Hotels','Hotel'],['🏖️','Villas','Villa'],['🌾','Farmhouses','Farm Stay'],['🏡','Homestays','Homestay'],['🏝️','Resorts','Resort']].map(c=>
        `<a class="card" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px" href="#/hotels" onclick="S.filters.types=new Set(${c[2]?`['${c[2]}']`:'[]'})">
         <span style="font-size:30px">${c[0]}</span><span style="font-size:14px;font-weight:700;color:var(--r800)">${c[1]}</span></a>`).join('')}
     </div>
@@ -859,7 +793,7 @@ function hotelsView(){
         <div class="fgroup"><div class="field"><label>Customer rating</label></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">${[4.5,4,3.5].map(r=>`<button class="pill ${f.minRating===r?'on':''}" onclick="S.filters.minRating=S.filters.minRating===${r}?0:${r};render()">${r}+</button>`).join('')}</div></div>
         <div class="fgroup"><div class="field"><label>Property type</label></div>
-          ${['Hotel','Resort','Homestay','Farm Stay'].map(t=>`<label class="check"><input type="checkbox" ${f.types.has(t)?'checked':''} onchange="fToggle('types','${t}')">${t}</label>`).join('')}</div>
+          ${['Hotel','Resort','Villa','Homestay','Farm Stay'].map(t=>`<label class="check"><input type="checkbox" ${f.types.has(t)?'checked':''} onchange="fToggle('types','${t}')">${t}</label>`).join('')}</div>
         <div class="fgroup"><div class="field"><label>Amenities</label></div>
           ${['Free Wi-Fi','Swimming Pool','Restaurant','Spa','Parking','Pet Friendly'].map(a=>`<label class="check"><input type="checkbox" ${f.amen.has(a)?'checked':''} onchange="fToggle('amen','${a}')">${a}</label>`).join('')}</div>
         <div class="fgroup"><div class="field"><label>Preferences</label></div>
@@ -1004,74 +938,6 @@ function applyDetailCoupon(){
 }
 
 /* ================= FLIGHTS / BUSES / CABS / PKGS / ACTS ================= */
-function flightsView(){
-  const f=S.fl;
-  let list=FLIGHTS.filter(x=>{
-    if(f.from&&!(x.from+' '+x.fc).toLowerCase().includes(f.from.toLowerCase()))return false;
-    if(f.to&&!(x.to+' '+x.tc).toLowerCase().includes(f.to.toLowerCase()))return false;
-    if(f.direct&&x.stops>0)return false; return true;});
-  if(f.sort==='Price: Low to High')list.sort((a,b)=>a.price-b.price);
-  else if(f.sort==='Price: High to Low')list.sort((a,b)=>b.price-a.price);
-  else if(f.sort==='Duration')list.sort((a,b)=>a.dur-b.dur);
-  return page('#/flights', `<div class="container" style="padding:28px 20px 40px">
-    <h1 style="font-size:22px;font-weight:800">Flight Search Results</h1>
-    <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${list.length} flights found</div>
-    <div class="card" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:16px;margin-bottom:18px">
-      <div class="field"><label>From</label><input id="flf" value="${esc(f.from)}" placeholder="Any" oninput="S.fl.from=this.value;renderKeepFocus('flf')"></div>
-      <div class="field"><label>To</label><input id="flt" value="${esc(f.to)}" placeholder="Any" oninput="S.fl.to=this.value;renderKeepFocus('flt')"></div>
-      <label class="check" style="padding-bottom:10px"><input type="checkbox" ${f.direct?'checked':''} onchange="S.fl.direct=this.checked;render()">Direct only</label>
-      <div class="field" style="margin-left:auto"><label>Sort</label><select onchange="S.fl.sort=this.value;render()">${['Price: Low to High','Price: High to Low','Duration'].map(o=>`<option ${f.sort===o?'selected':''}>${o}</option>`).join('')}</select></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-    ${list.length?list.map(x=>`<div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:16px">
-      <div style="display:flex;gap:10px;align-items:center;width:160px"><span style="font-size:22px">${x.logo}</span><div><div style="font-weight:700;font-size:14px">${x.airline}</div><div style="font-size:12px;color:var(--r400)">${x.no}</div></div></div>
-      <div style="flex:1;display:flex;align-items:center;gap:16px;justify-content:center;min-width:240px">
-        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.dep}</div><div style="font-size:12px;color:var(--r400)">${x.from} (${x.fc})</div></div>
-        <div style="flex:1;text-align:center;color:var(--r300);font-size:12px">${dur(x.dur)}<div style="height:1px;background:var(--r200);margin:4px 0"></div>${x.stops===0?'Non-stop':x.stops+' stop'}</div>
-        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.arr}</div><div style="font-size:12px;color:var(--r400)">${x.to} (${x.tc})</div></div>
-      </div>
-      <div style="text-align:right;min-width:150px">
-        <div style="font-size:11.5px;color:var(--r400)">${x.cls} · ${x.ref?'Refundable':'Non-refundable'} · ${x.bag}kg bag</div>
-        <div class="price-lg">${INR(x.price)}</div>
-        <button class="btn btn-p btn-sm" style="margin-top:5px" onclick="startCheckout({type:'Flight',title:'${x.from} → ${x.to} · ${x.no}',sub:'${x.airline} · ${x.cls}',amount:${x.price},tone:'royal',emoji:'✈️'})">Book Now</button>
-      </div>
-    </div>`).join(''):`<div class="card center-note">No flights match. Try another route.</div>`}
-    </div></div>`);
-}
-function busesView(){
-  const f=S.bus;
-  let list=BUSES.filter(x=>{
-    if(f.from&&!x.from.toLowerCase().includes(f.from.toLowerCase()))return false;
-    if(f.to&&!x.to.toLowerCase().includes(f.to.toLowerCase()))return false;
-    if(f.ac&&!x.ac)return false;return true;});
-  if(f.sort==='Price: Low to High')list.sort((a,b)=>a.price-b.price);
-  else if(f.sort==='Price: High to Low')list.sort((a,b)=>b.price-a.price);
-  else if(f.sort==='Rating')list.sort((a,b)=>b.rating-a.rating);
-  return page('#/buses', `<div class="container" style="padding:28px 20px 40px">
-    <h1 style="font-size:22px;font-weight:800">Bus Search Results</h1>
-    <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${list.length} buses found</div>
-    <div class="card" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:16px;margin-bottom:18px">
-      <div class="field"><label>From</label><input id="bf" value="${esc(f.from)}" placeholder="Any" oninput="S.bus.from=this.value;renderKeepFocus('bf')"></div>
-      <div class="field"><label>To</label><input id="bt" value="${esc(f.to)}" placeholder="Any" oninput="S.bus.to=this.value;renderKeepFocus('bt')"></div>
-      <label class="check" style="padding-bottom:10px"><input type="checkbox" ${f.ac?'checked':''} onchange="S.bus.ac=this.checked;render()">AC only</label>
-      <div class="field" style="margin-left:auto"><label>Sort</label><select onchange="S.bus.sort=this.value;render()">${['Price: Low to High','Price: High to Low','Rating'].map(o=>`<option ${f.sort===o?'selected':''}>${o}</option>`).join('')}</select></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-    ${list.length?list.map(x=>`<div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:16px">
-      <div style="width:180px"><div style="font-weight:700;font-size:14px">${x.op}</div><div style="font-size:12px;color:var(--r400)">${x.type}</div><div style="font-size:12px;color:var(--s600);font-weight:700;margin-top:2px">★ ${x.rating}</div></div>
-      <div style="flex:1;display:flex;align-items:center;gap:16px;justify-content:center;min-width:220px">
-        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.dep}</div><div style="font-size:12px;color:var(--r400)">${x.from}</div></div>
-        <div style="flex:1;text-align:center;color:var(--r300);font-size:12px">${dur(x.dur)}<div style="height:1px;background:var(--r200);margin:4px 0"></div></div>
-        <div style="text-align:center"><div style="font-size:18px;font-weight:800">${x.arr}</div><div style="font-size:12px;color:var(--r400)">${x.to}</div></div>
-      </div>
-      <div style="text-align:right;min-width:140px">
-        <div style="font-size:11.5px;color:var(--r400)">${x.seats} seats left</div>
-        <div class="price-lg">${INR(x.price)}</div>
-        <button class="btn btn-p btn-sm" style="margin-top:5px" onclick="startCheckout({type:'Bus',title:'${x.from} → ${x.to}',sub:'${esc(x.op)} · ${esc(x.type)}',amount:${x.price},tone:'saffron',emoji:'🚌'})">Select Seats</button>
-      </div>
-    </div>`).join(''):`<div class="card center-note">No buses match. Try another route.</div>`}
-    </div></div>`);
-}
 function cabsView(){
   const cats=['All','Hatchback','Sedan','SUV','Luxury','Tempo'];
   const list=S.cabCat==='All'?CABS:CABS.filter(c=>c.cat===S.cabCat);
@@ -1191,38 +1057,35 @@ function weekendView(){
   </div>`);
 }
 
-function trainsView(){
-  const f=S.tr;
-  const list=TRAINS.filter(t=>{
-    if(f.from&&!t.from.toLowerCase().includes(f.from.toLowerCase())&&!t.name.toLowerCase().includes(f.from.toLowerCase()))return false;
-    if(f.to&&!t.to.toLowerCase().includes(f.to.toLowerCase()))return false;return true;});
-  return page('#/trains', `<div class="container" style="padding:28px 20px 40px">
-    <h1 style="font-size:22px;font-weight:800">Train Ticket Booking</h1>
-    <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${list.length} trains found · demo timetable — IRCTC-authorised partner integration ready</div>
+function restCard(r){
+  return `<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
+    ${ph(r.tone,r.emoji,'','height:92px')}
+    <div style="padding:13px;flex:1;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><b style="font-size:14.5px">${r.name}</b><span class="rating-chip" style="font-size:12px;padding:3px 8px">${r.rating}</span></div>
+      <div style="font-size:12px;color:var(--r400);margin-top:3px">${r.city} · ${r.cuisine}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <span class="badge ${r.veg.indexOf('Pure')===0?'bg-g':'bg-o'}">${r.veg}</span>
+        <span class="amen">₹${r.for2} for two</span>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn btn-p btn-sm" style="margin-top:12px" onclick="startCheckout({type:'Restaurant',title:'${esc(r.name)}',sub:'${esc(r.city)} · table · aaj 8:00 PM',amount:200,tone:'${r.tone}',emoji:'\ud83c\udf7d\ufe0f'})">Reserve Table · ₹200</button>
+    </div></div>`;
+}
+function restaurantsView(){
+  const f=S.rest;
+  const list=RESTAURANTS.filter(r=>{
+    if(f.city&&!r.city.toLowerCase().includes(f.city.toLowerCase()))return false;
+    if(f.vegOnly&&r.veg.indexOf('Pure')!==0)return false;return true;});
+  return page('#/restaurants', `<div class="container" style="padding:28px 20px 40px">
+    <h1 style="font-size:22px;font-weight:800">Restaurants &amp; Table Booking</h1>
+    <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${list.length} restaurants · ₹200 reservation deposit, bill mein adjust</div>
     <div class="card" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:16px;margin-bottom:18px">
-      <div class="field"><label>From</label><input id="trf" value="${esc(f.from)}" placeholder="Any station" oninput="S.tr.from=this.value;renderKeepFocus('trf')"></div>
-      <div class="field"><label>To</label><input id="trt" value="${esc(f.to)}" placeholder="Any station" oninput="S.tr.to=this.value;renderKeepFocus('trt')"></div>
-      <button class="btn btn-s btn-sm" style="margin-bottom:2px" onclick="S.tr={from:'',to:''};render()">Clear</button>
+      <div class="field"><label>Sheher</label><input id="rc" value="${esc(f.city)}" placeholder="Koi bhi sheher" oninput="S.rest.city=this.value;renderKeepFocus('rc')"></div>
+      <label class="check" style="padding-bottom:10px"><input type="checkbox" ${f.vegOnly?'checked':''} onchange="S.rest.vegOnly=this.checked;render()">Pure Veg only</label>
+      <button class="btn btn-s btn-sm" style="margin-bottom:2px" onclick="S.rest={city:'',vegOnly:false};render()">Clear</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-    ${list.length?list.map(t=>`<div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:16px">
-      <div style="width:200px"><div style="font-weight:700;font-size:14.5px">${t.name}</div>
-        <div style="font-size:12px;color:var(--r400)">#${t.no} · ${t.days}</div>
-        <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">${t.cls.split(' · ').map(c=>`<span class="amen">${c}</span>`).join('')}</div></div>
-      <div style="flex:1;display:flex;align-items:center;gap:16px;justify-content:center;min-width:220px">
-        <div style="text-align:center"><div style="font-size:17px;font-weight:800">${t.dep}</div><div style="font-size:12px;color:var(--r400)">${t.from}</div></div>
-        <div style="flex:1;text-align:center;color:var(--r300);font-size:12px">🚆<div style="height:1px;background:var(--r200);margin:4px 0"></div></div>
-        <div style="text-align:center"><div style="font-size:17px;font-weight:800">${t.arr}</div><div style="font-size:12px;color:var(--r400)">${t.to}</div></div>
-      </div>
-      <div style="text-align:right;min-width:130px">
-        <div style="font-size:11.5px;color:var(--r400)">fare from</div>
-        <div class="price-lg">${INR(t.price)}</div>
-        <button class="btn btn-p btn-sm" style="margin-top:5px" onclick="startCheckout({type:'Train',title:'${esc(t.from)} → ${esc(t.to)} · ${esc(t.name)}',sub:'#${t.no} · ${esc(t.cls)}',amount:${t.price},tone:'royal',emoji:'🚆'})">Book Ticket</button>
-      </div>
-    </div>`).join(''):`<div class="card center-note">No trains match. Try another station.</div>`}
-    </div>
-    <div style="margin-top:18px;background:var(--r50);border-radius:12px;padding:14px 18px;font-size:12.5px;color:var(--r500)">
-      ℹ️ Demo timetable with sample fares. Live availability &amp; booking IRCTC-authorised API partner ke through connect hoga — architecture ready hai.
+    <div class="grid g4">
+      ${list.length?list.map(restCard).join(''):`<div class="card center-note" style="grid-column:1/-1">Koi restaurant nahi mila — doosra sheher try karo.</div>`}
     </div>
   </div>`);
 }
@@ -1331,9 +1194,7 @@ function doPay(btn){
     const rnd=n=>Math.floor(Math.random()*n);
     const digits=n=>Array.from({length:n},()=>rnd(10)).join('');
     const alnum=n=>Array.from({length:n},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[rnd(32)]).join('');
-    if(b.type==='Flight') b.extras={'PNR':alnum(6),'Seat':(4+rnd(28))+'A','Terminal':'T2 · Gate '+(1+rnd(18)),'Check-in':'Counter closes 45 min pehle'};
-    else if(b.type==='Bus') b.extras={'PNR':alnum(8),'Seat':'L'+(1+rnd(18))+' (Lower)','Boarding':'Main bus stand — 15 min pehle pahuncho'};
-    else if(b.type==='Train') b.extras={'PNR':digits(10),'Coach / Seat':'S'+(1+rnd(8))+' · '+(1+rnd(72))+' (Window)','Class':'SL — Sleeper','Platform':'PF '+(1+rnd(6))+' (tentative)'};
+    if(b.type==='Restaurant') b.extras={'Reservation ID':alnum(6),'Table':'4 guests \u00b7 aaj 8:00 PM','Note':'\u20b9200 deposit final bill mein adjust hoga'};
     S.lastBooking=b; S.bookings.unshift(b); save();
     go('#/status');
   },1100);
@@ -1370,7 +1231,7 @@ function voucherView(){
   if(!b) return page('', `<div class="center-note"><h2>No booking yet</h2><a class="btn btn-p" style="margin-top:14px" href="#/hotels">Book something first</a></div>`);
   return page('', `<div class="container" style="padding:32px 20px">
     <div style="max-width:760px;margin:0 auto 14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px" class="no-print">
-      <h1 style="font-size:20px;font-weight:800">${b.type} ${['Flight','Bus','Train'].includes(b.type)?'Ticket':'Voucher'}</h1>
+      <h1 style="font-size:20px;font-weight:800">${b.type} ${b.type==='Restaurant'?'Reservation':['Flight','Bus','Train'].includes(b.type)?'Ticket':'Voucher'}</h1>
       <div style="display:flex;gap:8px">
         <button class="btn btn-s btn-sm" onclick="print()">🖨️ Print</button>
         <button class="btn btn-s btn-sm" onclick="print()">⬇️ Save as PDF</button>
@@ -1678,11 +1539,10 @@ function render(){
     case '': html=homeView(); break;
     case 'hotels': html=hotelsView(); break;
     case 'hotel': html=hotelDetailView(param); break;
-    case 'flights': html=flightsView(); break;
-    case 'buses': html=busesView(); break;
     case 'cabs': html=cabsView(); break;
-    case 'trains': html=trainsView(); break;
     case 'weekend': html=weekendView(); break;
+    case 'restaurants': html=restaurantsView(); break;
+    case 'villas': S.filters.types=new Set(['Villa','Farm Stay']); html=hotelsView(); break;
     case 'packages': html=packagesView(); break;
     case 'activities': html=activitiesView(); break;
     case 'checkout': html=checkoutView(); break;

@@ -297,6 +297,16 @@ const COORDS = {
   'Sangli':[16.854,74.564],'Solapur':[17.659,75.906],'Nagpur':[21.146,79.088],
   'Tadoba':[20.226,79.383],'Chikhaldara':[21.402,77.325],'Jalgaon':[21.008,75.563],
 };
+/* --- ADMIN LOGIN (yahan apna password badlo) ---------------------
+   NOTE: yeh ek single HTML file hai — koi bhi file kholke password dekh
+   sakta hai. Isliye ismein kabhi bhi asli customer data mat rakhna.
+   Asli security ke liye server-side login chahiye.                    */
+/* --- ADMIN LOGIN: yahan apna email/password badlo. Admin panel se hotels,
+   restaurants, services on/off, notes sab manage kar sakte ho.
+   NOTE: single HTML file hai — password file mein dikhta hai, isliye ismein
+   asli customer data mat rakhna. */
+const ADMIN_LOGIN = { email:'admin@bharatstay.in', pass:'bharat@123' };
+
 const gmapUrl = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q + ', Maharashtra, India');
 const gdirUrl = q => 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q + ', Maharashtra, India');
 
@@ -326,18 +336,6 @@ const DESTS = [
  ['Satara','Satara','mountain','🌿',1599,88,'Kaas plateau, Thoseghar waterfalls.'],
  ['Ganpatipule','Ratnagiri','ocean','🕋',1899,66,'Beach temple aur Konkan coastline.'],
 ].map((d,i)=>({id:'d'+i,name:d[0],state:d[1],tone:d[2],emoji:d[3],price:d[4],count:d[5],desc:d[6]}));
-
-/* --- 3) OFFERS: ['Title','COUPONCODE','discount','category','vivaran','rang','emoji'] */
-const OFFERS = [
- ['Flat 25% off on Hotels','STAY25','25% OFF','Hotels','Maharashtra ke 500+ hotels par.','royal','\ud83c\udfe8'],
- ['Villas & Farmhouses 20% off','VILLA20','20% OFF','Villas','Lonavala, Karjat, Alibaug ki villas par.','forest','\ud83c\udfd6\ufe0f'],
- ['Restaurant Bill 10% off','THALI10','10% OFF','Restaurants','Table reserve karo, bill par discount pao.','saffron','\ud83c\udf7d\ufe0f'],
- ['Weekend Stays from \u20b91,999','WEEKEND','\u20b91,999+','Hotels','Badlapur\u2013Karjat belt ke weekend stays.','farm','\ud83c\udf3e'],
- ['First Booking \u2014 30% off','WELCOME30','30% OFF','New Users','Naye users ke liye exclusive.','gold','\ud83c\udf89'],
- ['10% Instant UPI Discount','UPI10','10% OFF','UPI','Har UPI payment par instant discount.','royal','\ud83d\udcf1'],
- ['Monsoon Packages 20% off','MONSOON20','20% OFF','Packages','Malshej, Bhandardara aur Lonavala plans.','forest','\ud83c\udf27\ufe0f'],
- ['Farmhouse Stays 15% off','FARM15','15% OFF','Farmhouses','Nashik, Igatpuri, Pawna ke farm stays.','farm','\ud83c\udf47'],
-];
 
 const AMEN_POOL=['Free Wi-Fi','Swimming Pool','Air Conditioning','Parking','Restaurant','Spa','Gym','Room Service','Power Backup','Pet Friendly'];
 /* --- 4) HOTELS/STAYS: ['Naam','Type','Sheher',star,price,'rang','room','khana','AREA']
@@ -555,11 +553,20 @@ const ADMIN = {
 };
 const REFUND_FLOW=['Requested','Under Review','Approved','Refund Initiated','Completed'];
 
+/* ================= EDITABLE DB (admin panel writes here) ========= */
+const SERVICE_KEYS = [['hotels','Stays'],['villas','Villas & Farmhouses'],['restaurants','Restaurants'],
+  ['map','Map'],['weekend','Weekend Trip'],['packages','Packages'],['activities','Activities'],['cabs','Cabs']];
+
 /* ================================================================
    ============  EDIT ZONE KHATAM — NEECHE CODE HAI  ==============
    ============  ISKO MAT CHHEDO  =================================
    ================================================================ */
 /* ================= STATE ================= */
+const _mem={};
+const store={
+  get(k,d){try{return localStorage.getItem(k)??d}catch(e){return _mem[k]??d}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){_mem[k]=v}}
+};
 const S = {
   tab:'stays', reviewIdx:0,
   wishlist:new Set(JSON.parse(localStorage.getItem('bs_wish')||'[]')),
@@ -569,13 +576,44 @@ const S = {
   map:{view:'belt',kinds:new Set(['dest','stay','food','spot']),sel:null,q:''},
   ai:{open:false,draft:'',msgs:[{who:'a',text:'Namaste! \ud83d\udc4b Main BharatStay Sahayak hoon. Villa, farmhouse, hotel, restaurant ya weekend plan \u2014 kuch bhi poochho, main dhoondh ke deta hoon.',items:[],tip:'Jaise: "Karjat mein 6000 ke andar pool villa"'}]},
   cabCat:'All', cabTrip:'Local',
-  detail:{roomIdx:0,coupon:'',couponOn:false},
+  detail:{roomIdx:0},
   cart:null,
-  co:{step:0,guest:{title:'Mr',first:'',last:'',email:'',phone:''},addons:{},coupon:'',couponOn:false,gst:false,gstin:'',method:'UPI'},
-  lastBooking:null, authMode:'password', otpSent:false, dashTab:'All',
+  co:{step:0,guest:{title:'Mr',first:'',last:'',email:'',phone:''},addons:{},gst:false,gstin:'',method:'UPI'},
+  lastBooking:null, dashTab:'All', adminTab:'overview',
+  db:loadDb(), edit:null,
+  auth:{user:JSON.parse(store.get('bs_user','null')), tab:'customer', step:'phone',
+        phone:'', name:'', otp:null, otpAt:0, tries:0, email:'', pass:''},
   admin:JSON.parse(JSON.stringify(ADMIN)),
 };
+function loadDb(){
+  const d = JSON.parse(store.get('bs_db','null')) || {};
+  return {
+    hotels: d.hotels || [],       // admin-added / edited stays
+    rests:  d.rests  || [],       // admin-added / edited restaurants
+    removed:d.removed|| [],       // deleted ids
+    notes:  d.notes  || [],
+    services: Object.assign(Object.fromEntries(SERVICE_KEYS.map(k=>[k[0],true])), d.services||{}),
+  };
+}
+const saveDb = () => { store.set('bs_db', JSON.stringify(S.db)); };
+
+/* merged views — admin edits win over seed data */
+function allHotels(){
+  const edits = new Map(S.db.hotels.map(h=>[h.id,h]));
+  const base = HOTELS.filter(h=>!S.db.removed.includes(h.id)).map(h=>edits.has(h.id)?{...h,...edits.get(h.id)}:h);
+  const added = S.db.hotels.filter(h=>!HOTELS.some(x=>x.id===h.id) && !S.db.removed.includes(h.id));
+  return [...added, ...base];
+}
+function allRests(){
+  const edits = new Map(S.db.rests.map(r=>[r.id,r]));
+  const base = RESTAURANTS.filter(r=>!S.db.removed.includes(r.id)).map(r=>edits.has(r.id)?{...r,...edits.get(r.id)}:r);
+  const added = S.db.rests.filter(r=>!RESTAURANTS.some(x=>x.id===r.id) && !S.db.removed.includes(r.id));
+  return [...added, ...base];
+}
+const svcOn = k => S.db.services[k] !== false;
+
 const save = () => {
+  store.set('bs_user', JSON.stringify(S.auth.user));
   localStorage.setItem('bs_wish', JSON.stringify([...S.wishlist]));
   localStorage.setItem('bs_bookings', JSON.stringify(S.bookings));
 };
@@ -679,7 +717,7 @@ function go(route){
 }
 
 /* ================= SHARED CHROME ================= */
-const NAVLINKS=[['#/hotels','Stays'],['#/villas','Villas'],['#/restaurants','Restaurants'],['#/map','Map'],['#/weekend','Weekend Trip'],['#/packages','Packages'],['#/cabs','Cabs']];
+const NAV_ALL=[['#/hotels','Stays','hotels'],['#/villas','Villas','villas'],['#/restaurants','Restaurants','restaurants'],['#/map','Map','map'],['#/weekend','Weekend Trip','weekend'],['#/packages','Packages','packages'],['#/cabs','Cabs','cabs']];
 function header(active){
   return `
   <div class="topbar no-print"><div class="container">
@@ -692,10 +730,15 @@ function header(active){
   </div></div>
   <header class="main no-print"><div class="container">
     <a href="#/" class="logo"><img src="${LOGO_URI}" alt="BharatStay — Stay, Travel, Explore India" style="height:54px;display:block"></a>
-    <nav class="links">${NAVLINKS.map(l=>`<a href="${l[0]}" class="${active===l[0]?'on':''}">${l[1]}</a>`).join('')}</nav>
+    <nav class="links">${NAV_ALL.filter(l=>svcOn(l[2])).map(l=>`<a href="${l[0]}" class="${active===l[0]?'on':''}">${l[1]}</a>`).join('')}</nav>
     <div class="hdr-actions">
-      <a class="btn btn-s btn-sm" href="#/dashboard">My Bookings</a>
-      <a class="btn btn-p btn-sm" href="#/login">Login / Sign Up</a>
+      ${S.auth.user ? `
+        <a class="btn btn-s btn-sm" href="${S.auth.user.role==='admin'?'#/admin':'#/dashboard'}">${S.auth.user.role==='admin'?'🛠️ Admin Panel':'🎟️ My Bookings'}</a>
+        <span class="badge bg-b" title="${esc(S.auth.user.phone||S.auth.user.email||'')}">${esc(S.auth.user.name)}</span>
+        <button class="btn btn-s btn-sm" onclick="logout()">Logout</button>`
+      : `
+        <a class="btn btn-s btn-sm" href="#/dashboard">My Bookings</a>
+        <a class="btn btn-p btn-sm" href="#/login">Login / Sign Up</a>`}
     </div>
   </div></header>`;
 }
@@ -793,25 +836,6 @@ function homeView(){
     </div>
   </div></section>
 
-  <section class="section"><div class="container">
-    <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:24px">
-      <div><div class="eyebrow">Exclusive Offers</div><h2 class="sec-title">Deals you don't want to miss</h2></div>
-    </div>
-    <div class="grid g4">
-      ${OFFERS.map(o=>`<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
-        ${ph(o[5],o[6],'', 'height:86px')}
-        <div style="padding:14px;flex:1;display:flex;flex-direction:column">
-          <span class="badge bg-o" style="align-self:flex-start">${o[2]}</span>
-          <div style="font-size:14px;font-weight:700;margin-top:8px">${o[0]}</div>
-          <div style="font-size:12px;color:var(--r400);margin-top:3px;flex:1">${o[4]}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;border:1px dashed var(--r200);background:var(--r50);border-radius:9px;padding:6px 10px;margin-top:10px">
-            <code style="font-size:12px;font-weight:800;color:var(--r700)">${o[1]}</code>
-            <button class="btn btn-p btn-sm" onclick="copyCoupon('${o[1]}')">Copy</button>
-          </div>
-        </div></div>`).join('')}
-    </div>
-  </div></section>
-
   <section class="section" style="padding-bottom:0"><div class="container">
     <a class="card" href="#/weekend" style="display:grid;grid-template-columns:340px 1fr;overflow:hidden;align-items:stretch" id="wkbanner">
       ${photoOr('Kondeshwar Waterfall','min-height:190px','',sceneBlock('forest','waterfall','','min-height:190px'))}
@@ -845,7 +869,7 @@ function homeView(){
       <div><div class="eyebrow">Khaana-Peena</div><h2 class="sec-title">Maharashtra ke top restaurants</h2></div>
       <a href="#/restaurants" class="btn btn-s btn-sm">View all →</a>
     </div>
-    <div class="grid g4">${RESTAURANTS.slice(0,4).map(restCard).join('')}</div>
+    <div class="grid g4">${allRests().slice(0,4).map(restCard).join('')}</div>
   </div></section>
 
   <section class="section alt"><div class="container">
@@ -929,10 +953,6 @@ function homeView(){
     </div>
   </div></section>`);
 }
-function copyCoupon(code){
-  if(navigator.clipboard) navigator.clipboard.writeText(code).catch(()=>{});
-  toast('Coupon '+code+' copied!');
-}
 function pkgCard(p){
   const kind = DEST_SCENE[p.dest] || {Rajasthan:'desert','Himachal Pradesh':'mountain'}[p.dest] || 'mountain';
   return `<div class="card" style="overflow:hidden;display:flex;flex-direction:column">
@@ -954,7 +974,7 @@ function pkgCard(p){
 /* ================= HOTELS ================= */
 function hotelsFiltered(){
   const f=S.filters;
-  let list = HOTELS.filter(h=>{
+  let list = allHotels().filter(h=>{
     if(f.q && !(h.city+' '+h.name+' '+h.type+' '+h.area).toLowerCase().includes(f.q.toLowerCase())) return false;
     if(f.city && h.city!==f.city) return false;
     if(h.price>f.maxPrice) return false;
@@ -988,7 +1008,7 @@ function hotelsView(){
         <div class="field"><label>Search</label><input id="hq" value="${esc(f.q)}" placeholder="Naam, sheher ya area" oninput="S.filters.q=this.value;renderKeepFocus('hq')"></div>
         <div class="field"><label>Sheher</label><select onchange="S.filters.city=this.value;render()">
           <option value="">Saare sheher</option>
-          ${[...new Set(HOTELS.map(h=>h.city))].sort().map(c=>`<option ${f.city===c?'selected':''}>${c}</option>`).join('')}
+          ${[...new Set(allHotels().map(h=>h.city))].sort().map(c=>`<option ${f.city===c?'selected':''}>${c}</option>`).join('')}
         </select></div>
         <div class="field"><label>Sort by</label><select onchange="S.filters.sort=this.value;render()">
           ${['Recommended','Price: Low to High','Price: High to Low','Top Rated','Most Reviewed','Distance','Highest Discount'].map(o=>`<option ${f.sort===o?'selected':''}>${o}</option>`).join('')}
@@ -1073,11 +1093,11 @@ function hotelRooms(h){
   ];
 }
 function hotelDetailView(id){
-  const h=HOTELS.find(x=>x.id===id);
+  const h=allHotels().find(x=>x.id===id);
   if(!h) return page('', `<div class="center-note"><h2>Property not found</h2><a class="btn btn-p" style="margin-top:14px" href="#/hotels">Back to hotels</a></div>`);
   const d=S.detail, rooms=hotelRooms(h), r=rooms[d.roomIdx]||rooms[0];
-  const discount=d.couponOn?Math.round(r.price*.1):0, taxes=Math.round((r.price-discount)*.12), total=r.price-discount+taxes;
-  const similar=HOTELS.filter(x=>x.city===h.city&&x.id!==h.id).slice(0,3);
+  const taxes=Math.round(r.price*.12), total=r.price+taxes;
+  const similar=allHotels().filter(x=>x.city===h.city&&x.id!==h.id).slice(0,3);
   return page('#/hotels', `<div class="container" style="padding-top:26px;padding-bottom:40px">
     <div class="gallery">${ph(h.tone,'🏨','')}${ph(h.tone,'🛏️','')}${ph(h.tone,'🛁','')}${ph(h.tone,'🏊','360° view')}</div>
     <div class="detail" style="margin-top:26px">
@@ -1141,7 +1161,7 @@ function hotelDetailView(id){
 
         ${similar.length?`<h3 style="margin-top:26px;font-size:18px">Similar properties in ${h.city}</h3>
         <div class="grid g3" style="margin-top:10px">${similar.map(s=>`
-          <a class="card" style="overflow:hidden" href="#/hotel/${s.id}" onclick="S.detail={roomIdx:0,coupon:'',couponOn:false}">
+          <a class="card" style="overflow:hidden" href="#/hotel/${s.id}" onclick="S.detail={roomIdx:0}">
             ${ph(s.tone,'🏨','','height:96px')}
             <div style="padding:10px"><div style="font-size:13.5px;font-weight:700">${s.name}</div><div style="font-size:12px;color:var(--r400)">${INR(s.price)} / night</div></div>
           </a>`).join('')}</div>`:''}
@@ -1153,26 +1173,14 @@ function hotelDetailView(id){
         <div style="font-size:12px;color:var(--r400)">per night · ${r.meal}</div>
         <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
           <div class="prow"><span>Room price</span><span>${INR(r.price)}</span></div>
-          ${d.couponOn?`<div class="prow" style="color:var(--g600)"><span>Coupon (10%)</span><span>−${INR(discount)}</span></div>`:''}
           <div class="prow"><span>Taxes &amp; fees</span><span>${INR(taxes)}</span></div>
           <div class="prow total"><span>Payable amount</span><span>${INR(total)}</span></div>
-        </div>
-        <div style="margin-top:12px">
-          ${d.couponOn?`<span class="badge bg-g">✓ Coupon ${esc(d.coupon.toUpperCase())} applied</span>`:
-          `<div style="display:flex;gap:8px">
-            <input id="cpn" placeholder="Coupon code" value="${esc(d.coupon)}" style="flex:1;border:1px solid var(--border);border-radius:9px;padding:9px 11px;outline:none" oninput="S.detail.coupon=this.value">
-            <button class="btn btn-s btn-sm" onclick="applyDetailCoupon()">Apply</button>
-          </div>`}
         </div>
         <button class="btn btn-p" style="width:100%;margin-top:14px" onclick="startCheckout({type:'Hotel',title:'${esc(h.name)}',sub:'${esc(h.city)} · ${esc(r.name)}',amount:${total},tone:'${h.tone}',emoji:'🏨'})">Book Now</button>
         <div style="text-align:center;font-size:11px;color:var(--r400);margin-top:8px">You won't be charged yet</div>
       </div>
     </div>
   </div>`);
-}
-function applyDetailCoupon(){
-  if(!S.detail.coupon.trim()){toast('Enter a coupon code first');return;}
-  S.detail.couponOn=true; toast('Coupon applied — 10% off! 🎉'); render();
 }
 
 /* ================= FLIGHTS / BUSES / CABS / PKGS / ACTS ================= */
@@ -1241,7 +1249,7 @@ const WK_PLANS = [
   steps:[['Sat 9 AM','Badlapur → Karjat (local train, 25 min)'],['11 AM','Ulhas Riverside Villa check-in + pool'],['4 PM','Riverside walk, evening barbecue'],['Sun 7 AM','Kondana Caves trek'],['11 AM','Ulhas river rafting batch'],['6 PM','Wapas Badlapur, yaadein saath']]},
 ];
 function weekendView(){
-  const stays = HOTELS.filter(h=>['Badlapur','Karjat','Neral','Bhivpuri'].includes(h.city));
+  const stays = allHotels().filter(h=>['Badlapur','Karjat','Neral','Bhivpuri'].includes(h.city));
   return page('#/weekend', `<div class="container" style="padding:30px 20px 40px">
     <div class="micro">Maharashtra Weekend Special</div>
     <h1 style="font-family:inherit;font-size:34px;font-weight:800;margin-top:6px">Badlapur <span style="color:var(--s500)">→</span> Karjat</h1>
@@ -1321,7 +1329,7 @@ function restCard(r){
 }
 function restaurantsView(){
   const f=S.rest;
-  const list=RESTAURANTS.filter(r=>{
+  const list=allRests().filter(r=>{
     if(f.city&&!(r.city+' '+r.name+' '+r.area+' '+r.cuisine).toLowerCase().includes(f.city.toLowerCase()))return false;
     if(f.pick&&r.city!==f.pick)return false;
     if(f.vegOnly&&r.veg.indexOf('Pure')!==0)return false;return true;});
@@ -1332,7 +1340,7 @@ function restaurantsView(){
       <div class="field"><label>Search</label><input id="rc" value="${esc(f.city)}" placeholder="Naam, area ya cuisine" oninput="S.rest.city=this.value;renderKeepFocus('rc')"></div>
       <div class="field"><label>Sheher</label><select onchange="S.rest.pick=this.value;render()">
         <option value="">Saare sheher</option>
-        ${[...new Set(RESTAURANTS.map(r=>r.city))].sort().map(c=>`<option ${f.pick===c?'selected':''}>${c}</option>`).join('')}
+        ${[...new Set(allRests().map(r=>r.city))].sort().map(c=>`<option ${f.pick===c?'selected':''}>${c}</option>`).join('')}
       </select></div>
       <label class="check" style="padding-bottom:10px"><input type="checkbox" ${f.vegOnly?'checked':''} onchange="S.rest.vegOnly=this.checked;render()">Pure Veg only</label>
       <button class="btn btn-s btn-sm" style="margin-bottom:2px" onclick="S.rest={city:'',pick:'',vegOnly:false};render()">Clear</button>
@@ -1365,8 +1373,8 @@ function mapItems(){
     out.push({name,kind,lat:c[0],lng:c[1],sub,price,action});
   };
   DESTS.forEach(d=>push(d.name,'dest',d.name,d.state+' \u00b7 '+d.count+' stays',d.price,`S.filters.q='${d.name.replace(/'/g,"")}';go('#/hotels')`));
-  HOTELS.forEach(h=>push(h.name,'stay',h.city,h.city+' \u00b7 '+h.type,h.price,`go('#/hotel/${h.id}')`));
-  RESTAURANTS.forEach(r=>push(r.name,'food',r.city,r.city+' \u00b7 '+r.cuisine,r.for2,`S.rest.city='${r.city}';go('#/restaurants')`));
+  allHotels().forEach(h=>push(h.name,'stay',h.city,h.city+' \u00b7 '+h.type,h.price,`go('#/hotel/${h.id}')`));
+  allRests().forEach(r=>push(r.name,'food',r.city,r.city+' \u00b7 '+r.cuisine,r.for2,`S.rest.city='${r.city}';go('#/restaurants')`));
   WK_SPOTS.forEach(w=>push(w.name,'spot',w.name,w.place+' \u00b7 '+w.tag,0,`go('#/weekend')`));
   return out;
 }
@@ -1459,14 +1467,14 @@ function mapToggle(k){ const s=S.map.kinds; s.has(k)?s.delete(k):s.add(k); rende
 
 /* ================= AI SAHAYAK (built-in assistant) ================= */
 const AI_CHIPS=['\u20b95000 ke andar villa','Lonavala mein kya karein','Veg restaurant','Weekend plan','Waterfall dikhao','Pool wali villa','Badlapur ke paas'];
-const AI_CITIES=[...new Set([...DESTS.map(d=>d.name),...HOTELS.map(h=>h.city),...RESTAURANTS.map(r=>r.city)])];
-const AI_AREAS=[...new Set([...HOTELS.map(h=>h.area),...RESTAURANTS.map(r=>r.area)])];
+const aiCities=()=>[...new Set([...DESTS.map(d=>d.name),...allHotels().map(h=>h.city),...allRests().map(r=>r.city)])];
+const aiAreas=()=>[...new Set([...allHotels().map(h=>h.area),...allRests().map(r=>r.area)])].filter(Boolean);
 
 function aiReply(qRaw){
   const q=qRaw.toLowerCase();
   const has=(...w)=>w.some(x=>q.includes(x));
-  const city=AI_CITIES.find(c=>q.includes(c.toLowerCase()));
-  const area=AI_AREAS.find(a=>a.split(',')[0].length>3 && q.includes(a.split(',')[0].toLowerCase()));
+  const city=aiCities().find(c=>q.includes(c.toLowerCase()));
+  const area=aiAreas().find(a=>a.split(',')[0].length>3 && q.includes(a.split(',')[0].toLowerCase()));
   let budget=null;
   const m=q.match(/(\d[\d,]*)\s*(k|hazar|hazaar|thousand)?/);
   if(m){ let n=+m[1].replace(/,/g,''); if(m[2]) n*=1000; if(n>=300) budget=n; }
@@ -1476,10 +1484,10 @@ function aiReply(qRaw){
 
   // 1) Food / restaurants
   if(has('restaurant','khana','khaana','food','veg','thali','misal','cafe','dinner','lunch','table')){
-    let list=RESTAURANTS.filter(r=>area?r.area===area:(!city||r.city===city));
+    let list=allRests().filter(r=>area?r.area===area:(!city||r.city===city));
     if(has('veg')&&!has('non')) list=list.filter(r=>r.veg.indexOf('Pure')===0);
     if(budget) list=list.filter(r=>r.for2<=budget);
-    if(!list.length) list=RESTAURANTS.slice(0,3);
+    if(!list.length) list=allRests().slice(0,3);
     return mk(`${city?city+' ke':'Maharashtra ke'} ${list.length} restaurant mile${has('veg')?' (pure veg)':''}. Table \u20b9200 deposit par reserve ho jayegi \u2014 bill mein adjust.`,
       list.slice(0,4).map(r=>card(r.name,r.area+' \u00b7 '+r.cuisine+' \u00b7 \u2b50'+r.rating,r.for2,'for two',
         `S.rest.city='${r.city}';go('#/restaurants')`,'Dekho')));
@@ -1505,7 +1513,7 @@ function aiReply(qRaw){
 
   // 4) Stays (villa / farmhouse / hotel / budget / city)
   if(has('villa','farmhouse','farm','hotel','stay','room','homestay','resort','ghar','budget','sasta','luxury','pool','rehne','thehar') || city || budget){
-    let list=HOTELS.slice();
+    let list=allHotels().slice();
     if(area) list=list.filter(h=>h.area===area);
     else if(city) list=list.filter(h=>h.city===city);
     if(has('villa')) list=list.filter(h=>h.type==='Villa');
@@ -1519,7 +1527,7 @@ function aiReply(qRaw){
     else if(has('luxury','best')) list.sort((a,b)=>b.price-a.price);
     else list.sort((a,b)=>b.rating-a.rating);
     if(!list.length){
-      const near=HOTELS.filter(h=>!city||h.city===city).sort((a,b)=>a.price-b.price).slice(0,3);
+      const near=allHotels().filter(h=>!city||h.city===city).sort((a,b)=>a.price-b.price).slice(0,3);
       return mk(`${budget?INR(budget)+' ke andar ':''}${city?city+' mein ':''}exact match nahi mila. Ye kareeb hain:`,
         near.map(h=>card(h.name,h.area+' \u00b7 '+h.type+' \u00b7 \u2b50'+h.rating,h.price,'/night',`go('#/hotel/${h.id}')`,'Dekho')));
     }
@@ -1598,21 +1606,20 @@ const ADDONS=[['breakfast','Breakfast upgrade',600],['early','Early check-in',80
 const METHODS=[['UPI','📱'],['Credit Card','💳'],['Debit Card','💳'],['Net Banking','🏦'],['Wallet','👛'],['EMI','🧾'],['Pay Later','⏳'],['Bank Transfer','🏧']];
 function startCheckout(item){
   S.cart=item;
-  S.co={step:0,guest:{title:'Mr',first:'',last:'',email:'',phone:''},addons:{},coupon:'',couponOn:false,gst:false,gstin:'',method:'UPI'};
+  S.co={step:0,guest:{title:'Mr',first:'',last:'',email:'',phone:''},addons:{},gst:false,gstin:'',method:'UPI'};
   go('#/checkout');
 }
 function coTotals(){
   const base=S.cart?S.cart.amount:0;
   const add=ADDONS.reduce((s,a)=>s+(S.co.addons[a[0]]?a[2]:0),0);
-  const disc=S.co.couponOn?Math.round(base*.05):0;
-  const sub=base+add-disc;
+  const sub=base+add;
   const gst=Math.round(sub*(S.co.gst?.18:.12));
-  return {base,add,disc,gst,total:sub+gst};
+  return {base,add,gst,total:sub+gst};
 }
 function checkoutView(){
   if(!S.cart) return page('', `<div class="center-note"><h2>Your cart is empty</h2><p style="margin-top:6px">Pick a hotel, flight, bus, cab or package first.</p><a class="btn btn-p" style="margin-top:16px" href="#/hotels">Browse Hotels</a></div>`);
   const c=S.co, t=coTotals();
-  const STEPS=['Review','Guest Details','Add-ons','Coupon & GST','Payment'];
+  const STEPS=['Review','Guest Details','Add-ons','GST Details','Payment'];
   const stepBody=[
    `<div class="card" style="padding:20px">
       <h3 style="font-size:17px;margin-bottom:12px">Review your booking</h3>
@@ -1642,11 +1649,8 @@ function checkoutView(){
         <button class="btn btn-s" onclick="S.co.step=1;render()">Back</button>
         <button class="btn btn-p" onclick="S.co.step=3;render()">Continue</button></div></div>`,
    `<div class="card" style="padding:20px">
-      <h3 style="font-size:17px;margin-bottom:12px">Coupon &amp; GST</h3>
-      ${c.couponOn?`<span class="badge bg-g">✓ Coupon ${esc(c.coupon.toUpperCase())} applied — 5% off</span>`:
-      `<div style="display:flex;gap:8px;max-width:340px"><input placeholder="e.g. STAY25" value="${esc(c.coupon)}" style="flex:1;border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none" oninput="S.co.coupon=this.value">
-       <button class="btn btn-s btn-sm" onclick="if(S.co.coupon.trim()){S.co.couponOn=true;toast('Coupon applied! 5% off 🎉');render()}else toast('Enter a coupon code')">Apply</button></div>`}
-      <label class="check" style="margin-top:16px"><input type="checkbox" ${c.gst?'checked':''} onchange="S.co.gst=this.checked;render()">I need a business GST invoice (18% GST)</label>
+      <h3 style="font-size:17px;margin-bottom:12px">GST invoice</h3>
+      <label class="check"><input type="checkbox" ${c.gst?'checked':''} onchange="S.co.gst=this.checked;render()">I need a business GST invoice (18% GST)</label>
       ${c.gst?`<div class="field" style="max-width:300px;margin-top:8px"><label>GSTIN</label><input value="${esc(c.gstin)}" oninput="S.co.gstin=this.value" placeholder="27ABCDE1234F1Z5"></div>`:''}
       <div style="display:flex;justify-content:space-between;margin-top:16px">
         <button class="btn btn-s" onclick="S.co.step=2;render()">Back</button>
@@ -1668,7 +1672,6 @@ function checkoutView(){
         <h4 style="font-size:13.5px;font-weight:800;margin-bottom:8px">Price Summary</h4>
         <div class="prow"><span>Base amount</span><span>${INR(t.base)}</span></div>
         ${t.add?`<div class="prow"><span>Add-ons</span><span>${INR(t.add)}</span></div>`:''}
-        ${t.disc?`<div class="prow" style="color:var(--g600)"><span>Coupon discount</span><span>−${INR(t.disc)}</span></div>`:''}
         <div class="prow"><span>${c.gst?'GST (18%)':'Taxes & fees (12%)'}</span><span>${INR(t.gst)}</span></div>
         <div class="prow total"><span>Total payable</span><span>${INR(t.total)}</span></div>
       </div>
@@ -1867,128 +1870,346 @@ function cancelBooking(i){
 }
 
 /* ================= ADMIN ================= */
-function adminView(){
-  const a=S.admin, st=a.stats;
-  const maxD=Math.max(...a.topDest.map(d=>d[1]));
-  return page('', `<div class="container" style="padding:28px 20px 44px">
+const A_TABS=[['overview','📈 Overview'],['hotels','🏨 Stays'],['rests','🍽️ Restaurants'],
+  ['services','⚙️ Services'],['notes','📝 Notes'],['customers','👥 Customers'],['bookings','🎟️ Bookings'],['queues','✅ Approvals']];
+
+function adminShell(inner){
+  return page('', `<div class="container" style="padding:26px 20px 44px">
     <div class="dash">
       <div class="card dnav">
-        <a href="#/dashboard">📊 My Dashboard</a>
-        <a class="on" href="#/admin">🛠️ Admin Dashboard</a>
-        <a href="#/support">💬 Support</a>
+        ${A_TABS.map(t=>`<a class="${S.adminTab===t[0]?'on':''}" href="#/admin" onclick="S.adminTab='${t[0]}';S.edit=null">${t[1]}</a>`).join('')}
+        <div style="border-top:1px solid var(--border);margin:8px 0"></div>
+        <a href="#/">🏠 Website dekho</a>
+        <a href="#/" onclick="logout()">🚪 Logout</a>
       </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-          <div><h1 style="font-size:22px;font-weight:800">Platform Analytics</h1>
-          <div style="font-size:13.5px;color:var(--r400)">Super-admin view · sample platform data</div></div>
-          <span class="badge bg-b">Super Admin</span>
-        </div>
-        <div class="grid g4" style="margin-bottom:22px">
-          <div class="card stat"><div class="k">Total bookings</div><div class="v">${st.bookings.toLocaleString('en-IN')}</div></div>
-          <div class="card stat"><div class="k">Total revenue</div><div class="v" style="color:var(--g600)">${INR(st.revenue)}</div></div>
-          <div class="card stat"><div class="k">Net profit</div><div class="v" style="color:var(--g600)">${INR(st.profit)}</div></div>
-          <div class="card stat"><div class="k">Pending payments</div><div class="v" style="color:var(--s600)">${INR(st.pendingPay)}</div></div>
-          <div class="card stat"><div class="k">Pending refunds</div><div class="v" style="color:var(--s600)">${INR(st.pendingRef)}</div></div>
-          <div class="card stat"><div class="k">Cancellation rate</div><div class="v">${st.cancel}%</div></div>
-          <div class="card stat"><div class="k">Conversion rate</div><div class="v">${st.conv}%</div></div>
-          <div class="card stat"><div class="k">Customer growth</div><div class="v" style="color:var(--g600)">${st.growth}</div></div>
-        </div>
-
-        <div class="card" style="padding:20px;margin-bottom:22px">
-          <h3 style="font-size:16px;margin-bottom:14px">Top destinations by bookings</h3>
-          ${a.topDest.map(d=>`<div style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;font-size:13.5px"><b>${d[0]}</b><span style="color:var(--r400)">${d[1].toLocaleString('en-IN')} bookings</span></div>
-            <div class="bar-outer"><div class="bar-inner" style="width:${(d[1]/maxD*100).toFixed(0)}%"></div></div>
-          </div>`).join('')}
-        </div>
-
-        <div class="card" style="padding:20px;margin-bottom:22px">
-          <h3 style="font-size:16px;margin-bottom:6px">Property approval queue</h3>
-          <div style="font-size:12.5px;color:var(--r400);margin-bottom:10px">New partner listings need admin verification before going live.</div>
-          <div class="tbl-wrap"><table class="tbl">
-            <tr><th>Property</th><th>Partner</th><th>City</th><th>Type</th><th>Status</th><th style="text-align:right">Action</th></tr>
-            ${a.props.map(p=>`<tr><td><b>${p.name}</b></td><td>${p.partner}</td><td>${p.city}</td><td>${p.type}</td><td>${stBadge(p.st)}</td>
-              <td style="text-align:right">${p.st==='Pending'?`
-                <button class="btn btn-g btn-sm" onclick="adminAct('props','${p.id}','Approved')">Approve</button>
-                <button class="btn btn-r btn-sm" onclick="adminAct('props','${p.id}','Rejected')">Reject</button>`:'<span style="font-size:12px;color:var(--r400)">Reviewed</span>'}</td></tr>`).join('')}
-          </table></div>
-        </div>
-
-        <div class="card" style="padding:20px;margin-bottom:22px">
-          <h3 style="font-size:16px;margin-bottom:6px">Offline payment proof verification</h3>
-          <div style="font-size:12.5px;color:var(--r400);margin-bottom:10px">Bank-transfer payments stay pending until an admin verifies the proof.</div>
-          <div class="tbl-wrap"><table class="tbl">
-            <tr><th>Booking</th><th>Customer</th><th>Bank</th><th>Reference</th><th>Amount</th><th>Status</th><th style="text-align:right">Action</th></tr>
-            ${a.proofs.map(p=>`<tr><td><b>${p.ref}</b></td><td>${p.cust}</td><td>${p.bank}</td><td>${p.txn}</td><td>${INR(p.amt)}</td><td>${stBadge(p.st)}</td>
-              <td style="text-align:right">${p.st==='Pending'?`
-                <button class="btn btn-g btn-sm" onclick="adminAct('proofs','${p.id}','Approved')">Approve</button>
-                <button class="btn btn-r btn-sm" onclick="adminAct('proofs','${p.id}','Rejected')">Reject</button>`:'<span style="font-size:12px;color:var(--r400)">Reviewed</span>'}</td></tr>`).join('')}
-          </table></div>
-        </div>
-
-        <div class="card" style="padding:20px">
-          <h3 style="font-size:16px;margin-bottom:6px">Refunds &amp; cancellations</h3>
-          <div style="font-size:12.5px;color:var(--r400);margin-bottom:10px">Workflow: Requested → Under Review → Approved → Refund Initiated → Completed.</div>
-          <div class="tbl-wrap"><table class="tbl">
-            <tr><th>Booking</th><th>Customer</th><th>Reason</th><th>Amount</th><th>Status</th><th style="text-align:right">Action</th></tr>
-            ${a.refunds.map(r=>{
-              const idx=REFUND_FLOW.indexOf(r.st), next=idx>-1&&idx<REFUND_FLOW.length-1?REFUND_FLOW[idx+1]:null;
-              const terminal=r.st==='Completed'||r.st==='Rejected';
-              return `<tr><td><b>${r.ref}</b></td><td>${r.cust}</td><td>${r.reason}</td><td>${INR(r.amt)}</td><td>${stBadge(r.st)}</td>
-              <td style="text-align:right">${terminal?'<span style="font-size:12px;color:var(--r400)">Closed</span>':`
-                ${next?`<button class="btn btn-blue btn-sm" onclick="adminAct('refunds','${r.id}','${next}')">→ ${next}</button>`:''}
-                <button class="btn btn-r btn-sm" onclick="adminAct('refunds','${r.id}','Rejected')">Reject</button>`}</td></tr>`;}).join('')}
-          </table></div>
-        </div>
-      </div>
+      <div>${inner}</div>
     </div>
   </div>`);
 }
+
+/* ---------- CRUD helpers ---------- */
+const H_FIELDS=[['name','Naam'],['type','Type'],['city','Sheher'],['area','Area / Address'],
+  ['price','Price / night'],['star','Star (3-5)'],['room','Room ka naam'],['meal','Khana']];
+const R_FIELDS=[['name','Naam'],['city','Sheher'],['cuisine','Cuisine'],['area','Area / Address'],
+  ['for2','Price for two'],['rating','Rating'],['veg','Veg label'],['hours','Timings']];
+
+function editStart(kind,id){
+  const src = kind==='hotel' ? allHotels().find(x=>x.id===id) : allRests().find(x=>x.id===id);
+  S.edit = src ? {kind, ...JSON.parse(JSON.stringify(src))}
+    : (kind==='hotel'
+        ? {kind, id:'h-new-'+Date.now(), name:'', type:'Villa', city:'Badlapur', area:'', price:3000, star:3,
+           room:'Deluxe Room', meal:'Breakfast Included', tone:'forest', rating:4, reviews:0, disc:0, base:3000,
+           tax:0, amen:['Free Wi-Fi'], freeCancel:true, payAtHotel:false, couple:true, family:true, dist:2}
+        : {kind, id:'r-new-'+Date.now(), name:'', city:'Badlapur', cuisine:'Maharashtrian', area:'', for2:300,
+           rating:4.2, veg:'Pure Veg', hours:'11:00 AM – 11:00 PM', tone:'farm', emoji:'🍽️'});
+  render();
+}
+function editSave(){
+  const e=S.edit; if(!e) return;
+  if(!e.name.trim()||!e.city.trim()){ toast('Naam aur sheher zaroori hai'); return; }
+  if(e.kind==='hotel'){
+    e.price=+e.price||0; e.star=+e.star||3; e.base=Math.round(e.price*1.15); e.tax=Math.round(e.price*.12);
+    e.address=(e.area||e.city)+', '+e.city+', Maharashtra';
+    S.db.hotels=[...S.db.hotels.filter(h=>h.id!==e.id), {...e, kind:undefined}];
+  } else {
+    e.for2=+e.for2||0; e.rating=+e.rating||4;
+    e.address=(e.area||e.city)+', '+e.city+', Maharashtra';
+    S.db.rests=[...S.db.rests.filter(r=>r.id!==e.id), {...e, kind:undefined}];
+  }
+  S.db.removed=S.db.removed.filter(id=>id!==e.id);
+  saveDb(); S.edit=null; toast('Save ho gaya ✓'); render();
+}
+function editDelete(kind,id){
+  S.db.removed=[...new Set([...S.db.removed,id])];
+  if(kind==='hotel') S.db.hotels=S.db.hotels.filter(h=>h.id!==id);
+  else S.db.rests=S.db.rests.filter(r=>r.id!==id);
+  saveDb(); toast('Delete ho gaya'); render();
+}
+function editForm(){
+  const e=S.edit, fields = e.kind==='hotel'?H_FIELDS:R_FIELDS;
+  return `<div class="card" style="padding:20px;margin-bottom:18px;border:2px solid var(--r400)">
+    <h3 style="font-size:16px;margin-bottom:12px">${e.name?'Edit: '+esc(e.name):'Naya '+(e.kind==='hotel'?'stay':'restaurant')+' jodo'}</h3>
+    <div class="grid g2" style="gap:12px">
+      ${fields.map(f=>{
+        if(f[0]==='type') return `<div class="field"><label>${f[1]}</label><select onchange="S.edit.type=this.value">
+          ${['Hotel','Resort','Villa','Homestay','Farm Stay'].map(t=>`<option ${e.type===t?'selected':''}>${t}</option>`).join('')}</select></div>`;
+        if(f[0]==='veg') return `<div class="field"><label>${f[1]}</label><select onchange="S.edit.veg=this.value">
+          ${['Pure Veg','Veg & Non-veg','Seafood Special','Non-veg Special'].map(t=>`<option ${e.veg===t?'selected':''}>${t}</option>`).join('')}</select></div>`;
+        return `<div class="field"><label>${f[1]}</label>
+          <input value="${esc(String(e[f[0]]??''))}" oninput="S.edit['${f[0]}']=this.value"></div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-p" onclick="editSave()">Save</button>
+      <button class="btn btn-s" onclick="S.edit=null;render()">Cancel</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--r400);margin-top:10px">Naya sheher jodo to map pin ke liye COORDS mein uske lat,lng bhi chahiye.</div>
+  </div>`;
+}
+
+function adminView(){
+  const t=S.adminTab, a=S.admin;
+
+  if(t==='hotels' || t==='rests'){
+    const isH = t==='hotels';
+    const rows = isH ? allHotels() : allRests();
+    return adminShell(`
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+        <div><h1 style="font-size:22px;font-weight:800">${isH?'Stays':'Restaurants'} manage karo</h1>
+        <div style="font-size:13.5px;color:var(--r400)">${rows.length} listings · add, edit ya delete karo</div></div>
+        <button class="btn btn-p" onclick="editStart('${isH?'hotel':'rest'}')">+ Naya ${isH?'stay':'restaurant'} jodo</button>
+      </div>
+      ${S.edit ? editForm() : ''}
+      <div class="card" style="overflow-x:auto">
+        <table class="tbl"><tr><th>Naam</th><th>${isH?'Type':'Cuisine'}</th><th>Sheher</th><th>Area</th>
+          <th style="text-align:right">${isH?'Price/night':'For two'}</th><th style="text-align:right">Action</th></tr>
+        ${rows.map(r=>`<tr>
+          <td><b>${esc(r.name)}</b></td><td>${esc(isH?r.type:r.cuisine)}</td><td>${esc(r.city)}</td>
+          <td style="font-size:12px;color:var(--r400)">${esc(r.area||'')}</td>
+          <td style="text-align:right">${INR(isH?r.price:r.for2)}</td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn btn-s btn-sm" onclick="editStart('${isH?'hotel':'rest'}','${r.id}')">Edit</button>
+            <button class="btn btn-r btn-sm" onclick="editDelete('${isH?'hotel':'rest'}','${r.id}')">Delete</button>
+          </td></tr>`).join('')}
+        </table>
+      </div>`);
+  }
+
+  if(t==='services'){
+    return adminShell(`
+      <h1 style="font-size:22px;font-weight:800">Services on/off</h1>
+      <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">Band ki hui service website ke menu se hat jayegi.</div>
+      <div class="grid g2">
+        ${SERVICE_KEYS.map(k=>`<div class="card" style="padding:16px;display:flex;justify-content:space-between;align-items:center">
+          <div><b style="font-size:15px">${k[1]}</b><div style="font-size:12px;color:var(--r400)">${svcOn(k[0])?'Website par dikh raha hai':'Chhupa hua hai'}</div></div>
+          <button class="btn btn-sm ${svcOn(k[0])?'btn-g':'btn-s'}" onclick="S.db.services['${k[0]}']=!(S.db.services['${k[0]}']!==false);saveDb();toast('${k[1]}: '+(S.db.services['${k[0]}']!==false?'ON':'OFF'));render()">
+            ${svcOn(k[0])?'ON':'OFF'}</button>
+        </div>`).join('')}
+      </div>`);
+  }
+
+  if(t==='notes'){
+    return adminShell(`
+      <h1 style="font-size:22px;font-weight:800">Notes</h1>
+      <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">Apne reminders, partner ki baatein, kuch bhi likho — browser mein save rahega.</div>
+      <form class="card" style="padding:16px;display:flex;gap:8px;margin-bottom:16px" onsubmit="event.preventDefault();
+        const v=this.n.value.trim(); if(!v){toast('Kuch likho');return;}
+        S.db.notes=[{t:Date.now(),v},...S.db.notes]; saveDb(); this.reset(); toast('Note save hua'); render();">
+        <input name="n" placeholder="Naya note likho..." style="flex:1;border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none">
+        <button class="btn btn-p">Add</button>
+      </form>
+      ${S.db.notes.length?S.db.notes.map(n=>`<div class="card" style="padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;gap:12px">
+        <div><div style="font-size:14px">${esc(n.v)}</div>
+        <div style="font-size:11.5px;color:var(--r400);margin-top:3px">${new Date(n.t).toLocaleString('en-IN')}</div></div>
+        <button class="btn btn-r btn-sm" onclick="S.db.notes=S.db.notes.filter(x=>x.t!==${n.t});saveDb();render()">Delete</button>
+      </div>`).join(''):`<div class="card center-note">Abhi koi note nahi.</div>`}`);
+  }
+
+  if(t==='customers'){
+    const map={};
+    S.bookings.forEach(b=>{
+      const key=b.email||b.guest||'guest';
+      map[key]=map[key]||{name:b.guest,email:b.email,phone:b.phone,n:0,spent:0,last:b.date};
+      map[key].n++; if(b.status!=='Cancelled') map[key].spent+=b.amount;
+    });
+    const rows=Object.values(map);
+    return adminShell(`
+      <h1 style="font-size:22px;font-weight:800">Customers</h1>
+      <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${rows.length} customers — is browser mein hui bookings se.</div>
+      ${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl">
+        <tr><th>Naam</th><th>Email</th><th>Phone</th><th style="text-align:right">Bookings</th><th style="text-align:right">Total</th><th>Last</th></tr>
+        ${rows.map(c=>`<tr><td><b>${esc(c.name||'—')}</b></td><td>${esc(c.email||'—')}</td><td>${esc(c.phone||'—')}</td>
+          <td style="text-align:right">${c.n}</td><td style="text-align:right">${INR(c.spent)}</td><td style="font-size:12px">${esc(c.last||'')}</td></tr>`).join('')}
+      </table></div>`:`<div class="card center-note">Abhi koi booking nahi hui — ek booking karke dekho, customer yahan aa jayega.</div>`}`);
+  }
+
+  if(t==='bookings'){
+    return adminShell(`
+      <h1 style="font-size:22px;font-weight:800">Saari bookings</h1>
+      <div style="font-size:13.5px;color:var(--r400);margin-bottom:16px">${S.bookings.length} bookings</div>
+      ${S.bookings.length?`<div class="card" style="overflow-x:auto"><table class="tbl">
+        <tr><th>Ref</th><th>Type</th><th>Kya</th><th>Guest</th><th>Date</th><th>Status</th><th style="text-align:right">Amount</th></tr>
+        ${S.bookings.map(b=>`<tr><td><b>${b.ref}</b></td><td>${b.type}</td><td>${esc(b.title)}</td><td>${esc(b.guest||'')}</td>
+          <td style="font-size:12px">${esc(b.date)}</td><td>${stBadge(b.status)}</td>
+          <td style="text-align:right">${INR(b.amount)}</td></tr>`).join('')}
+      </table></div>`:`<div class="card center-note">Abhi koi booking nahi hui.</div>`}`);
+  }
+
+  if(t==='queues'){
+    return adminShell(`
+      <h1 style="font-size:22px;font-weight:800">Approvals &amp; refunds</h1>
+      <div class="card" style="padding:20px;margin:16px 0">
+        <h3 style="font-size:16px;margin-bottom:10px">Property approval queue</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>Property</th><th>Partner</th><th>Sheher</th><th>Status</th><th style="text-align:right">Action</th></tr>
+          ${a.props.map(p=>`<tr><td><b>${p.name}</b></td><td>${p.partner}</td><td>${p.city}</td><td>${stBadge(p.st)}</td>
+            <td style="text-align:right">${p.st==='Pending'?`
+              <button class="btn btn-g btn-sm" onclick="adminAct('props','${p.id}','Approved')">Approve</button>
+              <button class="btn btn-r btn-sm" onclick="adminAct('props','${p.id}','Rejected')">Reject</button>`:'<span style="font-size:12px;color:var(--r400)">Reviewed</span>'}</td></tr>`).join('')}
+        </table></div>
+      </div>
+      <div class="card" style="padding:20px">
+        <h3 style="font-size:16px;margin-bottom:10px">Refund requests</h3>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>Booking</th><th>Customer</th><th>Reason</th><th style="text-align:right">Amount</th><th>Status</th><th style="text-align:right">Action</th></tr>
+          ${a.refunds.map(r=>{
+            const idx=REFUND_FLOW.indexOf(r.st), next=idx>-1&&idx<REFUND_FLOW.length-1?REFUND_FLOW[idx+1]:null;
+            const terminal=r.st==='Completed'||r.st==='Rejected';
+            return `<tr><td><b>${r.ref}</b></td><td>${r.cust}</td><td>${r.reason}</td><td style="text-align:right">${INR(r.amt)}</td><td>${stBadge(r.st)}</td>
+            <td style="text-align:right">${terminal?'<span style="font-size:12px;color:var(--r400)">Closed</span>':`
+              ${next?`<button class="btn btn-blue btn-sm" onclick="adminAct('refunds','${r.id}','${next}')">→ ${next}</button>`:''}
+              <button class="btn btn-r btn-sm" onclick="adminAct('refunds','${r.id}','Rejected')">Reject</button>`}</td></tr>`;}).join('')}
+        </table></div>
+      </div>`);
+  }
+
+  // overview
+  const st=a.stats, maxD=Math.max(...a.topDest.map(d=>d[1]));
+  const liveStays=allHotels().length, liveRests=allRests().length;
+  return adminShell(`
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div><h1 style="font-size:22px;font-weight:800">Admin Panel</h1>
+      <div style="font-size:13.5px;color:var(--r400)">Namaste ${esc(S.auth.user?S.auth.user.name:'Admin')} — yahan se poori website manage karo.</div></div>
+      <span class="badge bg-b">Admin</span>
+    </div>
+    <div class="grid g4" style="margin-bottom:22px">
+      <div class="card stat"><div class="k">Live stays</div><div class="v">${liveStays}</div></div>
+      <div class="card stat"><div class="k">Live restaurants</div><div class="v">${liveRests}</div></div>
+      <div class="card stat"><div class="k">Bookings (is browser)</div><div class="v" style="color:var(--g600)">${S.bookings.length}</div></div>
+      <div class="card stat"><div class="k">Notes</div><div class="v" style="color:var(--s600)">${S.db.notes.length}</div></div>
+      <div class="card stat"><div class="k">Total bookings (demo)</div><div class="v">${st.bookings.toLocaleString('en-IN')}</div></div>
+      <div class="card stat"><div class="k">Revenue (demo)</div><div class="v" style="color:var(--g600)">${INR(st.revenue)}</div></div>
+      <div class="card stat"><div class="k">Pending refunds</div><div class="v" style="color:var(--s600)">${INR(st.pendingRef)}</div></div>
+      <div class="card stat"><div class="k">Services ON</div><div class="v">${SERVICE_KEYS.filter(k=>svcOn(k[0])).length}/${SERVICE_KEYS.length}</div></div>
+    </div>
+    <div class="grid g2" style="margin-bottom:22px">
+      <button class="card" style="padding:18px;text-align:left" onclick="S.adminTab='hotels';editStart('hotel')">
+        <b style="font-size:16px">➕ Naya stay jodo</b><div style="font-size:12.5px;color:var(--r400);margin-top:3px">Villa, farmhouse, hotel ya homestay</div></button>
+      <button class="card" style="padding:18px;text-align:left" onclick="S.adminTab='rests';editStart('rest')">
+        <b style="font-size:16px">➕ Naya restaurant jodo</b><div style="font-size:12.5px;color:var(--r400);margin-top:3px">Cuisine, area aur timings ke saath</div></button>
+    </div>
+    <div class="card" style="padding:20px">
+      <h3 style="font-size:16px;margin-bottom:14px">Top destinations (demo data)</h3>
+      ${a.topDest.map(d=>`<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13.5px"><b>${d[0]}</b><span style="color:var(--r400)">${d[1].toLocaleString('en-IN')} bookings</span></div>
+        <div class="bar-outer"><div class="bar-inner" style="width:${(d[1]/maxD*100).toFixed(0)}%"></div></div>
+      </div>`).join('')}
+    </div>`);
+}
+
 function adminAct(list,id,st){
   const row=S.admin[list].find(x=>x.id===id);
   if(row){row.st=st; toast(`${id.toUpperCase()}: status → ${st}`); render();}
 }
 
 /* ================= AUTH / MISC ================= */
+/* ================= AUTH ================= */
+const OTP_TTL = 5*60*1000;              // 5 minute
+const otpLeft = () => Math.max(0, Math.ceil((S.auth.otpAt + OTP_TTL - Date.now())/1000));
+
+function sendOtp(){
+  const a=S.auth, ph=(a.phone||'').replace(/\D/g,'');
+  if(ph.length<10){ toast('10 digit mobile number daalo'); return; }
+  a.otp = String(Math.floor(100000 + Math.random()*900000));
+  a.otpAt = Date.now(); a.tries = 0; a.step='otp'; a.code='';
+  toast('OTP bheja gaya — screen par dikh raha hai');
+  render();
+}
+function verifyOtp(){
+  const a=S.auth, entered=(a.code||'').trim();
+  if(!a.otp){ toast('Pehle OTP bhejo'); return; }
+  if(otpLeft()<=0){ toast('OTP expire ho gaya — dobara bhejo'); a.otp=null; render(); return; }
+  if(entered!==a.otp){
+    a.tries++;
+    if(a.tries>=3){ toast('3 baar galat — naya OTP bhejo'); a.otp=null; a.step='phone'; }
+    else toast('Galat OTP — ' + (3-a.tries) + ' koshish baaki');
+    render(); return;
+  }
+  loginAs({role:'customer', name:a.name||'Traveller', phone:'+91 '+a.phone});
+}
+function adminLogin(){
+  const a=S.auth;
+  if(a.email.trim().toLowerCase()!==ADMIN_LOGIN.email || a.pass!==ADMIN_LOGIN.pass){
+    toast('Galat email ya password'); return;
+  }
+  loginAs({role:'admin', name:'Admin', email:ADMIN_LOGIN.email});
+}
+function loginAs(user){
+  S.auth.user=user; S.auth.otp=null; S.auth.code=''; S.auth.pass='';
+  save(); toast('Welcome, '+user.name+'! 🎉');
+  go(user.role==='admin' ? '#/admin' : '#/dashboard');
+}
+function logout(){ S.auth.user=null; save(); toast('Logout ho gaya'); go('#/'); }
+
 function loginView(){
+  const a=S.auth, isAdmin=a.tab==='admin';
   return page('', `<div class="auth-wrap">
-    <h1 style="font-size:24px;font-weight:800">Welcome back</h1>
-    <p style="font-size:14px;color:var(--r400);margin:4px 0 20px">Log in to manage bookings and travel faster.</p>
+    <h1 style="font-size:24px;font-weight:800">${isAdmin?'Admin Login':'Welcome back'}</h1>
+    <p style="font-size:14px;color:var(--r400);margin:4px 0 20px">${isAdmin
+      ? 'Admin panel se listings, services aur bookings manage karo.'
+      : 'Mobile number par OTP aayega — bookings manage karne ke liye login karo.'}</p>
+
     <div class="seg">
-      <button class="${S.authMode==='password'?'on':''}" onclick="S.authMode='password';S.otpSent=false;render()">Email &amp; Password</button>
-      <button class="${S.authMode==='otp'?'on':''}" onclick="S.authMode='otp';render()">Mobile OTP</button>
+      <button class="${!isAdmin?'on':''}" onclick="S.auth.tab='customer';S.auth.step='phone';render()">👤 Customer</button>
+      <button class="${isAdmin?'on':''}" onclick="S.auth.tab='admin';render()">🛠️ Admin</button>
     </div>
-    ${S.authMode==='password'?`
-    <form onsubmit="event.preventDefault();toast('Logged in! (demo) 🎉');go('#/dashboard')" style="display:flex;flex-direction:column;gap:13px">
-      <div class="field"><label>Email address</label><input required type="email" placeholder="you@example.com"></div>
-      <div class="field"><label>Password</label><input required type="password" placeholder="••••••••"></div>
-      <button class="btn btn-p">Log In</button>
-    </form>`:`
-    <form onsubmit="event.preventDefault();if(!S.otpSent){S.otpSent=true;toast('OTP sent! (demo — enter any 6 digits)');render()}else{toast('Logged in! (demo) 🎉');go('#/dashboard')}" style="display:flex;flex-direction:column;gap:13px">
-      <div class="field"><label>Mobile number</label><div style="display:flex;gap:8px"><span style="border:1px solid var(--border);border-radius:9px;padding:10px 13px">+91</span><input required type="tel" placeholder="98765 43210" style="flex:1;border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none"></div></div>
-      ${S.otpSent?`<div class="field"><label>Enter OTP (valid 5 min)</label><input required maxlength="6" inputmode="numeric" placeholder="••••••" style="letter-spacing:.5em"></div>`:''}
-      <button class="btn btn-p">${S.otpSent?'Verify & Log In':'Send OTP'}</button>
+
+    ${isAdmin ? `
+    <form onsubmit="event.preventDefault();adminLogin()" style="display:flex;flex-direction:column;gap:13px">
+      <div class="field"><label>Admin email</label>
+        <input required type="email" value="${esc(a.email)}" placeholder="admin@bharatstay.in" oninput="S.auth.email=this.value"></div>
+      <div class="field"><label>Password</label>
+        <input required type="password" value="${esc(a.pass)}" placeholder="••••••••" oninput="S.auth.pass=this.value"></div>
+      <button class="btn btn-p">Admin Panel Kholo</button>
+    </form>
+    <div style="background:var(--r50);border-radius:11px;padding:12px 14px;margin-top:16px;font-size:12.5px;color:var(--r600)">
+      🔑 Demo credentials — <b>${ADMIN_LOGIN.email}</b> / <b>${ADMIN_LOGIN.pass}</b><br>
+      <span style="color:var(--r400)">Yeh client-side demo gate hai, asli security nahi. File mein asli customer data mat rakhna.</span>
+    </div>`
+    : `
+    <form onsubmit="event.preventDefault();${a.step==='otp'?'verifyOtp()':'sendOtp()'}" style="display:flex;flex-direction:column;gap:13px">
+      <div class="field"><label>Aapka naam (optional)</label>
+        <input value="${esc(a.name)}" placeholder="Jaise: Ravi Patil" oninput="S.auth.name=this.value"></div>
+      <div class="field"><label>Mobile number</label>
+        <div style="display:flex;gap:8px">
+          <span style="border:1px solid var(--border);border-radius:9px;padding:10px 13px">+91</span>
+          <input required type="tel" inputmode="numeric" maxlength="10" value="${esc(a.phone)}" placeholder="98765 43210"
+            style="flex:1;border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none"
+            oninput="S.auth.phone=this.value.replace(/\\D/g,'')" ${a.step==='otp'?'readonly':''}></div></div>
+
+      ${a.step==='otp' ? `
+      <div style="background:var(--g50);border:1px dashed var(--g500);border-radius:11px;padding:12px 14px;text-align:center">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--g700)">Demo OTP</div>
+        <div style="font-family:monospace;font-size:26px;font-weight:800;letter-spacing:.3em;color:var(--g700);margin-top:4px">${a.otp||'------'}</div>
+        <div style="font-size:11.5px;color:var(--r400);margin-top:4px">Asli app mein yeh SMS par jata — offline demo mein screen par dikhaya hai.</div>
+      </div>
+      <div class="field"><label>OTP daalo (${otpLeft()}s baaki)</label>
+        <input required maxlength="6" inputmode="numeric" value="${esc(a.code||'')}" placeholder="••••••"
+          style="letter-spacing:.5em;text-align:center" oninput="S.auth.code=this.value.replace(/\\D/g,'')"></div>
+      <button class="btn btn-p">Verify &amp; Log In</button>
+      <button type="button" class="btn btn-s" onclick="sendOtp()">OTP dobara bhejo</button>`
+      : `<button class="btn btn-p">OTP Bhejo</button>`}
     </form>`}
-    <div style="display:flex;align-items:center;gap:10px;margin:18px 0"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:12px;color:var(--r400)">or continue with</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
-    <div class="grid g3" style="gap:10px">
-      <button class="btn btn-s" onclick="toast('Google login — demo')">🇬 Google</button>
-      <button class="btn btn-s" onclick="toast('Apple login — demo')"> Apple</button>
-      <button class="btn btn-s" onclick="toast('Facebook login — demo')">f Facebook</button>
+
+    <div style="text-align:center;font-size:13.5px;color:var(--r400);margin-top:18px">
+      ${isAdmin?'Customer ho? <a href="#/login" style="font-weight:700;color:var(--r700)" onclick="S.auth.tab=\'customer\'">Customer login</a>'
+               :'Naye ho? OTP se hi account ban jayega.'}
     </div>
-    <div style="text-align:center;font-size:13.5px;color:var(--r400);margin-top:18px">New to BharatStay? <a href="#/register" style="font-weight:700;color:var(--r700)">Create an account</a></div>
+    <a href="#/" style="display:block;text-align:center;font-size:12.5px;color:var(--r400);margin-top:14px">← Home</a>
   </div>`);
 }
+
 function registerView(){
   return page('', `<div class="auth-wrap">
     <h1 style="font-size:24px;font-weight:800">Create your account</h1>
     <p style="font-size:14px;color:var(--r400);margin:4px 0 20px">Join BharatStay for faster checkout and exclusive deals.</p>
-    <form onsubmit="event.preventDefault();toast('Account created! Welcome to BharatStay 🎉');go('#/dashboard')" style="display:flex;flex-direction:column;gap:13px">
+    <form onsubmit="event.preventDefault();loginAs({role:'customer',name:this.fn.value||'Traveller',phone:'+91 '+(this.ph.value||'')})" style="display:flex;flex-direction:column;gap:13px">
       <div class="grid g2" style="gap:10px">
-        <div class="field"><label>First name</label><input required placeholder="Ananya"></div>
+        <div class="field"><label>First name</label><input name="fn" required placeholder="Ananya"></div>
         <div class="field"><label>Last name</label><input placeholder="Sharma"></div>
       </div>
       <div class="field"><label>Email address</label><input required type="email" placeholder="you@example.com"></div>
-      <div class="field"><label>Mobile number</label><input required type="tel" placeholder="98765 43210"></div>
+      <div class="field"><label>Mobile number</label><input name="ph" required type="tel" placeholder="98765 43210"></div>
       <div class="field"><label>Password (min 8 chars)</label><input required minlength="8" type="password" placeholder="••••••••"></div>
       <label class="check" style="font-size:12.5px"><input required type="checkbox">I agree to the Terms &amp; Conditions and Privacy Policy</label>
       <button class="btn btn-p">Create Account</button>
@@ -2036,7 +2257,15 @@ function simplePage(title,body){ return page('', `<div class="container" style="
 /* ================= ROUTER ================= */
 function render(){
   const h=CURRENT||'#/';
-  const [_,route,param]=h.match(/^#\/([^\/]*)\/?(.*)$/)||[,'',''];
+  let [_,route,param]=h.match(/^#\/([^\/]*)\/?(.*)$/)||[,'',''];
+  const u=S.auth.user;
+  if(route==='admin' && (!u || u.role!=='admin')){
+    if(!render._warned){ render._warned=1; setTimeout(()=>{toast('Admin login zaroori hai'); render._warned=0;},0); }
+    S.auth.tab='admin'; route='login'; CURRENT='#/login';
+  } else if(route==='dashboard' && !u){
+    if(!render._warned){ render._warned=1; setTimeout(()=>{toast('Pehle login karo'); render._warned=0;},0); }
+    S.auth.tab='customer'; route='login'; CURRENT='#/login';
+  }
   let html;
   switch(route){
     case '': html=homeView(); break;

@@ -340,6 +340,28 @@ textarea.fi{resize:vertical;min-height:96px}
 .city-tag{font-size:.76rem;color:var(--muted2);background:rgba(255,255,255,.04);
   border:1px solid var(--border);border-radius:6px;padding:4px 10px}
 
+/* ── HERO PHOTO ── */
+.hero-photo{position:absolute;inset:0;z-index:-1;overflow:hidden}
+.hero-photo img{width:100%;height:100%;object-fit:cover;opacity:.16}
+.hero-photo::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 40%,rgba(4,6,8,.5),rgba(4,6,8,.92))}
+
+/* ── GALLERY ── */
+#gallery{background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(0,229,255,.04) 0%,transparent 70%)}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.gal-item{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);
+  aspect-ratio:4/3;cursor:none;background:var(--surface);transition:border-color .4s,box-shadow .4s}
+.gal-item:hover{border-color:var(--cyan);box-shadow:0 20px 60px rgba(0,229,255,.1)}
+.gal-item img{width:100%;height:100%;object-fit:cover;display:block;
+  filter:saturate(1.05) brightness(.82);transition:transform .6s ease,filter .6s ease}
+.gal-item:hover img{transform:scale(1.07);filter:saturate(1.2) brightness(1)}
+.gal-item::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(4,6,8,.8) 0%,rgba(4,6,8,.15) 45%,transparent 100%)}
+.gal-cap{position:absolute;left:16px;bottom:14px;z-index:2;pointer-events:none}
+.gal-cap-t{font-family:var(--display);font-weight:700;font-size:1.02rem;color:var(--white)}
+.gal-cap-s{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--cyan);margin-top:2px}
+
 /* ── FOOTER ── */
 footer{position:relative;z-index:1;padding:60px 6% 36px;
   border-top:1px solid var(--border);
@@ -390,6 +412,29 @@ footer{position:relative;z-index:1;padding:60px 6% 36px;
 @keyframes scrollL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,229,255,.5)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(0,229,255,0)}}
 @keyframes pulse2{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.5)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+
+/* ── TOUCH / MOBILE: restore native cursor, disable custom cursor ── */
+@media (hover:none),(pointer:coarse){
+  body{cursor:auto}
+  #cd,#cr{display:none!important}
+  a,button,.nav-cta,.btn-p,.btn-g,.svc-card,.ins-card,.amc-card,.why-pt,
+  .cc,.proc-step,.gal-item,.wa-fab,#btt,.sl{cursor:pointer}
+  .fi{cursor:text}
+}
+
+/* ── ACCESSIBILITY: reduced motion ── */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .bt-inner,.tt{animation:none!important}
+}
+
+/* ── SMALL SCREENS ── */
+@media (max-width:600px){
+  section{padding:70px 5%}
+  .h-stats{gap:30px}
+  .contact-grid{gap:36px}
+}
 </style>
 </head>
 <body>
@@ -405,6 +450,7 @@ footer{position:relative;z-index:1;padding:60px 6% 36px;
   <ul class="nav-links">
     <li><a href="#services">Services</a></li>
     <li><a href="#instruments">Instruments</a></li>
+    <li><a href="#gallery">Gallery</a></li>
     <li><a href="#amc">AMC Plans</a></li>
     <li><a href="#testi">Clients</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -414,6 +460,9 @@ footer{position:relative;z-index:1;padding:60px 6% 36px;
 
 <!-- HERO -->
 <section id="hero">
+  <div class="hero-photo">
+    <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?w=1600&q=70&auto=format&fit=crop" alt="Analytical laboratory with instruments" loading="eager">
+  </div>
   <div class="hud-wrap">
     <div class="hud hud1">
       <div class="hud-lbl">HPLC System</div>
@@ -661,6 +710,42 @@ footer{position:relative;z-index:1;padding:60px 6% 36px;
           <span class="tag">190–1100nm</span><span class="tag">1nm BW</span><span class="tag">QC</span>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<div class="gdiv"></div>
+
+<!-- GALLERY / FACILITY -->
+<section id="gallery">
+  <div class="rv" style="text-align:center;margin-bottom:56px">
+    <div class="sec-eye">Inside Our Work</div>
+    <h2 class="sec-h">Precision, Every Single Day</h2>
+  </div>
+  <div class="gal-grid rv d1">
+    <div class="gal-item">
+      <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&q=75&auto=format&fit=crop" alt="Analytical laboratory with instruments" loading="lazy">
+      <div class="gal-cap"><div class="gal-cap-t">QC & Analytical Labs</div><div class="gal-cap-s">Pharma-grade environments</div></div>
+    </div>
+    <div class="gal-item">
+      <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&q=75&auto=format&fit=crop" alt="Sample preparation and pipetting into vials" loading="lazy">
+      <div class="gal-cap"><div class="gal-cap-t">Sample Analysis</div><div class="gal-cap-s">HPLC · GC · Method dev</div></div>
+    </div>
+    <div class="gal-item">
+      <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=75&auto=format&fit=crop" alt="Service engineer working on instrument documentation" loading="lazy">
+      <div class="gal-cap"><div class="gal-cap-t">Expert Engineers</div><div class="gal-cap-s">Service · Calibration · IQ/OQ/PQ</div></div>
+    </div>
+    <div class="gal-item">
+      <img src="https://images.unsplash.com/photo-1518152006812-edab29b069ac?w=800&q=75&auto=format&fit=crop" alt="Row of laboratory instruments" loading="lazy">
+      <div class="gal-cap"><div class="gal-cap-t">Instrument Portfolio</div><div class="gal-cap-s">Sales · Refurbished · AMC</div></div>
+    </div>
+    <div class="gal-item">
+      <img src="https://images.unsplash.com/photo-1614308457932-e16d85c5d053?w=800&q=75&auto=format&fit=crop" alt="Instrument service and maintenance on a bench" loading="lazy">
+      <div class="gal-cap"><div class="gal-cap-t">On-Site Service</div><div class="gal-cap-s">24-hour breakdown response</div></div>
+    </div>
+    <div class="gal-item">
+      <img src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=800&q=75&auto=format&fit=crop" alt="Scientific analysis visualisation" loading="lazy">
+      <div class="gal-cap"><div class="gal-cap-t">Research & R&D</div><div class="gal-cap-s">LCMS · GCMS · UV/Vis</div></div>
     </div>
   </div>
 </section>
@@ -956,40 +1041,39 @@ footer{position:relative;z-index:1;padding:60px 6% 36px;
     <div>
       <div class="f-h">Services</div>
       <ul class="f-links">
-        <li><a href="#">Refurbished HPLC</a></li>
-        <li><a href="#">GC Systems</a></li>
-        <li><a href="#">AMC / CMC</a></li>
-        <li><a href="#">IQ / OQ / PQ</a></li>
-        <li><a href="#">Calibration</a></li>
+        <li><a href="#services">Refurbished HPLC</a></li>
+        <li><a href="#instruments">GC Systems</a></li>
+        <li><a href="#amc">AMC / CMC</a></li>
+        <li><a href="#services">IQ / OQ / PQ</a></li>
+        <li><a href="#services">Calibration</a></li>
       </ul>
     </div>
     <div>
       <div class="f-h">Brands</div>
       <ul class="f-links">
-        <li><a href="#">Shimadzu</a></li>
-        <li><a href="#">Waters</a></li>
-        <li><a href="#">Agilent</a></li>
-        <li><a href="#">Thermo Scientific</a></li>
-        <li><a href="#">PerkinElmer</a></li>
+        <li><a href="#brands">Shimadzu</a></li>
+        <li><a href="#brands">Waters</a></li>
+        <li><a href="#brands">Agilent</a></li>
+        <li><a href="#brands">Thermo Scientific</a></li>
+        <li><a href="#brands">PerkinElmer</a></li>
       </ul>
     </div>
     <div>
       <div class="f-h">Company</div>
       <ul class="f-links">
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Our Team</a></li>
-        <li><a href="#">Careers</a></li>
-        <li><a href="#">Contact</a></li>
+        <li><a href="#why">About Us</a></li>
+        <li><a href="#testi">Clients</a></li>
+        <li><a href="#process">How We Work</a></li>
+        <li><a href="#contact">Contact</a></li>
       </ul>
     </div>
   </div>
   <div class="f-bot">
-    <div>© 2025 Vision Analytical · Ambarnath, Thane, Maharashtra · visionanalytical.in</div>
+    <div>© 2026 Vision Analytical · Ambarnath, Thane, Maharashtra</div>
     <div class="socials">
-      <a href="#" class="sl">in</a>
-      <a href="#" class="sl">𝕏</a>
-      <a href="#" class="sl">ig</a>
-      <a href="#" class="sl">yt</a>
+      <a href="https://wa.me/919136216080" class="sl" title="WhatsApp" aria-label="WhatsApp">wa</a>
+      <a href="mailto:visionanalytical96@gmail.com" class="sl" title="Email" aria-label="Email">@</a>
+      <a href="tel:+919136216080" class="sl" title="Call" aria-label="Call">☎</a>
     </div>
   </div>
 </footer>
@@ -1033,7 +1117,7 @@ const cd=document.getElementById('cd'),cr=document.getElementById('cr');
 let mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cd.style.left=mx+'px';cd.style.top=my+'px'});
 (function ar(){rx+=(mx-rx)*.11;ry+=(my-ry)*.11;cr.style.left=rx+'px';cr.style.top=ry+'px';requestAnimationFrame(ar)})();
-document.querySelectorAll('a,button,.svc-card,.ins-card,.amc-card,.why-pt,.cc,.proc-step').forEach(el=>{
+document.querySelectorAll('a,button,.svc-card,.ins-card,.amc-card,.why-pt,.cc,.proc-step,.gal-item').forEach(el=>{
   el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
   el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
 });

@@ -1,0 +1,6 @@
+customtkinter>=5.2,<6
+paramiko>=3.4,<4
+scp>=0.15,<1
+cryptography>=42,<44
+keyring>=24,<26
+Pillow>=10,<12

@@ -1,0 +1,4 @@
+# Python dependencies for the Vision Website Deploy tool (see
+# vision-website-deploy/README.md). Kept at repo root so the "Python
+# package" GitHub Actions workflow can find and install them.
+-r vision-website-deploy/requirements.txt

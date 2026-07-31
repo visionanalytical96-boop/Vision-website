@@ -1,28 +1,62 @@
-VISION ANALYTICAL — WEBSITE (Multi-Page)
-========================================
+VISION ANALYTICAL — WEBSITE (Version 2 · Industrial Premium Redesign)
+=====================================================================
 
-WHAT'S INSIDE
--------------
-index.html      -> Home page
-products.html   -> Products (HPLC, GC, LC-MS, UV/Vis)
-services.html   -> Services (Install, AMC, IQ/OQ/PQ, Calibration...)
-amc.html        -> AMC / CMC plans
-about.html      -> About / Why Us / Testimonials
-contact.html    -> Contact + enquiry form
-css/style.css   -> All styles (shared by every page)
-js/main.js      -> All scripts (shared by every page)
-images/         -> All photos (bundled, work offline)
+A complete redesign — premium, corporate, industrial look (navy / white /
+graphite / soft-blue / subtle gold), inspired by Thermo Fisher, Agilent,
+Waters and Shimadzu. Fonts: Manrope (headings) + Inter (body). No neon,
+no cursor effects — clean, professional, fully responsive.
 
 
-HOW TO HOST (bahut simple)
---------------------------
-1. Is poore folder ki saari files/folders upload karo apne server ke
-   web root me — jaise cPanel me "public_html".
-   (index.html, products.html, ..., css/, js/, images/ — sab)
-2. Bas! Website live ho jaayegi. Homepage "index.html" apne aap khulega.
+PAGES (18 total)
+----------------
+index.html          Home (hero, brands, products, services, why-us,
+                    stats, industries, trust, process, testimonials, CTA)
+products.html       Full product catalogue
+services.html       All services (install, AMC, IQ/OQ/PQ, calibration…)
+amc.html            AMC / CMC plans
+about.html          About / why choose / stats / testimonials
+contact.html        Contact — info, hours, Google map, quote/visit/service form
 
-   IMPORTANT: css/, js/, images/ folders bhi upload karna zaroori hai —
-   warna design/photos nahi dikhenge.
+Product detail pages (each: overview, features, specifications, applications,
+industries, available models, compatible software, install/qualification/
+warranty, related products, quote CTA):
+  hplc · gc · lcms · gcms · uv-vis · ftir · karl-fischer ·
+  balance · moisture · toc · dissolution · lab-equipment
+
+css/style.css       All styling (shared by every page)
+js/main.js          All scripts (shared by every page)
+images/             Your photos go here (see below)
+
+
+HOW TO HOST
+-----------
+Upload the WHOLE folder (all .html files + css/ + js/ + images/) to your
+web root (e.g. cPanel "public_html"). index.html opens automatically.
+No database or server setup — it is a pure static website.
+
+
+>>> IMPORTANT: ADD YOUR REAL PHOTOS <<<
+---------------------------------------
+Per your instructions, NO stock photos are used. Product images and the
+hero/engineer/calibration areas show clean placeholders that say
+"Add photo…". Replace them with YOUR real photos:
+
+1) Put your photos in the images/ folder with these exact names:
+     images/hero.jpg          (a real lab / instrument photo — wide)
+     images/engineer.jpg      (your service engineer at work)
+     images/calibration.jpg   (calibration / installation photo)
+2) Then, in the HTML, replace the placeholder block with an <img>. Example
+   for the hero (in index.html) — swap:
+     <div class="img-ph dark"> … </div>
+   with:
+     <img src="images/hero.jpg" alt="Our laboratory">
+
+   For each PRODUCT page, replace the ".pd-media" placeholder the same way
+   with your real instrument photo, e.g. images/hplc.jpg.
+
+TIP: I could not include manufacturer product photos (Shimadzu / Waters /
+Agilent images are copyrighted). Use your own product photos, or official
+images you are licensed to use.
 
 
 CONTACT DETAILS (already set)
@@ -30,22 +64,21 @@ CONTACT DETAILS (already set)
 Phone / WhatsApp : +91 91362 16080
 Email            : visionanalytical96@gmail.com
 Location         : Ambarnath, Thane, Maharashtra
+Business hours   : Mon–Fri 9:30–18:30, Sat 9:30–15:00
 
-Contact form "Submit" dabane par visitor ka WhatsApp khulta hai aur
-enquiry seedha aapke number (91362 16080) par pre-filled aa jaati hai.
+The contact form ("Send via WhatsApp") opens WhatsApp with the visitor's
+name, phone, instrument and message pre-filled to your number.
 
-
-PHOTOS BADALNA HO TO
---------------------
-images/ folder me ye photos hain: lab.jpg, analysis.jpg, engineer.jpg,
-instruments.jpg, service.jpg, research.jpg
-Apni asli photos ko INHI naamo se replace kar do — website apne aap
-nayi photos dikhaane lagegi. (Size ~1200px wide, JPG best rehta hai.)
+Google Map: the contact page embeds a map for "Ambarnath, Thane". To pin
+your exact shop, open Google Maps → your location → Share → Embed a map →
+copy the <iframe> src and paste it into the map iframe in contact.html.
 
 
-NOTE
-----
-- Fonts internet se load hote hain (Google Fonts). Internet na ho to
-  system font use hoga — layout phir bhi theek rahega. Photos offline
-  bhi chalengi (bundled hain).
-- Koi database/setup nahi chahiye. Pure static website hai.
+NOTES
+-----
+- Fonts load from Google Fonts, and the contact map loads from Google Maps
+  — both need an internet connection (they degrade gracefully offline:
+  system fonts are used and the map area stays blank).
+- Fully responsive: mobile, tablet and desktop.
+- Animations are minimal (subtle fade-in + clean hover) as requested.
+- All icons are professional SVG line icons (no emoji).

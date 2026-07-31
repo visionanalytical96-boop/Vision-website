@@ -113,7 +113,7 @@ class Deployer:
         except WebsiteFolderNotFoundError as exc:
             return self._fail(started_at, str(exc))
         except ssh_client.DeployConnectionError as exc:
-            return self._fail(started_at, f"Could not connect to server: {exc}")
+            return self._fail(started_at, str(exc))
         except ssh_client.RemoteCommandError as exc:
             return self._fail(started_at, f"Deployment failed on server: {exc}")
         except Exception as exc:  # noqa: BLE001 - surfaced to the UI as a failure, not a crash

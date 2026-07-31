@@ -5,13 +5,14 @@ running the remote deploy script while streaming its output.
 
 from __future__ import annotations
 
+import os
 from contextlib import contextmanager
 from typing import Callable, Iterator, Optional
 
 import paramiko
 from scp import SCPClient
 
-from vision_deploy.settings import AUTH_KEY, Settings
+from vision_deploy.settings import AUTH_KEY, AUTH_PASSWORD, Settings
 
 ProgressCallback = Callable[[int, int], None]
 OutputCallback = Callable[[str], None]
@@ -25,15 +26,41 @@ class RemoteCommandError(Exception):
     """Raised when the remote deploy script exits non-zero."""
 
 
+def _target(settings: Settings) -> str:
+    return f"{settings.ssh_username}@{settings.server_ip}:{settings.ssh_port}"
+
+
+def _validate_auth_settings(settings: Settings) -> None:
+    if settings.auth_method == AUTH_KEY:
+        if not settings.ssh_key_path:
+            raise DeployConnectionError(
+                f"No SSH key file set for {_target(settings)}. "
+                "Open Settings, switch to SSH Key, and choose the key file."
+            )
+        if not os.path.isfile(settings.ssh_key_path):
+            raise DeployConnectionError(f"SSH key file not found: {settings.ssh_key_path}")
+    elif not settings.ssh_password:
+        raise DeployConnectionError(
+            f"No SSH password set for {_target(settings)}. Open Settings and enter the password."
+        )
+
+
 def _connect(settings: Settings, timeout: float = 10.0) -> paramiko.SSHClient:
+    _validate_auth_settings(settings)
+
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+    # Only attempt the configured auth method - a local ssh-agent or a
+    # ~/.ssh/id_rsa on the machine running the app would otherwise be tried
+    # first and could mask an incorrect password/key with a confusing error.
     connect_kwargs = dict(
         hostname=settings.server_ip,
         port=settings.ssh_port,
         username=settings.ssh_username,
         timeout=timeout,
+        allow_agent=False,
+        look_for_keys=False,
     )
 
     if settings.auth_method == AUTH_KEY:
@@ -45,9 +72,17 @@ def _connect(settings: Settings, timeout: float = 10.0) -> paramiko.SSHClient:
 
     try:
         client.connect(**connect_kwargs)
+    except paramiko.AuthenticationException as exc:
+        client.close()
+        auth_label = "SSH key" if settings.auth_method == AUTH_KEY else "password"
+        raise DeployConnectionError(
+            f"Authentication failed for {_target(settings)} using {auth_label}. "
+            "Check the credentials in Settings, and that the server allows this "
+            f"auth method (auth: {AUTH_PASSWORD if settings.auth_method != AUTH_KEY else AUTH_KEY})."
+        ) from exc
     except Exception as exc:
         client.close()
-        raise DeployConnectionError(str(exc)) from exc
+        raise DeployConnectionError(f"Could not connect to {_target(settings)}: {exc}") from exc
 
     return client
 

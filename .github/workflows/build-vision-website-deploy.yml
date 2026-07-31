@@ -1,0 +1,45 @@
+name: 'Build: Vision Website Deploy'
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [master]
+    paths:
+      - 'vision-website-deploy/**'
+      - '.github/workflows/build-vision-website-deploy.yml'
+  pull_request:
+    paths:
+      - 'vision-website-deploy/**'
+      - '.github/workflows/build-vision-website-deploy.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: vision-website-deploy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build VisionWebsiteDeploy.exe
+        run: pyinstaller --noconfirm vision_deploy.spec
+
+      - name: Upload executable
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: VisionWebsiteDeploy-windows
+          path: vision-website-deploy/dist/VisionWebsiteDeploy.exe
+          if-no-files-found: error

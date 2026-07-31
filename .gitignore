@@ -83,4 +83,9 @@ packages/cli/src/commands/export/outputs
 lefthook-local.yml
 IMPROVEMENTS.md
 .playwright-mcp
+
+# Vision Website Deploy (PyInstaller build output, local runtime state)
+vision-website-deploy/build/
+vision-website-deploy/*.log
+vision-website-deploy/config.enc
 stryker.log

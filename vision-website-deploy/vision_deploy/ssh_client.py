@@ -14,7 +14,8 @@ from scp import SCPClient
 
 from vision_deploy.settings import AUTH_KEY, AUTH_PASSWORD, Settings
 
-ProgressCallback = Callable[[int, int], None]
+# Matches scp.SCPClient's `progress` callback signature: (filename, size, sent).
+ProgressCallback = Callable[[object, int, int], None]
 OutputCallback = Callable[[str], None]
 
 

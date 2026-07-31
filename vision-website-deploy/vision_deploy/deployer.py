@@ -2,13 +2,14 @@
 
 Sequence: verify local folder -> zip it -> connect -> upload over SCP ->
 run the remote backup/replace/restart script -> verify the site responds ->
-clean up the local temp zip. Every step reports through callbacks so the
+clean up the local temp directory. Every step reports through callbacks so the
 GUI can update the status light, progress bar and log window without this
 module knowing anything about Tk.
 """
 
 from __future__ import annotations
 
+import shutil
 import tempfile
 import urllib.error
 import urllib.request
@@ -87,7 +88,7 @@ class Deployer:
                 self._step("Verifying deployment", 0.9)
                 verified = self._verify_deployment()
             finally:
-                zip_path.unlink(missing_ok=True)
+                shutil.rmtree(zip_path.parent, ignore_errors=True)
 
             finished_at = datetime.now()
             self._on_progress(1.0)
@@ -150,9 +151,18 @@ class Deployer:
         return zip_path
 
     def _upload(self, client, zip_path: Path, remote_zip_path: str) -> None:
-        def on_progress(sent: int, total: int) -> None:
-            if total:
-                self.logger.line(f"Upload progress: {sent}/{total} bytes")
+        last_logged_percent = -1
+
+        def on_progress(filename, size: int, sent: int) -> None:
+            nonlocal last_logged_percent
+            if not size:
+                return
+            percent = int(sent * 100 / size)
+            # scp invokes this once per chunk (can be hundreds of times per
+            # file) - only log when the percentage actually moves.
+            if percent != last_logged_percent:
+                last_logged_percent = percent
+                self.logger.line(f"Upload progress: {percent}% ({sent}/{size} bytes)")
 
         ssh_client.upload_file(client, str(zip_path), remote_zip_path, progress=on_progress)
         self.logger.line("Upload complete")

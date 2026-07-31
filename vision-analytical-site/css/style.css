@@ -482,3 +482,92 @@ footer{position:relative;z-index:1;padding:60px 6% 36px;
 .cta-band h2{font-family:var(--display);font-size:clamp(1.6rem,3.5vw,2.6rem);font-weight:800;margin-bottom:14px}
 .cta-band p{color:var(--muted);max-width:520px;margin:0 auto 26px;line-height:1.7}
 .cta-acts{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* ═══════════════════════════════════════════════════════
+   PREMIUM POLISH LAYER  (elevation · float · glass · rhythm)
+   ═══════════════════════════════════════════════════════ */
+:root{
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --elev-1:0 2px 10px rgba(0,0,0,.35);
+  --elev-2:0 14px 34px -10px rgba(0,0,0,.55), 0 3px 10px rgba(0,0,0,.30);
+  --elev-3:0 34px 74px -20px rgba(0,0,0,.68), 0 10px 26px -10px rgba(0,0,0,.42);
+  --gloss:inset 0 1px 0 rgba(255,255,255,.07);
+  --edge:0 0 0 1px rgba(0,229,255,.10);
+  --edge-hi:0 0 0 1px rgba(0,229,255,.30);
+  --halo:0 0 44px -12px var(--cyan-glow);
+}
+
+/* Balanced, premium text alignment */
+.h1,.page-h1,.sec-h,.prod-title,.svc-name,.cta-band h2,.amc-name,.cf-h,.tc-q,.f-desc{text-wrap:balance}
+.h-sub,.page-sub,.sec-sub,.prod-desc,.svc-desc,.cta-band p,.why-pt-d{text-wrap:pretty}
+
+/* ── Floating card family: soft layered depth + glossy edge ── */
+.svc-card,.stat-cell,.gal-item,.cc,.cf,.cov-box,.osc-box,.prod,.amc-card,.tc,.proc-step{
+  box-shadow:var(--elev-2),var(--gloss),var(--edge);
+  transition:transform .45s var(--ease),box-shadow .45s var(--ease),border-color .45s var(--ease);
+  will-change:transform;
+}
+.svc-card:hover,.cc:hover,.proc-step:hover{
+  transform:translateY(-7px);
+  box-shadow:var(--elev-3),var(--gloss),var(--edge-hi),var(--halo);
+  border-color:var(--border2);
+}
+.stat-cell:hover,.gal-item:hover{
+  transform:translateY(-6px);
+  box-shadow:var(--elev-3),var(--gloss),var(--edge-hi),var(--halo);
+}
+.prod:hover,.amc-card:hover,.tc:hover{
+  box-shadow:var(--elev-3),var(--gloss),var(--edge-hi);
+  border-color:var(--border2);
+}
+.amc-card{transition:transform .45s var(--ease),box-shadow .45s var(--ease),border-color .45s var(--ease)}
+.amc-card:hover{transform:translateY(-8px)}
+
+/* Featured plan floats above the rest */
+.amc-card.featured{
+  box-shadow:var(--elev-3),var(--gloss),0 0 0 1px var(--border2),0 0 60px -18px var(--cyan-glow);
+}
+.amc-card.featured:hover{transform:translateY(-12px) scale(1.015)}
+
+/* ── Premium buttons: real depth + smooth lift ── */
+.btn-p{
+  box-shadow:0 10px 26px -8px rgba(0,229,255,.55),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease),filter .3s var(--ease);
+}
+.btn-p:hover{transform:translateY(-3px);box-shadow:0 18px 40px -10px rgba(0,229,255,.7),inset 0 1px 0 rgba(255,255,255,.45);filter:saturate(1.08)}
+.btn-p:active{transform:translateY(-1px)}
+.btn-g{
+  box-shadow:var(--gloss),var(--edge);
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s var(--ease),background .3s var(--ease);
+}
+.btn-g:hover{transform:translateY(-3px);border-color:var(--cyan);box-shadow:var(--gloss),var(--edge-hi),0 12px 30px -12px var(--cyan-glow)}
+
+/* ── Product image: premium framing ── */
+.prod-media{box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);transition:transform .6s var(--ease)}
+.prod-media img{transition:transform .8s var(--ease)}
+.prod:hover .prod-media img{transform:scale(1.05)}
+
+/* ── Gallery: refined premium hover ── */
+.gal-item img{transition:transform .8s var(--ease),filter .6s var(--ease)}
+.gal-item:hover img{transform:scale(1.07);filter:saturate(1.12) brightness(1.02)}
+
+/* ── Nav: crisp glass + hairline sheen ── */
+nav{border-bottom:1px solid rgba(0,229,255,.10);box-shadow:0 1px 0 rgba(255,255,255,.03)}
+nav.sc{box-shadow:0 10px 30px -12px rgba(0,0,0,.6),0 1px 0 rgba(0,229,255,.14)}
+.nav-cta{box-shadow:0 8px 20px -8px rgba(0,229,255,.5),inset 0 1px 0 rgba(255,255,255,.3);transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 14px 30px -8px rgba(0,229,255,.7),inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* ── CTA band & page hero: deeper premium presence ── */
+.cta-band{box-shadow:var(--elev-3),var(--gloss),0 0 0 1px var(--border2)}
+.page-hero .page-h1{line-height:1.04}
+
+/* ── Section rhythm: consistent premium vertical spacing ── */
+section{padding-top:clamp(70px,9vw,120px);padding-bottom:clamp(70px,9vw,120px)}
+#hero{padding-top:0;padding-bottom:0}
+.page-hero{padding-top:150px;padding-bottom:70px}
+
+/* ── Respect reduced motion ── */
+@media(prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important}
+  .svc-card:hover,.cc:hover,.stat-cell:hover,.gal-item:hover,.prod:hover,.amc-card:hover,.tc:hover,.proc-step:hover,.btn-p:hover,.btn-g:hover,.nav-cta:hover{transform:none}
+}

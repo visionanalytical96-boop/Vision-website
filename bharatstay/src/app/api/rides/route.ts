@@ -11,14 +11,14 @@ const point = { lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(
 
 const quoteSchema = z.object({
   action: z.literal('quote'),
-  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO']),
+  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO', 'CAB', 'CAB_XL']),
   pickup: z.object(point),
   drop: z.object(point),
 });
 
 const bookSchema = z.object({
   action: z.literal('book'),
-  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO']),
+  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO', 'CAB', 'CAB_XL']),
   pickup: z.object({ ...point, label: z.string().trim().min(2).max(120) }),
   drop: z.object({ ...point, label: z.string().trim().min(2).max(120) }),
   customerName: z.string().trim().min(2).max(80),

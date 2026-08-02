@@ -46,5 +46,5 @@ export default async function RiderPage() {
     );
   }
 
-  return <RiderConsole name={rider.name} vehicleNumber={rider.vehicleNumber} />;
+  return <RiderConsole name={rider.name} vehicleNumber={rider.vehicleNumber} mapsKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY} />;
 }

@@ -10,10 +10,11 @@ type Fare = {
   perKm: number;
   minFare: number;
   matchRadiusKm: number;
+  seats: number;
   enabled: boolean;
 };
 
-const EMOJI: Record<string, string> = { BIKE: '🏍️', EBIKE: '⚡', AUTO: '🛺' };
+const EMOJI: Record<string, string> = { BIKE: '🏍️', EBIKE: '⚡', AUTO: '🛺', CAB: '🚗', CAB_XL: '🚙' };
 
 export function FareEditor({ fares }: { fares: Fare[] }) {
   const router = useRouter();
@@ -27,7 +28,7 @@ export function FareEditor({ fares }: { fares: Fare[] }) {
         tak ke rider ko request bheji jaye. Save karte hi naya rate lag jaata hai.
       </p>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {fares.map((f) => (
           <form
             key={f.vehicleType}
@@ -45,6 +46,7 @@ export function FareEditor({ fares }: { fares: Fare[] }) {
                   perKm: Number(data.get('perKm')),
                   minFare: Number(data.get('minFare')),
                   matchRadiusKm: Number(data.get('matchRadiusKm')),
+                  seats: Number(data.get('seats')),
                   enabled: data.get('enabled') === 'on',
                 }),
               });
@@ -79,6 +81,10 @@ export function FareEditor({ fares }: { fares: Fare[] }) {
               <div className="field">
                 <label htmlFor={`r-${f.vehicleType}`}>Radius (km)</label>
                 <input id={`r-${f.vehicleType}`} name="matchRadiusKm" type="number" step="0.5" defaultValue={f.matchRadiusKm} required />
+              </div>
+              <div className="field">
+                <label htmlFor={`s-${f.vehicleType}`}>Kitne log</label>
+                <input id={`s-${f.vehicleType}`} name="seats" type="number" min={1} max={12} defaultValue={f.seats} required />
               </div>
             </div>
 

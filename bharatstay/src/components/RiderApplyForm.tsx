@@ -5,7 +5,9 @@ import { useState } from 'react';
 const VEHICLES = [
   { value: 'BIKE', label: 'Bike', emoji: '🏍️', note: 'Petrol motorcycle ya scooter' },
   { value: 'EBIKE', label: 'E-bike', emoji: '⚡', note: 'Electric scooter ya bike' },
-  { value: 'AUTO', label: 'Auto', emoji: '🛺', note: 'Auto rickshaw' },
+  { value: 'AUTO', label: 'Auto', emoji: '🛺', note: 'Auto rickshaw · 3 log' },
+  { value: 'CAB', label: 'Cab', emoji: '🚗', note: 'Sedan ya hatchback · 4 log' },
+  { value: 'CAB_XL', label: 'Cab XL', emoji: '🚙', note: 'SUV ya Innova · 6 log' },
 ] as const;
 
 const CITIES = ['Badlapur', 'Ambernath', 'Vangani', 'Neral', 'Bhivpuri', 'Karjat'];
@@ -48,7 +50,7 @@ export function RiderApplyForm() {
       }}
     >
       <p className="eyebrow mb-3">Gaadi kaunsi hai</p>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {VEHICLES.map((v) => (
           <button
             key={v.value}

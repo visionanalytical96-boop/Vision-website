@@ -233,7 +233,7 @@ export function CheckoutForm({
           </div>
         </dl>
         <p className="mt-4 text-[12.5px]" style={{ color: 'var(--basalt-soft)' }}>
-          Payment gateway abhi connect nahi hai, isliye booking bina paise kate confirm hoti hai.
+          Agle step par UPI, Google Pay, PhonePe ya card se pay kar sakte hain.
         </p>
       </aside>
     </div>

@@ -12,13 +12,28 @@ export const VEHICLE_LABEL: Record<VehicleType, string> = {
   BIKE: 'Bike',
   EBIKE: 'E-bike',
   AUTO: 'Auto',
+  CAB: 'Cab',
+  CAB_XL: 'Cab XL',
 };
 
 export const VEHICLE_EMOJI: Record<VehicleType, string> = {
   BIKE: '🏍️',
   EBIKE: '⚡',
   AUTO: '🛺',
+  CAB: '🚗',
+  CAB_XL: '🚙',
 };
+
+/** Passengers each vehicle carries — drives the "kitne log" picker. */
+export const VEHICLE_SEATS: Record<VehicleType, number> = {
+  BIKE: 1,
+  EBIKE: 1,
+  AUTO: 3,
+  CAB: 4,
+  CAB_XL: 6,
+};
+
+export const ALL_VEHICLE_TYPES = ['BIKE', 'EBIKE', 'AUTO', 'CAB', 'CAB_XL'] as const;
 
 /**
  * Great-circle distance in km. This is straight-line, not road distance —

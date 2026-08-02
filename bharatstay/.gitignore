@@ -11,3 +11,6 @@ next-env.d.ts
 
 # local logs
 *.log
+
+# uploaded photo pack — imported into the database by pnpm import-photos
+/photos/

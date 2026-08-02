@@ -167,15 +167,17 @@ async function main() {
 
   // ---- fares for the bike/auto ride service
   const fares = [
-    ['BIKE', 'Bike', 20, 8, 30, 6],
-    ['EBIKE', 'E-bike', 20, 7, 30, 6],
-    ['AUTO', 'Auto', 30, 14, 40, 7],
+    ['BIKE', 'Bike', 20, 8, 30, 6, 1],
+    ['EBIKE', 'E-bike', 20, 7, 30, 6, 1],
+    ['AUTO', 'Auto', 30, 14, 40, 7, 3],
+    ['CAB', 'Cab (sedan)', 60, 18, 100, 10, 4],
+    ['CAB_XL', 'Cab XL (SUV)', 90, 24, 150, 12, 6],
   ];
-  for (const [vehicleType, label, baseFare, perKm, minFare, matchRadiusKm] of fares) {
+  for (const [vehicleType, label, baseFare, perKm, minFare, matchRadiusKm, seats] of fares) {
     await prisma.fareRule.upsert({
       where: { vehicleType },
-      create: { vehicleType, label, baseFare, perKm, minFare, matchRadiusKm },
-      update: { label },
+      create: { vehicleType, label, baseFare, perKm, minFare, matchRadiusKm, seats },
+      update: { label, seats },
     });
   }
   console.log(`fares         ${fares.length}`);

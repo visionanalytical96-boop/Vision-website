@@ -33,6 +33,7 @@ export default async function AdminRidersPage() {
           perKm: f.perKm,
           minFare: f.minFare,
           matchRadiusKm: f.matchRadiusKm,
+          seats: f.seats,
           enabled: f.enabled,
         }))}
       />

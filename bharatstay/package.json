@@ -13,7 +13,8 @@
     "db:seed": "node --env-file-if-exists=.env prisma/seed.mjs",
     "release": "prisma migrate deploy && node prisma/seed.mjs",
     "extract-content": "node scripts/extract-content.mjs",
-    "e2e": "node scripts/e2e.mjs"
+    "e2e": "node scripts/e2e.mjs",
+    "import-photos": "node --env-file-if-exists=.env scripts/import-photos.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
@@ -26,6 +27,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.65.4",
     "@types/node": "^20.14.9",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

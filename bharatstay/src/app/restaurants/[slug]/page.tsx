@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { RestaurantCard } from '@/components/RestaurantCard';
-import { Cover } from '@/components/Cover';
+import { Gallery } from '@/components/Gallery';
 import { INR, mapDirectionsUrl, mapSearchUrl } from '@/lib/format';
 import { getSettings } from '@/lib/site';
 
@@ -60,8 +60,8 @@ export default async function RestaurantDetailPage({ params }: { params: { slug:
           </div>
         </div>
 
-        <div className="card mt-7 aspect-[16/7] overflow-hidden">
-          <Cover photoId={r.photos[0]?.id} tone={r.tone} alt={r.name} seed={4} />
+        <div className="mt-7">
+          <Gallery photos={r.photos} tone={r.tone} title={r.name} />
         </div>
 
         <dl className="card mt-7 divide-y overflow-hidden text-[14.5px]">

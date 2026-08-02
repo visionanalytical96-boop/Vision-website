@@ -6,6 +6,8 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { getSettings } from '@/lib/site';
 import { INR, mapDirectionsUrl } from '@/lib/format';
+import { PayButton } from '@/components/PayButton';
+import { paymentsLive } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Booking voucher', robots: { index: false } };
@@ -21,13 +23,31 @@ export default async function VoucherPage({ params }: { params: { ref: string } 
     <>
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-5 py-12">
-        <div
-          className="rounded-xl px-5 py-4 text-[14.5px]"
-          style={{ background: 'color-mix(in srgb, var(--monsoon) 16%, transparent)' }}
-        >
-          <strong>Booking confirm ho gayi.</strong> Yeh page aapka voucher hai — screenshot le lijiye ya link save
-          kar lijiye.
-        </div>
+        {booking.status === 'PENDING' ? (
+          <div className="card p-6">
+            <p className="eyebrow">Payment baaki hai</p>
+            <h2 className="display mt-2 text-[24px]">{INR(booking.totalAmount)}</h2>
+            <p className="mt-2 text-[13.5px]" style={{ color: 'var(--basalt)' }}>
+              Pay karte hi booking confirm ho jayegi aur yahi page aapka voucher ban jayega.
+            </p>
+            <div className="mt-5">
+              <PayButton refCode={booking.ref} amount={booking.totalAmount} name={booking.guestName} />
+            </div>
+          </div>
+        ) : (
+          <div
+            className="rounded-xl px-5 py-4 text-[14.5px]"
+            style={{ background: 'color-mix(in srgb, var(--monsoon) 16%, transparent)' }}
+          >
+            <strong>Booking confirm ho gayi.</strong> Yeh page aapka voucher hai — screenshot le lijiye ya link
+            save kar lijiye.
+            {!paymentsLive() && (
+              <span style={{ color: 'var(--basalt)' }}>
+                {' '}Payment gateway abhi connect nahi hai, isliye paise nahi kate.
+              </span>
+            )}
+          </div>
+        )}
 
         <div className="card mt-7 overflow-hidden">
           <div className="border-b p-6" style={{ background: 'var(--ink)', color: 'var(--mist)' }}>

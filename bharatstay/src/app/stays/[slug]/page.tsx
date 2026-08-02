@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { StayCard } from '@/components/StayCard';
-import { Cover } from '@/components/Cover';
+import { Gallery } from '@/components/Gallery';
 import { INR, mapDirectionsUrl, mapSearchUrl, stayTypeLabel } from '@/lib/format';
 import { getSettings } from '@/lib/site';
 import { BookingBox } from '@/components/BookingBox';
@@ -71,18 +71,8 @@ export default async function StayDetailPage({ params }: { params: { slug: strin
           </div>
         </div>
 
-        {/* gallery */}
-        <div className="mt-7 grid gap-3 sm:grid-cols-[2fr_1fr]">
-          <div className="card aspect-[16/10] overflow-hidden">
-            <Cover photoId={stay.photos[0]?.id} tone={stay.tone} alt={stay.name} seed={2} />
-          </div>
-          <div className="grid grid-rows-2 gap-3">
-            {[1, 2].map((i) => (
-              <div key={i} className="card aspect-[16/9] overflow-hidden sm:aspect-auto">
-                <Cover photoId={stay.photos[i]?.id} tone={stay.tone} alt={stay.name} seed={i + 5} />
-              </div>
-            ))}
-          </div>
+        <div className="mt-7">
+          <Gallery photos={stay.photos} tone={stay.tone} title={stay.name} />
         </div>
         {stay.photos.length === 0 && (
           <p className="mt-2 text-[12.5px]" style={{ color: 'var(--basalt-soft)' }}>

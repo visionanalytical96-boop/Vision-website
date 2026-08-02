@@ -14,11 +14,12 @@ const riderSchema = z.object({
 
 const fareSchema = z.object({
   kind: z.literal('fare'),
-  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO']),
+  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO', 'CAB', 'CAB_XL']),
   baseFare: z.coerce.number().int().min(0).max(2000),
   perKm: z.coerce.number().int().min(1).max(500),
   minFare: z.coerce.number().int().min(0).max(5000),
   matchRadiusKm: z.coerce.number().min(0.5).max(50),
+  seats: z.coerce.number().int().min(1).max(12),
   enabled: z.boolean(),
 });
 

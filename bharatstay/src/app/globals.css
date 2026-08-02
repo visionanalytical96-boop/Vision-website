@@ -267,3 +267,226 @@ body {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
+
+/* ==================================================================
+   GLASS THEME
+   Frosted, floating surfaces over a live background. Every value here
+   reads from a CSS variable that the admin panel writes, so the look is
+   changed from the site itself rather than by editing this file.
+   ================================================================== */
+
+:root {
+  --glass-blur: 18px;
+  --glass-alpha: 0.55;          /* how solid the frosted panel is */
+  --glass-tint: 255 255 255;    /* rgb triplet the panel is tinted with */
+  --glass-border: 0.22;         /* border brightness */
+  --glass-radius: 20px;
+  --glass-float: 1;             /* 0 turns the lift + hover motion off */
+  --glass-bg-from: #0d1f1a;
+  --glass-bg-to: #16352c;
+  --glass-accent: #e0a426;
+}
+
+/* The page background the glass sits on. Without something behind it,
+   frosted glass just looks like a grey box. */
+.glass-root {
+  position: relative;
+  min-height: 100vh;
+  background: var(--glass-bg-to);
+}
+
+/* The gradient lives in its own fixed layer rather than as a fixed background
+   on <body>: fixed backgrounds are unreliable on iOS Safari and only paint the
+   first viewport, which leaves the rest of a long page bare. */
+.glass-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, color-mix(in srgb, var(--glass-accent) 26%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 88% 8%, color-mix(in srgb, var(--laterite) 30%, transparent), transparent 62%),
+    linear-gradient(160deg, var(--glass-bg-from), var(--glass-bg-to));
+}
+
+.glass {
+  background: rgb(var(--glass-tint) / var(--glass-alpha));
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border: 1px solid rgb(255 255 255 / var(--glass-border));
+  border-radius: var(--glass-radius);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 1.6)) inset,
+    0 18px 50px -20px rgb(0 0 0 / 0.55);
+}
+
+/* Panels that lift off the page — the "floating window" look. */
+.glass-float {
+  transform: translateY(calc(var(--glass-float) * -2px));
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease;
+}
+
+.glass-float:hover {
+  transform: translateY(calc(var(--glass-float) * -8px)) scale(calc(1 + var(--glass-float) * 0.006));
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 2)) inset,
+    0 32px 70px -24px rgb(0 0 0 / 0.65);
+}
+
+/* A darker pane for hero/nav areas where text must stay legible. */
+.glass-dark {
+  background: rgb(8 20 16 / calc(var(--glass-alpha) + 0.18));
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border: 1px solid rgb(255 255 255 / var(--glass-border));
+  border-radius: var(--glass-radius);
+}
+
+/* Netflix-style row: wide, snapping, scrolls sideways inside itself. */
+.glass-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 300px);
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+}
+
+.glass-rail > * {
+  scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-float,
+  .glass-float:hover {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Safari and Firefox without backdrop-filter fall back to a solid panel
+   rather than unreadable transparent text. */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-dark {
+    background: rgb(var(--glass-tint) / 0.92);
+  }
+}
+
+/* ---- the site's surfaces become glass -------------------------------
+   Rather than sprinkling .glass through every component, the existing
+   .card / .chip / field styles are re-pointed at the glass treatment, so
+   the whole site changes with the theme instead of only new screens. */
+
+.glass-root {
+  color: #eaf1ec;
+}
+
+.glass-root .card {
+  background: rgb(var(--glass-tint) / var(--glass-alpha));
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border: 1px solid rgb(255 255 255 / var(--glass-border));
+  border-radius: var(--glass-radius);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 1.6)) inset,
+    0 18px 50px -20px rgb(0 0 0 / 0.5);
+  color: #eaf1ec;
+}
+
+.glass-root .card-hover {
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease;
+}
+
+.glass-root .card-hover:hover {
+  transform: translateY(calc(var(--glass-float) * -8px));
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 2)) inset,
+    0 32px 70px -24px rgb(0 0 0 / 0.62);
+}
+
+/* Text tokens re-tuned for a dark, translucent ground. */
+.glass-root {
+  --ink: #f2f7f4;
+  --ink-soft: #e2ece6;
+  /* Kept bright enough to clear WCAG AA on the frosted panel — muted text on
+     glass goes unreadable far sooner than it does on a solid card. */
+  --basalt: #d6e3dc;
+  --basalt-soft: #b3c5bc;
+  --line: rgb(255 255 255 / 0.16);
+  --paper: rgb(255 255 255 / 0.08);
+  /* Light, not transparent: several sections use --mist as their TEXT colour
+     on a dark ground, so blanking it here makes that text disappear. The page
+     background comes from .glass-root's gradient instead. */
+  --mist: #eef4f0;
+  --mist-deep: rgb(255 255 255 / 0.12);
+  --rail: rgb(255 255 255 / 0.5);
+  --turmeric: #f0be55;
+  --monsoon: #5fc5a7;
+  --laterite: #e2734f;
+  --laterite-lift: #ef8965;
+}
+
+.glass-root .chip {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.18);
+  color: #dbe7e1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-root .chip-on {
+  background: rgb(255 255 255 / 0.92);
+  border-color: transparent;
+  color: #10261f;
+}
+
+.glass-root .field input,
+.glass-root .field select,
+.glass-root .field textarea {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.2);
+  color: #eef4f0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-root .field input::placeholder,
+.glass-root .field textarea::placeholder {
+  color: rgb(255 255 255 / 0.45);
+}
+
+.glass-root .field select option {
+  background: #16352c;
+  color: #eef4f0;
+}
+
+.glass-root .btn-secondary {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.22);
+  color: #eef4f0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-root .btn-secondary:hover {
+  background: rgb(255 255 255 / 0.18);
+  border-color: rgb(255 255 255 / 0.34);
+}
+
+.glass-root .btn-ink {
+  background: rgb(255 255 255 / 0.92);
+  color: #10261f;
+}
+.glass-root .btn-ink:hover { background: #fff; }
+
+/* Sections that used to paint themselves ink now let the background show. */
+.glass-root section[style*="var(--ink)"] {
+  background: transparent !important;
+}
+
+.glass-root table thead tr { border-color: rgb(255 255 255 / 0.16); }
+.glass-root .divide-y > * + * { border-color: rgb(255 255 255 / 0.12); }

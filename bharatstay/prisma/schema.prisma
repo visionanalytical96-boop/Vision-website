@@ -457,6 +457,8 @@ enum VehicleType {
   BIKE
   EBIKE
   AUTO
+  CAB
+  CAB_XL
 }
 
 enum RiderStatus {
@@ -574,6 +576,8 @@ model FareRule {
   minFare     Int
   /// How far away a rider can be and still be offered the ride.
   matchRadiusKm Float   @default(6)
+  /// Passengers the vehicle seats — 1 on a bike, 3 in an auto, 4 in a cab.
+  seats         Int     @default(1)
   enabled     Boolean @default(true)
   updatedAt   DateTime @updatedAt
 }

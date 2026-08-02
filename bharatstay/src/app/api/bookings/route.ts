@@ -3,6 +3,7 @@ import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth/session';
+import { paymentsLive } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     data: {
       ref,
       kind: 'STAY',
-      status: process.env.PAYMENT_PROVIDER === 'razorpay' ? 'PENDING' : 'CONFIRMED',
+      status: paymentsLive() ? 'PENDING' : 'CONFIRMED',
       userId: session?.userId ?? null,
       guestName: d.guestName,
       guestEmail: d.guestEmail,
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
       totalAmount: baseAmount + taxAmount,
       gstin: d.gstin || null,
       gstCompany: d.gstCompany || null,
-      paymentMode: process.env.PAYMENT_PROVIDER ?? 'mock',
+      paymentMode: paymentsLive() ? 'razorpay' : 'mock',
     },
     select: { ref: true },
   });

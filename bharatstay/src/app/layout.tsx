@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Bricolage_Grotesque, Instrument_Sans, DM_Mono } from 'next/font/google';
 import './globals.css';
+import { getTheme, themeToStyle } from '@/lib/theme';
 
 // Display face carries the personality; body stays readable; mono is used for
 // real timetable data — distances, times, fares — not for decoration.
@@ -25,10 +26,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Read once per render so an admin theme change shows up on the next load
+  // without a redeploy.
+  const theme = await getTheme();
+
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${data.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} ${data.variable}`}
+      style={themeToStyle(theme) as React.CSSProperties}
+    >
+      <body className="glass-root min-h-screen antialiased">{children}</body>
     </html>
   );
 }

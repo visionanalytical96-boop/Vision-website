@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { BeltMap, type MapPin } from './BeltMap';
+import { GoogleMap } from './GoogleMap';
+import type { MapPin } from './BeltMap';
 import { INR } from '@/lib/format';
 
 type Ride = {
@@ -33,7 +34,7 @@ const STATE: Record<string, { title: string; body: string; tone: string }> = {
   NO_RIDER: { title: 'Abhi koi rider nahi mila', body: 'Is waqt aas-paas koi rider online nahi hai. Thodi der baad dobara try kijiye.', tone: 'var(--laterite)' },
 };
 
-export function RideTracker({ refCode }: { refCode: string }) {
+export function RideTracker({ refCode, mapsKey }: { refCode: string; mapsKey?: string }) {
   const [ride, setRide] = useState<Ride | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -146,7 +147,7 @@ export function RideTracker({ refCode }: { refCode: string }) {
       )}
 
       <div className="card mt-5 p-4">
-        <BeltMap pins={pins} />
+        <GoogleMap apiKey={mapsKey} pins={pins} route height={400} />
       </div>
 
       <dl className="card mt-5 divide-y overflow-hidden text-[14px]">

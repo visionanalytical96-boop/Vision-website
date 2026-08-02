@@ -3,22 +3,26 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BELT_LANDMARKS, inBelt } from '@/lib/belt';
-import { BeltMap, type MapPin } from './BeltMap';
+import { GoogleMap } from './GoogleMap';
+import type { MapPin } from './BeltMap';
 import { INR } from '@/lib/format';
 
-type Fare = { vehicleType: string; label: string; baseFare: number; perKm: number; minFare: number };
+type Fare = { vehicleType: string; label: string; baseFare: number; perKm: number; minFare: number; seats: number };
 type Point = { label: string; lat: number; lng: number } | null;
 
-const EMOJI: Record<string, string> = { BIKE: '🏍️', EBIKE: '⚡', AUTO: '🛺' };
+const EMOJI: Record<string, string> = { BIKE: '🏍️', EBIKE: '⚡', AUTO: '🛺', CAB: '🚗', CAB_XL: '🚙' };
+const SEATS: Record<string, number> = { BIKE: 1, EBIKE: 1, AUTO: 3, CAB: 4, CAB_XL: 6 };
 
 export function RideBooking({
   fares,
   defaultName,
   defaultPhone,
+  mapsKey,
 }: {
   fares: Fare[];
   defaultName: string;
   defaultPhone: string;
+  mapsKey?: string;
 }) {
   const router = useRouter();
   const [vehicleType, setVehicleType] = useState(fares[0]?.vehicleType ?? 'BIKE');
@@ -94,7 +98,7 @@ export function RideBooking({
   return (
     <div>
       <p className="eyebrow mb-3">Gaadi chuniye</p>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         {fares.map((f) => (
           <button
             key={f.vehicleType}
@@ -108,6 +112,9 @@ export function RideBooking({
             <div className="mt-1 text-[15px] font-semibold">{f.label}</div>
             <div className="data mt-0.5 text-[12px]" style={{ color: 'var(--basalt-soft)' }}>
               ₹{f.baseFare} + ₹{f.perKm}/km
+            </div>
+            <div className="mt-0.5 text-[11.5px]" style={{ color: 'var(--basalt-soft)' }}>
+              {SEATS[f.vehicleType] ?? f.seats} {(SEATS[f.vehicleType] ?? f.seats) === 1 ? 'sawaari' : 'log'}
             </div>
           </button>
         ))}
@@ -129,7 +136,7 @@ export function RideBooking({
 
       {pins.length > 0 && (
         <div className="card mt-6 p-4">
-          <BeltMap pins={pins} />
+          <GoogleMap apiKey={mapsKey} pins={pins} route height={380} />
         </div>
       )}
 

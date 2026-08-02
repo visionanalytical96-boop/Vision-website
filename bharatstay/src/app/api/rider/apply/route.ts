@@ -10,7 +10,7 @@ export const maxDuration = 60;
 const schema = z.object({
   name: z.string().trim().min(2).max(80),
   phone: z.string().trim().min(10).max(15),
-  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO']),
+  vehicleType: z.enum(['BIKE', 'EBIKE', 'AUTO', 'CAB', 'CAB_XL']),
   vehicleNumber: z.string().trim().min(4).max(20),
   licenceNumber: z.string().trim().max(30).optional(),
   city: z.string().trim().min(2).max(60),

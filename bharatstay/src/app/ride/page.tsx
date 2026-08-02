@@ -55,9 +55,11 @@ export default async function RidePage() {
               baseFare: f.baseFare,
               perKm: f.perKm,
               minFare: f.minFare,
+              seats: f.seats,
             }))}
             defaultName={session?.name ?? ''}
             defaultPhone={session?.phone ?? ''}
+            mapsKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
           />
 
           <div className="card mt-10 p-6">

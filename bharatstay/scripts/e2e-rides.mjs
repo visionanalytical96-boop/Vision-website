@@ -9,7 +9,14 @@
 import { chromium } from 'playwright-core';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000';
-const ADMIN = { email: 'admin@bharatstay.in', password: 'bharat@123' };
+const ADMIN = {
+  email: process.env.ADMIN_EMAIL ?? 'admin@bharatstay.in',
+  password: process.env.ADMIN_PASSWORD,
+};
+if (!ADMIN.password) {
+  console.error('ADMIN_PASSWORD set kijiye — yeh script koi default password nahi rakhti.');
+  process.exit(1);
+}
 
 // Real points in the belt: the rider sits near Badlapur station, the customer
 // asks for a trip that starts there.

@@ -37,6 +37,7 @@ Konkan tak. Next.js 14 (App Router) + Postgres + Prisma.
 
 ```bash
 cp .env.example .env      # DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD bharo
+                          # ADMIN_PASSWORD: openssl rand -base64 24
 pnpm install
 pnpm exec prisma migrate deploy
 pnpm db:seed              # catalogue + admin account
@@ -63,7 +64,7 @@ Service ko in variables ki zaroorat hai:
 |---|---|
 | `DATABASE_URL` | Postgres — Railway apne aap deta hai |
 | `JWT_SECRET` | Session cookie sign karta hai. `openssl rand -base64 32` |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Pehle deploy par admin account banta hai |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Pehle deploy par admin account banta hai. Password kam se kam 12 akshar ka — `openssl rand -base64 24` se banaiye. Seed kamzor ya jaana-pehchana password reject kar deta hai. |
 | `NEXT_PUBLIC_APP_URL` | Public URL |
 | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Asli Google Maps ke liye (billing wala Google Cloud project) |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET` | Asli payment ke liye |

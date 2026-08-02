@@ -9,7 +9,14 @@
 import { chromium } from 'playwright-core';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3210';
-const ADMIN = { email: 'admin@bharatstay.in', password: 'bharat@123' };
+const ADMIN = {
+  email: process.env.ADMIN_EMAIL ?? 'admin@bharatstay.in',
+  password: process.env.ADMIN_PASSWORD,
+};
+if (!ADMIN.password) {
+  console.error('ADMIN_PASSWORD set kijiye — yeh script koi default password nahi rakhti.');
+  process.exit(1);
+}
 
 let pass = 0;
 let fail = 0;

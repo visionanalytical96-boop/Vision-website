@@ -219,8 +219,18 @@ async function main() {
   // ---- admin account
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
+  // Passwords that have ever been written down somewhere public are not
+  // passwords. Refusing them here is the only place that reliably stops a
+  // throwaway value from becoming the live admin login.
+  const BANNED = new Set(['bharat@123', 'admin', 'admin123', 'password', 'changeme', '12345678']);
+
   if (!email || !password) {
     console.warn('! ADMIN_EMAIL / ADMIN_PASSWORD not set — skipping admin account creation.');
+  } else if (BANNED.has(password.toLowerCase()) || password.length < 12) {
+    throw new Error(
+      'ADMIN_PASSWORD kamzor hai. Kam se kam 12 akshar ka naya password rakhiye ' +
+        '(banane ke liye: openssl rand -base64 24). Purana demo password ab nahi chalega.',
+    );
   } else {
     const passwordHash = await hash(password);
     await prisma.user.upsert({

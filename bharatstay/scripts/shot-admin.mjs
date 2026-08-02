@@ -8,7 +8,10 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 
 await ctx.request.post(`${BASE}/api/auth/admin`, {
-  data: { email: 'admin@bharatstay.in', password: 'bharat@123' },
+  data: {
+    email: process.env.ADMIN_EMAIL ?? 'admin@bharatstay.in',
+    password: process.env.ADMIN_PASSWORD ?? '',
+  },
 });
 
 const page = await ctx.newPage();

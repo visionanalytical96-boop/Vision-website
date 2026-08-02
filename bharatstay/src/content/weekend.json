@@ -1,0 +1,148 @@
+{
+  "line": [
+    "Badlapur",
+    "Vangani",
+    "Shelu",
+    "Neral",
+    "Bhivpuri Rd",
+    "Karjat"
+  ],
+  "spots": [
+    {
+      "name": "Kondeshwar Waterfall",
+      "place": "Badlapur",
+      "scene": "waterfall",
+      "tone": "forest",
+      "dist": "~6 km",
+      "tag": "Monsoon must-visit",
+      "desc": "Forest waterfall beside the ancient Kondeshwar Shiva temple — best July to September."
+    },
+    {
+      "name": "Barvi Dam",
+      "place": "Badlapur",
+      "scene": "dam",
+      "tone": "lake",
+      "dist": "~12 km",
+      "tag": "Picnic spot",
+      "desc": "Overflowing spillway views in monsoon, calm backwaters and picnic lawns."
+    },
+    {
+      "name": "Chanderi Fort",
+      "place": "Badlapur–Vangani",
+      "scene": "hillfort",
+      "tone": "mountain",
+      "dist": "~10 km",
+      "tag": "Trek",
+      "desc": "Dramatic pinnacle trek between Badlapur and Vangani with valley views."
+    },
+    {
+      "name": "Bhivpuri Waterfalls",
+      "place": "Bhivpuri Road",
+      "scene": "waterfall",
+      "tone": "forest",
+      "dist": "~15 km",
+      "tag": "Waterfall rappelling",
+      "desc": "Famous rappelling waterfalls right next to Bhivpuri Road station."
+    },
+    {
+      "name": "Ulhas River Rafting",
+      "place": "Karjat",
+      "scene": "rafting",
+      "tone": "ocean",
+      "dist": "~25 km",
+      "tag": "Adventure",
+      "desc": "White-water rafting on the Ulhas river — monsoon-season batches from Karjat."
+    },
+    {
+      "name": "Kondana Caves",
+      "place": "Karjat",
+      "scene": "caves",
+      "tone": "forest",
+      "dist": "~33 km",
+      "tag": "Heritage trek",
+      "desc": "1st-century BC Buddhist rock-cut caves with a waterfall at the entrance in monsoon."
+    },
+    {
+      "name": "Kothaligad (Peth Fort)",
+      "place": "Karjat",
+      "scene": "hillfort",
+      "tone": "mountain",
+      "dist": "~45 km",
+      "tag": "Night trek",
+      "desc": "Iconic funnel-shaped pinnacle — a favourite sunrise and night trek."
+    },
+    {
+      "name": "Matheran (via Neral)",
+      "place": "Neral",
+      "scene": "toytrain",
+      "tone": "mountain",
+      "dist": "~29 km",
+      "tag": "Hill station",
+      "desc": "Asia's only automobile-free hill station — toy train from Neral junction."
+    }
+  ],
+  "plans": [
+    {
+      "title": "1-Day Monsoon Waterfall Dash",
+      "price": 799,
+      "per": "per person",
+      "steps": [
+        [
+          "7:00 AM",
+          "Badlapur station se shuru — cab/bike to Kondeshwar"
+        ],
+        [
+          "8:00 AM",
+          "Kondeshwar Waterfall + temple darshan"
+        ],
+        [
+          "12:30 PM",
+          "Local Maharashtrian thali lunch"
+        ],
+        [
+          "2:00 PM",
+          "Barvi Dam spillway & backwaters"
+        ],
+        [
+          "5:30 PM",
+          "Chanderi viewpoint sunset"
+        ],
+        [
+          "7:30 PM",
+          "Wapas Badlapur"
+        ]
+      ]
+    },
+    {
+      "title": "2-Day Karjat Villa Weekend",
+      "price": 4999,
+      "per": "per person · stay included",
+      "steps": [
+        [
+          "Sat 9 AM",
+          "Badlapur → Karjat (local train, 25 min)"
+        ],
+        [
+          "11 AM",
+          "Ulhas Riverside Villa check-in + pool"
+        ],
+        [
+          "4 PM",
+          "Riverside walk, evening barbecue"
+        ],
+        [
+          "Sun 7 AM",
+          "Kondana Caves trek"
+        ],
+        [
+          "11 AM",
+          "Ulhas river rafting batch"
+        ],
+        [
+          "6 PM",
+          "Wapas Badlapur, yaadein saath"
+        ]
+      ]
+    }
+  ]
+}

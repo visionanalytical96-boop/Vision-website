@@ -2,56 +2,268 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  BharatStay — Sahyadri monsoon palette.
+  Colours come from the belt this site actually sells: wet forest, Konkan
+  laterite soil, ghat mist, turmeric. Not a generic travel palette.
+*/
+:root {
+  --ink: #10261f;        /* wet forest, near-black green */
+  --ink-soft: #1b3830;
+  --mist: #edf1ec;       /* fog on a ghat — the page ground */
+  --mist-deep: #dee5dd;
+  --paper: #fbfcfa;
+  --laterite: #b4472b;   /* Konkan soil — actions live here */
+  --laterite-lift: #c85735;
+  --monsoon: #1f6f5c;    /* deep teal-green — links, secondary */
+  --turmeric: #e0a426;   /* ratings and small highlights only */
+  --basalt: #3d4a45;     /* secondary text */
+  --basalt-soft: #6b7b74;
+  --line: #cdd7cf;
+
+  --rail: var(--ink);
+  --radius: 14px;
+  --shadow-card: 0 1px 2px rgb(16 38 31 / 0.06), 0 8px 24px -12px rgb(16 38 31 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(16 38 31 / 0.08), 0 18px 40px -18px rgb(16 38 31 / 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mist: #0d1a16;
+    --mist-deep: #142520;
+    --paper: #12211c;
+    --ink: #eaf1ec;
+    --ink-soft: #cfdcd5;
+    --basalt: #a9b9b2;
+    --basalt-soft: #7e8f88;
+    --line: #24382f;
+    --laterite: #e0714d;
+    --laterite-lift: #ec8460;
+    --monsoon: #4fae94;
+    --rail: #3f5c51;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+  }
+}
+
+* {
+  border-color: var(--line);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-surface text-royal-900;
+  background: var(--mist);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-::selection {
-  @apply bg-saffron-200 text-royal-900;
+/* ---------------------------------------------------------------- type */
+
+.display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
 }
 
-@layer components {
-  .container-xl {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
-  }
+.data {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-feature-settings: 'tnum';
+}
 
-  .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-saffron-500 px-5 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-saffron-600 active:bg-saffron-700 disabled:cursor-not-allowed disabled:opacity-60;
-  }
+/* Small uppercase label used above section headings. */
+.eyebrow {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--basalt-soft);
+}
 
-  .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg border border-royal-200 bg-white px-5 py-3 text-sm font-semibold text-royal-700 transition hover:bg-royal-50;
-  }
+/* ---------------------------------------------------------------- parts */
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-royal-700 transition hover:bg-royal-50;
-  }
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
 
-  .card {
-    @apply rounded-xl2 border border-surface-border bg-white shadow-card transition hover:shadow-card-hover;
-  }
+.card-hover {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
 
-  .input-field {
-    @apply w-full rounded-lg border border-surface-border bg-white px-3 py-2.5 text-sm text-royal-900 placeholder:text-royal-400 focus:border-royal-400 focus:outline-none focus:ring-2 focus:ring-royal-100;
-  }
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+}
 
-  .field-label {
-    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-royal-500;
-  }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+  text-align: center;
+}
 
-  .section-eyebrow {
-    @apply text-sm font-semibold uppercase tracking-wide text-saffron-600;
-  }
+.btn-primary {
+  background: var(--laterite);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--laterite-lift); }
 
-  .badge-success {
-    @apply inline-flex items-center gap-1 rounded-full bg-success-50 px-2.5 py-1 text-xs font-semibold text-success-700;
-  }
+.btn-secondary {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+.btn-secondary:hover { border-color: var(--rail); background: var(--mist-deep); }
 
-  .badge-verified {
-    @apply inline-flex items-center gap-1 rounded-full bg-royal-50 px-2.5 py-1 text-xs font-semibold text-royal-700;
-  }
+.btn-ink {
+  background: var(--ink);
+  color: var(--mist);
+}
+.btn-ink:hover { background: var(--ink-soft); }
+
+.btn-sm { padding: 7px 13px; font-size: 13px; border-radius: 8px; }
+
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--basalt);
+  margin-bottom: 5px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-size: 14.5px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--monsoon);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--monsoon) 18%, transparent);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--basalt);
+  background: var(--paper);
+}
+
+.chip-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--mist);
+}
+
+/* ------------------------------------------------------- the route line */
+/*
+  The signature device. Station order and spacing carry real information —
+  these are the actual Central Railway stops between Badlapur and Karjat —
+  so the same component doubles as the step indicator on multi-step forms.
+*/
+.rail {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.rail-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.rail-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 3px solid var(--rail);
+  background: var(--mist);
+  flex: 0 0 auto;
+}
+
+.rail-dot-on {
+  background: var(--laterite);
+  border-color: var(--laterite);
+}
+
+.rail-link {
+  flex: 1 1 auto;
+  height: 3px;
+  background: var(--rail);
+  margin-top: 5px;
+  min-width: 18px;
+  border-radius: 2px;
+}
+
+.rail-link-dim { opacity: 0.28; }
+
+@keyframes rail-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.rail-animate .rail-link {
+  transform-origin: left center;
+  animation: rail-draw 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rail-animate .rail-link { animation: none; }
+  .card-hover { transition: none; }
+  .card-hover:hover { transform: none; }
+}
+
+/* ---------------------------------------------------------------- a11y */
+
+:focus-visible {
+  outline: 2px solid var(--monsoon);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Wide content (tables, the rail on small screens) scrolls inside itself
+   rather than pushing the page sideways. */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }

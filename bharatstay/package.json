@@ -2,18 +2,28 @@
   "name": "bharatstay",
   "version": "0.1.0",
   "private": true,
-  "description": "BharatStay — India's Complete Travel Booking Platform",
+  "description": "BharatStay \u2014 Maharashtra ke stays, restaurants aur weekend trips",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "prisma generate && next build && cp -r public .next/standalone/ 2>/dev/null; cp -r .next/static .next/standalone/.next/",
+    "start": "node .next/standalone/server.js",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node --env-file-if-exists=.env prisma/seed.mjs",
+    "release": "prisma migrate deploy && node prisma/seed.mjs",
+    "extract-content": "node scripts/extract-content.mjs",
+    "e2e": "node scripts/e2e.mjs"
   },
   "dependencies": {
-    "next": "^14.2.5",
+    "@node-rs/argon2": "^2.0.2",
+    "@prisma/client": "^5.22.0",
+    "jose": "^6.2.7",
+    "next": "^14.2.35",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "sharp": "^0.35.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
@@ -24,8 +34,10 @@
     "eslint-config-next": "^14.2.5",
     "postcss": "^8.4.39",
     "prisma": "^5.16.1",
-    "@prisma/client": "^5.16.1",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.5.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   }
 }

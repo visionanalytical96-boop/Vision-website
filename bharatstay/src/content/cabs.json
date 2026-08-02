@@ -1,0 +1,82 @@
+[
+  {
+    "id": "c0",
+    "name": "Hatchback (Swift / i20)",
+    "icon": "🚗",
+    "seats": 4,
+    "bags": 2,
+    "perKm": 12,
+    "allow": 250,
+    "cat": "Hatchback"
+  },
+  {
+    "id": "c1",
+    "name": "Sedan (Dzire / Etios)",
+    "icon": "🚙",
+    "seats": 4,
+    "bags": 3,
+    "perKm": 14,
+    "allow": 300,
+    "cat": "Sedan"
+  },
+  {
+    "id": "c2",
+    "name": "SUV (Ertiga / Innova)",
+    "icon": "🚐",
+    "seats": 6,
+    "bags": 4,
+    "perKm": 18,
+    "allow": 350,
+    "cat": "SUV"
+  },
+  {
+    "id": "c3",
+    "name": "Premium SUV (Innova Crysta)",
+    "icon": "🚙",
+    "seats": 7,
+    "bags": 5,
+    "perKm": 22,
+    "allow": 400,
+    "cat": "SUV"
+  },
+  {
+    "id": "c4",
+    "name": "Luxury Sedan (Camry / E-Class)",
+    "icon": "🚘",
+    "seats": 4,
+    "bags": 3,
+    "perKm": 35,
+    "allow": 500,
+    "cat": "Luxury"
+  },
+  {
+    "id": "c5",
+    "name": "Tempo Traveller (12-Seater)",
+    "icon": "🚌",
+    "seats": 12,
+    "bags": 10,
+    "perKm": 28,
+    "allow": 500,
+    "cat": "Tempo"
+  },
+  {
+    "id": "c6",
+    "name": "Tempo Traveller (17-Seater)",
+    "icon": "🚌",
+    "seats": 17,
+    "bags": 14,
+    "perKm": 34,
+    "allow": 600,
+    "cat": "Tempo"
+  },
+  {
+    "id": "c7",
+    "name": "Electric Hatchback (Tigor EV)",
+    "icon": "🔋",
+    "seats": 4,
+    "bags": 2,
+    "perKm": 11,
+    "allow": 250,
+    "cat": "Hatchback"
+  }
+]

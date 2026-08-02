@@ -1,5 +1,8 @@
-// BharatStay — domain data model.
-// Not yet connected to a live database in this scaffold; see docs/ROADMAP.md.
+// BharatStay — Maharashtra stays, restaurants and weekend trips.
+//
+// Scope note: flights, buses, trains and coupons were removed from the product.
+// What remains is what the site actually sells: stays, restaurants, packages,
+// activities and cabs, plus the partner-onboarding and admin-editing machinery.
 
 generator client {
   provider = "prisma-client-js"
@@ -10,277 +13,337 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ---------------------------------------------------------------------------
-// Identity & access
-// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------- accounts
 
 enum UserRole {
-  CUSTOMER
-  PARTNER
-  PARTNER_STAFF
-  AGENT
-  SUB_AGENT
-  CORPORATE_ADMIN
-  CORPORATE_TRAVELER
-  SUPPORT_AGENT
-  FINANCE_ADMIN
   ADMIN
-  SUPER_ADMIN
-}
-
-enum KycStatus {
-  NOT_SUBMITTED
-  PENDING
-  VERIFIED
-  REJECTED
+  PARTNER
+  CUSTOMER
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  phone         String?   @unique
-  passwordHash  String?
-  firstName     String
-  lastName      String
-  role          UserRole  @default(CUSTOMER)
-  avatarUrl     String?
-  isEmailVerified Boolean @default(false)
-  isPhoneVerified Boolean @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  role         UserRole  @default(CUSTOMER)
+  name         String
+  email        String?   @unique
+  phone        String?   @unique
+  // Only ever set for ADMIN accounts; argon2id hash, never a plaintext password.
+  passwordHash String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  bookings        Booking[]
-  payments        Payment[]
-  savedTravellers SavedTraveller[]
-  wishlist        WishlistItem[]
-  reviews         Review[]
-  supportTickets  SupportTicket[]
-  refundRequests  RefundRequest[]
-  notifications   Notification[]
-  wallet          Wallet?
-  partnerProfile  PartnerProfile?
-  agentProfile    AgentProfile?
-  corporateAccount CorporateEmployee?
-  auditLogs       AuditLog[]
+  bookings Booking[]
+  reviews  Review[]
+
+  @@index([role])
 }
 
-model Wallet {
+/// Short-lived login codes. The code itself is stored hashed so a database
+/// dump cannot be replayed into someone's account.
+model OtpChallenge {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String   @unique
-  balancePaise Int   @default(0)
-  updatedAt DateTime @updatedAt
+  phone     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
 }
 
-model SavedTraveller {
-  id          String   @id @default(cuid())
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  title       String
-  firstName   String
-  lastName    String
-  gender      String
-  dateOfBirth DateTime
-  nationality String   @default("Indian")
-  passportNo  String?
-  createdAt   DateTime @default(now())
-}
+// ---------------------------------------------------------------- catalogue
 
-// ---------------------------------------------------------------------------
-// Properties (hotels/resorts/villas/homestays/farm-stays)
-// ---------------------------------------------------------------------------
-
-enum PropertyType {
+enum StayType {
   HOTEL
   RESORT
   VILLA
   HOMESTAY
   FARM_STAY
-  BEACH_STAY
-  MOUNTAIN_STAY
-  HERITAGE
-  BUDGET
-  LUXURY
 }
 
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  SUSPENDED
+model Destination {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  name    String
+  state   String
+  tone    String
+  emoji   String
+  desc    String
+  price   Int
+  count   Int
+  lat     Float?
+  lng     Float?
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+
+  @@index([visible])
 }
 
-model PartnerProfile {
-  id            String         @id @default(cuid())
-  user          User           @relation(fields: [userId], references: [id])
-  userId        String         @unique
-  companyName   String?
-  panNumber     String?
-  gstNumber     String?
-  bankAccountNo String?
-  bankIfsc      String?
-  kycStatus     KycStatus      @default(NOT_SUBMITTED)
-  createdAt     DateTime       @default(now())
-
-  properties    Property[]
-}
-
-model Property {
-  id              String         @id @default(cuid())
-  partner         PartnerProfile @relation(fields: [partnerId], references: [id])
-  partnerId       String
-  name            String
-  type            PropertyType
-  description     String
-  city            String
-  state           String
-  address         String
-  latitude        Float?
-  longitude       Float?
-  starRating      Int            @default(3)
-  approvalStatus  ApprovalStatus @default(PENDING)
-  isActive        Boolean        @default(true)
-  amenities       String[]
-  images          String[]
-  checkInTime     String         @default("14:00")
-  checkOutTime    String         @default("11:00")
-  cancellationPolicy String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-
-  rooms           Room[]
-  reviews         Review[]
-  bookings        HotelBooking[]
-  wishlistedBy    WishlistItem[]
-}
-
-model Room {
-  id            String   @id @default(cuid())
-  property      Property @relation(fields: [propertyId], references: [id])
-  propertyId    String
-  name          String
-  maxAdults     Int      @default(2)
-  maxChildren   Int      @default(1)
-  basePricePaise Int
-  mealPlan      String   @default("Room Only")
-  totalInventory Int     @default(1)
-  amenities     String[]
-  images        String[]
-
-  priceRules    PriceRule[]
-  hotelBookings HotelBooking[]
-}
-
-model PriceRule {
+model Stay {
   id        String   @id @default(cuid())
-  room      Room     @relation(fields: [roomId], references: [id])
-  roomId    String
-  date      DateTime
-  pricePaise Int
-  inventory Int
+  slug      String   @unique
+  name      String
+  type      StayType
+  city      String
+  area      String
+  address   String
+  star      Int      @default(3)
+  tone      String   @default("forest")
+  room      String
+  meal      String
+  amenities String[]
+
+  /// Rupees. `basePrice` is the strike-through rate, `price` is what is charged.
+  basePrice Int
+  price     Int
+  taxPct    Int @default(12)
+
+  rating      Float   @default(4.0)
+  reviewCount Int     @default(0)
+  freeCancel  Boolean @default(true)
+  payAtHotel  Boolean @default(false)
+  couple      Boolean @default(true)
+  family      Boolean @default(true)
+
+  lat     Float?
+  lng     Float?
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+
+  /// Set when the listing came in through the partner form rather than the seed.
+  applicationId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos   Photo[]
+  bookings Booking[]
+  reviews  Review[]
+
+  @@index([city, visible])
+  @@index([visible, price])
 }
 
-model WishlistItem {
-  id         String   @id @default(cuid())
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
-  property   Property @relation(fields: [propertyId], references: [id])
-  propertyId String
-  createdAt  DateTime @default(now())
+model Restaurant {
+  id      String @id @default(cuid())
+  slug    String @unique
+  name    String
+  city    String
+  area    String
+  address String
+  cuisine String
+  vegType String
+  hours   String
+  emoji   String @default("🍽️")
+  tone    String @default("saffron")
 
-  @@unique([userId, propertyId])
+  /// Typical cost for two, in rupees.
+  costForTwo Int
+  rating     Float   @default(4.0)
+  visible    Boolean @default(true)
+  sort       Int     @default(0)
+
+  lat Float?
+  lng Float?
+
+  applicationId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos Photo[]
+
+  @@index([city, visible])
 }
 
-// ---------------------------------------------------------------------------
-// Flights / buses / cabs / packages / activities (supplier-facing catalog)
-// ---------------------------------------------------------------------------
+model Package {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  dest      String
+  tone      String
+  emoji     String
+  nights    Int
+  days      Int
+  hotel     String
+  meal      String
+  transport String
+  sights    String[]
+  price     Int
+  visible   Boolean  @default(true)
+  sort      Int      @default(0)
 
-model Flight {
-  id              String   @id @default(cuid())
-  airlineName     String
-  airlineLogoUrl  String?
-  flightNumber    String
-  fromCity        String
-  toCity          String
-  departureTime   DateTime
-  arrivalTime     DateTime
-  durationMinutes Int
-  stops           Int      @default(0)
-  cabinClass      String   @default("Economy")
-  refundable      Boolean  @default(false)
-  basePricePaise  Int
-  baggageKg       Int      @default(15)
-  cabinBaggageKg  Int      @default(7)
-
-  bookings        FlightBooking[]
-}
-
-model BusRoute {
-  id              String   @id @default(cuid())
-  operatorName    String
-  fromCity        String
-  toCity          String
-  departureTime   DateTime
-  arrivalTime     DateTime
-  busType         String
-  isAc            Boolean  @default(true)
-  seatType        String   @default("Seater")
-  amenities       String[]
-  basePricePaise  Int
-  totalSeats      Int      @default(40)
-
-  bookings        BusBooking[]
-}
-
-model CabOption {
-  id              String   @id @default(cuid())
-  vehicleType     String
-  imageUrl        String?
-  seatingCapacity Int
-  luggageCapacity Int
-  perKmPaise      Int
-  driverAllowancePaise Int @default(0)
-
-  bookings        CabBooking[]
-}
-
-model HolidayPackage {
-  id              String   @id @default(cuid())
-  title           String
-  destination     String
-  imageUrl        String?
-  nights          Int
-  days            Int
-  hotelCategory   String
-  mealPlan        String
-  transportDetails String
-  sightseeing     String[]
-  pricePerPersonPaise Int
-  createdAt       DateTime @default(now())
-
-  bookings        PackageBooking[]
+  photos   Photo[]
+  bookings Booking[]
 }
 
 model Activity {
-  id          String   @id @default(cuid())
-  title       String
-  city        String
-  imageUrl    String?
-  durationHours Int
-  pricePerPersonPaise Int
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  title    String
+  city     String
+  tone     String
+  emoji    String
+  hours    Int
+  category String
+  price    Int
+  visible  Boolean @default(true)
+  sort     Int     @default(0)
+
+  photos Photo[]
 }
 
-// ---------------------------------------------------------------------------
-// Bookings (polymorphic parent + per-vertical detail tables)
-// ---------------------------------------------------------------------------
+model Cab {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  name      String
+  icon      String
+  seats     Int
+  bags      Int
+  perKm     Int
+  allowance Int
+  category  String
+  visible   Boolean @default(true)
+  sort      Int     @default(0)
+}
 
-enum BookingType {
-  HOTEL
-  FLIGHT
-  BUS
-  CAB
+/// Badlapur → Karjat weekend planner content.
+model WeekendSpot {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  name    String
+  place   String
+  scene   String
+  tone    String
+  dist    String
+  tag     String
+  desc    String
+  lat     Float?
+  lng     Float?
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+
+  photos Photo[]
+}
+
+model WeekendPlan {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  title   String
+  price   Int
+  per     String
+  /// [["7:00 AM", "Badlapur station se shuru"], ...]
+  steps   Json
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+}
+
+// ---------------------------------------------------------------- photos
+
+/// Image bytes live in Postgres rather than on a volume so that uploads survive
+/// redeploys and behave identically in local dev. Everything is resized on the
+/// way in, so rows stay small.
+model Photo {
+  id        String   @id @default(cuid())
+  data      Bytes
+  mimeType  String
+  width     Int
+  height    Int
+  bytes     Int
+  alt       String   @default("")
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+
+  stayId        String?
+  restaurantId  String?
+  packageId     String?
+  activityId    String?
+  weekendSpotId String?
+  applicationId String?
+
+  stay        Stay?               @relation(fields: [stayId], references: [id], onDelete: Cascade)
+  restaurant  Restaurant?         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  package     Package?            @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  activity    Activity?           @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  weekendSpot WeekendSpot?        @relation(fields: [weekendSpotId], references: [id], onDelete: Cascade)
+  application PartnerApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([stayId, sort])
+  @@index([restaurantId, sort])
+  @@index([applicationId])
+}
+
+// ------------------------------------------------- partner onboarding form
+
+enum ApplicationKind {
+  STAY
+  RESTAURANT
+}
+
+enum ApplicationStatus {
+  PENDING
+  NEEDS_INFO
+  APPROVED
+  REJECTED
+}
+
+/// Filled in by a farmhouse/hotel/restaurant owner through the public link at
+/// /partner/apply. Nothing here is visible on the site until an admin approves
+/// it, at which point a Stay or Restaurant row is created from these fields.
+model PartnerApplication {
+  id     String            @id @default(cuid())
+  kind   ApplicationKind
+  status ApplicationStatus @default(PENDING)
+
+  /// Unguessable token the applicant uses to check status without an account.
+  publicToken String @unique
+
+  businessName String
+  ownerName    String
+  email        String
+  phone        String
+  city         String
+  area         String
+  address      String
+  description  String
+
+  // Stay-shaped fields
+  stayType  StayType?
+  rooms     Int?
+  maxGuests Int?
+  roomName  String?
+  mealPlan  String?
+  amenities String[] @default([])
+
+  // Restaurant-shaped fields
+  cuisine    String?
+  vegType    String?
+  hours      String?
+  costForTwo Int?
+
+  /// Asking price per night (stays). Admin can change it before or after approval.
+  price Int?
+
+  /// Filled in by the admin when rejecting or asking for more information.
+  adminNote    String?
+  reviewedAt   DateTime?
+  reviewedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos Photo[]
+
+  @@index([status, createdAt])
+}
+
+// ---------------------------------------------------------------- bookings
+
+enum BookingKind {
+  STAY
   PACKAGE
-  ACTIVITY
 }
 
 enum BookingStatus {
@@ -288,325 +351,95 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
-  FAILED
 }
 
 model Booking {
-  id            String        @id @default(cuid())
-  bookingRef    String        @unique
-  user          User          @relation(fields: [userId], references: [id])
-  userId        String
-  type          BookingType
-  status        BookingStatus @default(PENDING)
-  totalPaise    Int
-  discountPaise Int           @default(0)
-  taxPaise      Int           @default(0)
-  convenienceFeePaise Int     @default(0)
-  amountPaidPaise Int         @default(0)
-  couponCode    String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id     String        @id @default(cuid())
+  ref    String        @unique
+  kind   BookingKind
+  status BookingStatus @default(PENDING)
 
-  hotelBooking    HotelBooking?
-  flightBooking   FlightBooking?
-  busBooking      BusBooking?
-  cabBooking      CabBooking?
-  packageBooking  PackageBooking?
-  payments        Payment[]
-  refundRequests  RefundRequest[]
-  voucher         Voucher?
-}
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-model HotelBooking {
-  id          String   @id @default(cuid())
-  booking     Booking  @relation(fields: [bookingId], references: [id])
-  bookingId   String   @unique
-  property    Property @relation(fields: [propertyId], references: [id])
-  propertyId  String
-  room        Room     @relation(fields: [roomId], references: [id])
-  roomId      String
-  checkIn     DateTime
-  checkOut    DateTime
-  adults      Int      @default(2)
-  children    Int      @default(0)
-  rooms       Int      @default(1)
-  guestName   String
-}
+  guestName  String
+  guestEmail String
+  guestPhone String
 
-model FlightBooking {
-  id           String   @id @default(cuid())
-  booking      Booking  @relation(fields: [bookingId], references: [id])
-  bookingId    String   @unique
-  flight       Flight   @relation(fields: [flightId], references: [id])
-  flightId     String
-  passengers   Json
-  tripType     String   @default("ONE_WAY")
-}
+  stayId    String?
+  stay      Stay?    @relation(fields: [stayId], references: [id], onDelete: SetNull)
+  packageId String?
+  package   Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
 
-model BusBooking {
-  id         String   @id @default(cuid())
-  booking    Booking  @relation(fields: [bookingId], references: [id])
-  bookingId  String   @unique
-  route      BusRoute @relation(fields: [routeId], references: [id])
-  routeId    String
-  seatNumbers String[]
-  boardingPoint String
-  droppingPoint String
-}
+  checkIn  DateTime?
+  checkOut DateTime?
+  nights   Int       @default(1)
+  guests   Int       @default(2)
+  rooms    Int       @default(1)
 
-model CabBooking {
-  id          String    @id @default(cuid())
-  booking     Booking   @relation(fields: [bookingId], references: [id])
-  bookingId   String    @unique
-  cab         CabOption @relation(fields: [cabId], references: [id])
-  cabId       String
-  pickupLocation String
-  dropLocation   String?
-  pickupAt    DateTime
-  tripCategory String   @default("LOCAL")
-}
+  baseAmount  Int
+  addonAmount Int @default(0)
+  taxAmount   Int
+  totalAmount Int
 
-model PackageBooking {
-  id          String         @id @default(cuid())
-  booking     Booking        @relation(fields: [bookingId], references: [id])
-  bookingId   String         @unique
-  package     HolidayPackage @relation(fields: [packageId], references: [id])
-  packageId   String
-  travellers  Int            @default(2)
-  travelDate  DateTime
-}
+  gstin       String?
+  gstCompany  String?
+  paymentMode String  @default("mock")
 
-// ---------------------------------------------------------------------------
-// Payments, receipts, vouchers
-// ---------------------------------------------------------------------------
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-enum PaymentMethod {
-  UPI
-  CREDIT_CARD
-  DEBIT_CARD
-  NET_BANKING
-  WALLET
-  EMI
-  PAY_LATER
-  BANK_TRANSFER
-  PAYMENT_LINK
-  CASH
-}
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
-model Payment {
-  id              String        @id @default(cuid())
-  booking         Booking       @relation(fields: [bookingId], references: [id])
-  bookingId       String
-  user            User          @relation(fields: [userId], references: [id])
-  userId          String
-  method          PaymentMethod
-  status          PaymentStatus @default(PENDING)
-  amountPaise     Int
-  gateway         String?
-  gatewayOrderId  String?
-  gatewayPaymentId String?
-  transactionId   String        @unique
-  createdAt       DateTime      @default(now())
-
-  proof           PaymentProof?
-  receipt         Receipt?
-}
-
-enum ProofVerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-model PaymentProof {
-  id              String                   @id @default(cuid())
-  payment         Payment                  @relation(fields: [paymentId], references: [id])
-  paymentId       String                   @unique
-  fileUrl         String
-  bankName        String?
-  referenceNumber String?
-  paymentDate     DateTime
-  remarks         String?
-  status          ProofVerificationStatus  @default(PENDING)
-  reviewedBy      String?
-  reviewedAt      DateTime?
-}
-
-model Receipt {
-  id              String   @id @default(cuid())
-  payment         Payment  @relation(fields: [paymentId], references: [id])
-  paymentId       String   @unique
-  receiptNumber   String   @unique
-  gstNumber       String?
-  gstAmountPaise  Int      @default(0)
-  qrCodeData      String
-  issuedAt        DateTime @default(now())
-}
-
-enum VoucherType {
-  HOTEL
-  FLIGHT
-  BUS
-  CAB
-  PACKAGE
-  ACTIVITY
-}
-
-model Voucher {
-  id            String      @id @default(cuid())
-  booking       Booking     @relation(fields: [bookingId], references: [id])
-  bookingId     String      @unique
-  type          VoucherType
-  qrCodeData    String
-  issuedAt      DateTime    @default(now())
-}
-
-// ---------------------------------------------------------------------------
-// Refunds & cancellations
-// ---------------------------------------------------------------------------
-
-enum RefundStatus {
-  REQUESTED
-  UNDER_REVIEW
-  APPROVED
-  REFUND_INITIATED
-  COMPLETED
-  REJECTED
-}
-
-model RefundRequest {
-  id              String       @id @default(cuid())
-  booking         Booking      @relation(fields: [bookingId], references: [id])
-  bookingId       String
-  user            User         @relation(fields: [userId], references: [id])
-  userId          String
-  reason          String
-  status          RefundStatus @default(REQUESTED)
-  cancellationChargePaise Int  @default(0)
-  refundAmountPaise Int?
-  refundTransactionId String?
-  isWalletRefund  Boolean      @default(false)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-}
-
-// ---------------------------------------------------------------------------
-// Marketing: offers, coupons, reviews, support, notifications, audit
-// ---------------------------------------------------------------------------
-
-model Coupon {
-  id              String   @id @default(cuid())
-  code            String   @unique
-  description     String
-  discountPercent Int?
-  discountFlatPaise Int?
-  minBookingPaise Int      @default(0)
-  validFrom       DateTime
-  validUntil      DateTime
-  isActive        Boolean  @default(true)
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 model Review {
-  id          String    @id @default(cuid())
-  user        User      @relation(fields: [userId], references: [id])
-  userId      String
-  property    Property? @relation(fields: [propertyId], references: [id])
-  propertyId  String?
-  rating      Int
-  bookingType BookingType
-  comment     String
-  isVerified  Boolean   @default(true)
-  createdAt   DateTime  @default(now())
+  id    String @id @default(cuid())
+  name  String
+  city  String
+  stars Int
+  kind  String
+  text  String
+  tone  String @default("forest")
+  emoji String @default("👤")
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  stayId String?
+  stay   Stay?   @relation(fields: [stayId], references: [id], onDelete: Cascade)
+
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
-enum SupportTicketStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
+// ---------------------------------------------------------------- site admin
+
+/// Lets the admin switch whole sections of the site on and off. A disabled
+/// service disappears from navigation, search and the sitemap.
+model ServiceToggle {
+  key     String  @id
+  label   String
+  enabled Boolean @default(true)
+  sort    Int     @default(0)
 }
 
-model SupportTicket {
-  id          String               @id @default(cuid())
-  user        User                 @relation(fields: [userId], references: [id])
-  userId      String
-  subject     String
-  category    String
-  description String
-  status      SupportTicketStatus  @default(OPEN)
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-}
-
-enum NotificationChannel {
-  EMAIL
-  SMS
-  WHATSAPP
-  PUSH
-  IN_APP
-}
-
-model Notification {
-  id        String              @id @default(cuid())
-  user      User                @relation(fields: [userId], references: [id])
-  userId    String
-  channel   NotificationChannel
-  title     String
-  body      String
-  isRead    Boolean             @default(false)
-  createdAt DateTime            @default(now())
+/// Free-form key/value site settings (brand text, hero copy, contact email,
+/// GSTIN, admin notes) so copy changes do not need a redeploy.
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  actor      User     @relation(fields: [actorId], references: [id])
-  actorId    String
-  action     String
-  entityType String
-  entityId   String
-  metadata   Json?
-  createdAt  DateTime @default(now())
-}
+  id        String   @id @default(cuid())
+  actorId   String?
+  actorName String
+  action    String
+  entity    String
+  entityId  String?
+  detail    String?
+  createdAt DateTime @default(now())
 
-// ---------------------------------------------------------------------------
-// B2B agent & corporate (modeled for future dashboards, see docs/ROADMAP.md)
-// ---------------------------------------------------------------------------
-
-model AgentProfile {
-  id            String   @id @default(cuid())
-  user          User     @relation(fields: [userId], references: [id])
-  userId        String   @unique
-  agencyName    String
-  creditLimitPaise Int   @default(0)
-  markupPercent Float    @default(0)
-  parentAgentId String?
-  kycStatus     KycStatus @default(NOT_SUBMITTED)
-}
-
-model CorporateAccount {
-  id          String   @id @default(cuid())
-  companyName String
-  gstNumber   String?
-  travelPolicy Json?
-  createdAt   DateTime @default(now())
-
-  employees   CorporateEmployee[]
-}
-
-model CorporateEmployee {
-  id            String            @id @default(cuid())
-  user          User              @relation(fields: [userId], references: [id])
-  userId        String            @unique
-  account       CorporateAccount  @relation(fields: [accountId], references: [id])
-  accountId     String
-  department    String?
-  costCentre    String?
-  isApprover    Boolean           @default(false)
+  @@index([createdAt])
 }

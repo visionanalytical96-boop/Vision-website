@@ -1,47 +1,81 @@
 import type { Metadata } from 'next';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
-import { activities } from '@/lib/mock-data';
-import { formatINR } from '@/lib/utils';
-import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
+import { notFound } from 'next/navigation';
+import { db } from '@/lib/db';
+import { getEnabledServices } from '@/lib/site';
+import { SiteHeader } from '@/components/SiteHeader';
+import { SiteFooter } from '@/components/SiteFooter';
+import { Scene } from '@/components/Scene';
+import { INR, mapDirectionsUrl } from '@/lib/format';
 
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Local Sightseeing & Activities',
-  description: 'Book curated local activities, tours and adventure experiences across India with BharatStay.',
+  title: 'Activities',
+  description: 'Rafting, rappelling, trek, scuba aur heritage walks — Maharashtra bhar mein.',
 };
 
-export default function ActivitiesPage() {
+export default async function ActivitiesPage() {
+  const enabled = await getEnabledServices();
+  if (!enabled.has('activities')) notFound();
+
+  const activities = await db.activity.findMany({ where: { visible: true }, orderBy: { sort: 'asc' } });
+  const categories = [...new Set(activities.map((a) => a.category))];
+
   return (
     <>
-      <Header />
-      <main className="pb-16 lg:pb-0">
-        <div className="container-xl py-8">
-          <div className="mb-6">
-            <h1 className="text-xl font-bold text-royal-900">Local Sightseeing &amp; Activities</h1>
-            <p className="text-sm text-royal-500">{activities.length} curated experiences across India</p>
-          </div>
+      <SiteHeader />
+      <main className="mx-auto max-w-6xl px-5 py-10">
+        <p className="eyebrow">Karne layak</p>
+        <h1 className="display mt-3 text-[clamp(30px,6vw,52px)]">Activities</h1>
+        <p className="mt-3 max-w-[58ch] text-[15px]" style={{ color: 'var(--basalt)' }}>
+          Monsoon rafting se leke fort treks tak — {categories.join(', ')}.
+        </p>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {activities.map((act) => (
-              <div key={act.id} className="card flex flex-col overflow-hidden">
-                <PlaceholderImage token={act.image} label={act.city} className="h-32 w-full" emojiClassName="text-3xl" />
-                <div className="flex flex-1 flex-col p-4">
-                  <span className="w-fit rounded-full bg-royal-50 px-2 py-0.5 text-[11px] font-semibold text-royal-600">{act.category}</span>
-                  <h3 className="mt-2 text-sm font-semibold text-royal-900">{act.title}</h3>
-                  <p className="mt-1 text-xs text-royal-500">{act.city} · ~{act.durationHours}h</p>
-                  <div className="mt-3 flex items-end justify-between">
-                    <p className="text-base font-bold text-royal-900">{formatINR(act.pricePerPerson)}</p>
-                    <a href={`/checkout?type=activity&amount=${act.pricePerPerson}`} className="btn-primary text-xs">Book</a>
+        <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {activities.map((a, i) => (
+            <article key={a.id} className="card card-hover overflow-hidden">
+              <div className="relative aspect-[16/10]">
+                <Scene tone={a.tone} seed={i + 6} />
+                <span className="absolute bottom-3 left-3 text-[30px] leading-none drop-shadow" aria-hidden>
+                  {a.emoji}
+                </span>
+              </div>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-[15.5px] font-semibold leading-snug">{a.title}</h2>
+                  <span className="data shrink-0 text-[12px]" style={{ color: 'var(--basalt-soft)' }}>
+                    {a.hours}h
+                  </span>
+                </div>
+                <p className="mt-1 text-[13px]" style={{ color: 'var(--basalt-soft)' }}>
+                  {a.city}
+                </p>
+                <div className="mt-3">
+                  <span className="chip text-[11.5px]">{a.category}</span>
+                </div>
+                <div className="mt-4 flex items-end justify-between border-t pt-3">
+                  <div>
+                    <span className="data text-[18px] font-medium">{INR(a.price)}</span>
+                    <span className="text-[12px]" style={{ color: 'var(--basalt-soft)' }}>
+                      {' '}
+                      / person
+                    </span>
                   </div>
+                  <a
+                    className="text-[13px] font-semibold"
+                    style={{ color: 'var(--laterite)' }}
+                    href={mapDirectionsUrl(a.city)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Directions →
+                  </a>
                 </div>
               </div>
-            ))}
-          </div>
+            </article>
+          ))}
         </div>
       </main>
-      <Footer />
-      <MobileBottomNav />
+      <SiteFooter />
     </>
   );
 }

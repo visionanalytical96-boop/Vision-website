@@ -1,0 +1,232 @@
+[
+  {
+    "id": "d0",
+    "name": "Lonavala",
+    "state": "Pune dist.",
+    "tone": "forest",
+    "emoji": "🌧️",
+    "price": 1399,
+    "count": 176,
+    "desc": "Waterfalls, ghats aur monsoon getaways."
+  },
+  {
+    "id": "d1",
+    "name": "Mahabaleshwar",
+    "state": "Satara",
+    "tone": "farm",
+    "emoji": "🍓",
+    "price": 1599,
+    "count": 129,
+    "desc": "Strawberry farms aur valley viewpoints."
+  },
+  {
+    "id": "d2",
+    "name": "Alibaug",
+    "state": "Raigad",
+    "tone": "ocean",
+    "emoji": "🏖️",
+    "price": 2499,
+    "count": 142,
+    "desc": "Beach villas, Kihim beach aur Kolaba fort."
+  },
+  {
+    "id": "d3",
+    "name": "Matheran",
+    "state": "Raigad",
+    "tone": "mountain",
+    "emoji": "🚂",
+    "price": 1799,
+    "count": 88,
+    "desc": "Gaadi-free hill station, toy train ride."
+  },
+  {
+    "id": "d4",
+    "name": "Karjat",
+    "state": "Raigad",
+    "tone": "forest",
+    "emoji": "🚣",
+    "price": 1999,
+    "count": 96,
+    "desc": "River villas, rafting aur Kondana caves."
+  },
+  {
+    "id": "d5",
+    "name": "Igatpuri",
+    "state": "Nashik dist.",
+    "tone": "mountain",
+    "emoji": "⛰️",
+    "price": 1699,
+    "count": 74,
+    "desc": "Vipassana, Tringalwadi fort aur lakes."
+  },
+  {
+    "id": "d6",
+    "name": "Nashik",
+    "state": "Nashik",
+    "tone": "mountain",
+    "emoji": "🍇",
+    "price": 1499,
+    "count": 168,
+    "desc": "Vineyards, Sula aur Panchvati darshan."
+  },
+  {
+    "id": "d7",
+    "name": "Panchgani",
+    "state": "Satara",
+    "tone": "mountain",
+    "emoji": "🍓",
+    "price": 1549,
+    "count": 82,
+    "desc": "Table Land aur strawberry ki kheti."
+  },
+  {
+    "id": "d8",
+    "name": "Mumbai",
+    "state": "Mumbai",
+    "tone": "royal",
+    "emoji": "🌆",
+    "price": 2299,
+    "count": 589,
+    "desc": "Gateway, Marine Drive aur city stays."
+  },
+  {
+    "id": "d9",
+    "name": "Pune",
+    "state": "Pune",
+    "tone": "royal",
+    "emoji": "🏙️",
+    "price": 1899,
+    "count": 412,
+    "desc": "Culture capital — wada se cafe tak."
+  },
+  {
+    "id": "d10",
+    "name": "Kolhapur",
+    "state": "Kolhapur",
+    "tone": "heritage",
+    "emoji": "🏰",
+    "price": 1299,
+    "count": 94,
+    "desc": "Mahalaxmi mandir aur tambda-pandhra rassa."
+  },
+  {
+    "id": "d11",
+    "name": "Aurangabad",
+    "state": "Marathwada",
+    "tone": "heritage",
+    "emoji": "🛕",
+    "price": 1599,
+    "count": 110,
+    "desc": "Ajanta-Ellora caves ka gateway."
+  },
+  {
+    "id": "d12",
+    "name": "Tarkarli",
+    "state": "Sindhudurg",
+    "tone": "ocean",
+    "emoji": "🐠",
+    "price": 1999,
+    "count": 58,
+    "desc": "Konkan ka Maldives — scuba aur seafood."
+  },
+  {
+    "id": "d13",
+    "name": "Bhandardara",
+    "state": "Ahmednagar",
+    "tone": "lake",
+    "emoji": "🏕️",
+    "price": 1899,
+    "count": 46,
+    "desc": "Lakeside camping aur Wilson dam."
+  },
+  {
+    "id": "d14",
+    "name": "Malshej Ghat",
+    "state": "Thane dist.",
+    "tone": "forest",
+    "emoji": "🌊",
+    "price": 1499,
+    "count": 38,
+    "desc": "Monsoon waterfalls aur flamingo point."
+  },
+  {
+    "id": "d15",
+    "name": "Badlapur",
+    "state": "Thane dist.",
+    "tone": "farm",
+    "emoji": "🌾",
+    "price": 1799,
+    "count": 64,
+    "desc": "Kondeshwar waterfall, Barvi dam aur farmhouses."
+  },
+  {
+    "id": "d16",
+    "name": "Khandala",
+    "state": "Pune dist.",
+    "tone": "mountain",
+    "emoji": "⛰️",
+    "price": 1699,
+    "count": 72,
+    "desc": "Ghat views, Duke's Nose aur monsoon drives."
+  },
+  {
+    "id": "d17",
+    "name": "Kashid",
+    "state": "Raigad",
+    "tone": "ocean",
+    "emoji": "🏖️",
+    "price": 2199,
+    "count": 54,
+    "desc": "Saaf beach, Mumbai se 3 ghante."
+  },
+  {
+    "id": "d18",
+    "name": "Shirdi",
+    "state": "Ahmednagar",
+    "tone": "gold",
+    "emoji": "🕌",
+    "price": 1499,
+    "count": 186,
+    "desc": "Sai Baba darshan aur pilgrim stays."
+  },
+  {
+    "id": "d19",
+    "name": "Nagpur",
+    "state": "Vidarbha",
+    "tone": "gold",
+    "emoji": "🍊",
+    "price": 1899,
+    "count": 204,
+    "desc": "Orange city, Tadoba ka gateway."
+  },
+  {
+    "id": "d20",
+    "name": "Tadoba",
+    "state": "Chandrapur",
+    "tone": "forest",
+    "emoji": "🐅",
+    "price": 3499,
+    "count": 42,
+    "desc": "Tiger safari aur jungle lodges."
+  },
+  {
+    "id": "d21",
+    "name": "Satara",
+    "state": "Satara",
+    "tone": "mountain",
+    "emoji": "🌿",
+    "price": 1599,
+    "count": 88,
+    "desc": "Kaas plateau, Thoseghar waterfalls."
+  },
+  {
+    "id": "d22",
+    "name": "Ganpatipule",
+    "state": "Ratnagiri",
+    "tone": "ocean",
+    "emoji": "🕋",
+    "price": 1899,
+    "count": 66,
+    "desc": "Beach temple aur Konkan coastline."
+  }
+]

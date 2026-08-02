@@ -1,0 +1,6 @@
+[
+  { "id": "dx0", "name": "Bhivpuri", "state": "Raigad", "tone": "forest", "emoji": "🧗", "price": 1899, "count": 34, "desc": "Waterfall rappelling, Ulhas valley aur Karjat ka gateway." },
+  { "id": "dx1", "name": "Neral", "state": "Raigad", "tone": "mountain", "emoji": "🚂", "price": 1599, "count": 28, "desc": "Matheran toy train ka junction — ghat ke paas base town." },
+  { "id": "dx2", "name": "Kolad", "state": "Raigad", "tone": "ocean", "emoji": "🚣", "price": 2099, "count": 41, "desc": "Kundalika river rafting aur riverside camps." },
+  { "id": "dx3", "name": "Thane", "state": "Thane", "tone": "lake", "emoji": "🏞️", "price": 1999, "count": 118, "desc": "Talao Pali, Yeoor hills aur city ke paas ka weekend base." }
+]

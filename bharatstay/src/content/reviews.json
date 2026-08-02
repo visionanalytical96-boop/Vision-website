@@ -1,0 +1,62 @@
+[
+  {
+    "id": "rv0",
+    "name": "Ananya Sharma",
+    "city": "Thane",
+    "stars": 5,
+    "kind": "Villa Booking",
+    "text": "Lonavala ki pool villa bilkul photos jaisi thi — cook ka khana zabardast, check-in instant.",
+    "tone": "royal",
+    "emoji": "👩"
+  },
+  {
+    "id": "rv1",
+    "name": "Rohan Mehta",
+    "city": "Mumbai",
+    "stars": 4,
+    "kind": "Farmhouse Booking",
+    "text": "Karjat ka farmhouse weekend perfect tha — BBQ, river walk, sab kuch sorted.",
+    "tone": "forest",
+    "emoji": "👨"
+  },
+  {
+    "id": "rv2",
+    "name": "Priya Kulkarni",
+    "city": "Pune",
+    "stars": 5,
+    "kind": "Restaurant Reservation",
+    "text": "Table reservation se Mahabaleshwar mein wait nahi karna pada — deposit bill mein adjust ho gaya.",
+    "tone": "farm",
+    "emoji": "👩"
+  },
+  {
+    "id": "rv3",
+    "name": "Arjun Patil",
+    "city": "Kalyan",
+    "stars": 5,
+    "kind": "Homestay Booking",
+    "text": "Tarkarli ke homestay ka Malvani khana ab tak yaad hai. Paisa vasool!",
+    "tone": "ocean",
+    "emoji": "👨"
+  },
+  {
+    "id": "rv4",
+    "name": "Sneha Joshi",
+    "city": "Badlapur",
+    "stars": 4,
+    "kind": "Package Booking",
+    "text": "Badlapur–Karjat weekend plan follow kiya — Kondeshwar waterfall best tha.",
+    "tone": "forest",
+    "emoji": "👩"
+  },
+  {
+    "id": "rv5",
+    "name": "Vikram Deshmukh",
+    "city": "Nashik",
+    "stars": 5,
+    "kind": "Hotel Booking",
+    "text": "Free cancellation ne plan badalne par bacha liya — refund 3 din mein aa gaya.",
+    "tone": "heritage",
+    "emoji": "👨"
+  }
+]

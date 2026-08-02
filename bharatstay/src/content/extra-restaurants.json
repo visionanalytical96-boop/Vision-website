@@ -1,0 +1,31 @@
+[
+  { "id": "xr-bhiv-1", "name": "Bhivpuri Station Misal Corner", "city": "Bhivpuri", "cuisine": "Maharashtrian · Misal Pav", "for2": 200, "rating": 4.2, "tone": "farm", "emoji": "🍛", "veg": "Pure Veg", "area": "Bhivpuri Road station", "hours": "7:00 AM – 9:00 PM" },
+  { "id": "xr-bhiv-2", "name": "Waterfall View Dhaba", "city": "Bhivpuri", "cuisine": "Punjabi Dhaba · Highway", "for2": 480, "rating": 4.0, "tone": "forest", "emoji": "🥘", "veg": "Veg & Non-veg", "area": "Bhivpuri–Karjat Road", "hours": "11:00 AM – 11:00 PM" },
+  { "id": "xr-bhiv-3", "name": "Trekkers Chai Katta", "city": "Bhivpuri", "cuisine": "Cafe · Chai · Maggi", "for2": 150, "rating": 4.3, "tone": "mountain", "emoji": "☕", "veg": "Pure Veg", "area": "Waterfall base, Bhivpuri", "hours": "6:00 AM – 8:00 PM" },
+
+  { "id": "xr-mum-1", "name": "Marine Drive Bhel Corner", "city": "Mumbai", "cuisine": "Street Food · Chaat", "for2": 200, "rating": 4.2, "tone": "ocean", "emoji": "🥗", "veg": "Pure Veg", "area": "Marine Drive, Churchgate", "hours": "4:00 PM – 11:30 PM" },
+  { "id": "xr-mum-2", "name": "Colaba Seafood House", "city": "Mumbai", "cuisine": "Malvani · Seafood", "for2": 1300, "rating": 4.4, "tone": "ocean", "emoji": "🦐", "veg": "Seafood Special", "area": "Colaba Causeway, South Mumbai", "hours": "12:00 PM – 11:30 PM" },
+  { "id": "xr-mum-3", "name": "Dadar Maharashtrian Thali", "city": "Mumbai", "cuisine": "Maharashtrian · Thali", "for2": 550, "rating": 4.5, "tone": "heritage", "emoji": "🍽️", "veg": "Pure Veg", "area": "Dadar West, near station", "hours": "11:00 AM – 11:00 PM" },
+  { "id": "xr-mum-4", "name": "Mohammed Ali Road Kebab Lane", "city": "Mumbai", "cuisine": "Mughlai · Kebab", "for2": 700, "rating": 4.4, "tone": "gold", "emoji": "🍖", "veg": "Non-veg Special", "area": "Mohammed Ali Road, South Mumbai", "hours": "6:00 PM – 2:00 AM" },
+  { "id": "xr-mum-5", "name": "Bandra Cafe Culture", "city": "Mumbai", "cuisine": "Cafe · Continental · Coffee", "for2": 900, "rating": 4.3, "tone": "saffron", "emoji": "☕", "veg": "Veg & Non-veg", "area": "Hill Road, Bandra West", "hours": "8:00 AM – 12:00 AM" },
+  { "id": "xr-mum-6", "name": "Juhu Beach Pav Bhaji Stall", "city": "Mumbai", "cuisine": "Street Food · Pav Bhaji", "for2": 250, "rating": 4.1, "tone": "royal", "emoji": "🧆", "veg": "Pure Veg", "area": "Juhu Beach, Juhu", "hours": "4:00 PM – 12:00 AM" },
+  { "id": "xr-mum-7", "name": "Matunga Udupi Dosa House", "city": "Mumbai", "cuisine": "South Indian · Dosa · Filter Coffee", "for2": 350, "rating": 4.5, "tone": "farm", "emoji": "🥞", "veg": "Pure Veg", "area": "Matunga East, near station", "hours": "7:00 AM – 10:30 PM" },
+
+  { "id": "xr-shirdi-1", "name": "Sai Prasad Bhojanalaya", "city": "Shirdi", "cuisine": "Maharashtrian · Thali", "for2": 300, "rating": 4.3, "tone": "gold", "emoji": "🍽️", "veg": "Pure Veg", "area": "Pimpalwadi Road, near Sai Mandir", "hours": "7:00 AM – 10:30 PM" },
+  { "id": "xr-shirdi-2", "name": "Temple Road Sweet & Farsan", "city": "Shirdi", "cuisine": "Sweets · Farsan · Prasad", "for2": 180, "rating": 4.2, "tone": "saffron", "emoji": "🍬", "veg": "Pure Veg", "area": "Shirdi main market", "hours": "6:00 AM – 10:00 PM" },
+  { "id": "xr-shirdi-3", "name": "Yatri Punjabi Rasoi", "city": "Shirdi", "cuisine": "North Indian · Tandoor", "for2": 500, "rating": 4.1, "tone": "heritage", "emoji": "🍲", "veg": "Pure Veg", "area": "Nashik Road, Shirdi", "hours": "11:00 AM – 11:00 PM" },
+
+  { "id": "xr-nsk-1", "name": "Nashik Misal Katta", "city": "Nashik", "cuisine": "Maharashtrian · Misal Pav", "for2": 250, "rating": 4.5, "tone": "farm", "emoji": "🍛", "veg": "Pure Veg", "area": "College Road, Nashik", "hours": "7:00 AM – 10:00 PM" },
+  { "id": "xr-nsk-2", "name": "Panchvati Thali Ghar", "city": "Nashik", "cuisine": "Maharashtrian · Thali", "for2": 420, "rating": 4.3, "tone": "heritage", "emoji": "🍽️", "veg": "Pure Veg", "area": "Panchvati, near Ramkund", "hours": "11:00 AM – 11:00 PM" },
+  { "id": "xr-nsk-3", "name": "Godavari Riverside Cafe", "city": "Nashik", "cuisine": "Cafe · Snacks · Coffee", "for2": 350, "rating": 4.2, "tone": "lake", "emoji": "☕", "veg": "Pure Veg", "area": "Tapovan, Nashik", "hours": "8:00 AM – 10:00 PM" },
+  { "id": "xr-nsk-4", "name": "Vineyard Grill House", "city": "Nashik", "cuisine": "Continental · Grill", "for2": 1200, "rating": 4.4, "tone": "desert", "emoji": "🥩", "veg": "Veg & Non-veg", "area": "Gangapur Road, Nashik", "hours": "12:00 PM – 11:00 PM" },
+
+  { "id": "xr-lon-1", "name": "Lonavala Maratha Thali House", "city": "Lonavala", "cuisine": "Maharashtrian · Thali", "for2": 500, "rating": 4.2, "tone": "heritage", "emoji": "🍽️", "veg": "Veg & Non-veg", "area": "Old Mumbai–Pune Highway, Lonavala", "hours": "11:00 AM – 11:00 PM" },
+  { "id": "xr-lon-2", "name": "Ghat View Chai Point", "city": "Lonavala", "cuisine": "Cafe · Chai · Vada Pav", "for2": 160, "rating": 4.1, "tone": "mountain", "emoji": "☕", "veg": "Pure Veg", "area": "Tiger Point Road, Lonavala", "hours": "7:00 AM – 9:00 PM" },
+
+  { "id": "xr-kjt-1", "name": "Karjat Farm Kitchen", "city": "Karjat", "cuisine": "Maharashtrian · Farm Meals", "for2": 450, "rating": 4.3, "tone": "farm", "emoji": "🍲", "veg": "Veg & Non-veg", "area": "Kondivade, Karjat", "hours": "8:00 AM – 10:00 PM" },
+  { "id": "xr-kjt-2", "name": "Ulhas Riverside Barbecue", "city": "Karjat", "cuisine": "Barbecue · Grill", "for2": 850, "rating": 4.2, "tone": "forest", "emoji": "🍖", "veg": "Veg & Non-veg", "area": "Kadav riverside, Karjat", "hours": "12:00 PM – 11:00 PM" },
+
+  { "id": "xr-mth-1", "name": "Matheran Valley Thali", "city": "Matheran", "cuisine": "Maharashtrian · Thali", "for2": 400, "rating": 4.1, "tone": "mountain", "emoji": "🍽️", "veg": "Pure Veg", "area": "MG Road, Matheran", "hours": "11:00 AM – 9:00 PM" },
+  { "id": "xr-thane-1", "name": "Thane Lakeside Misal", "city": "Thane", "cuisine": "Maharashtrian · Misal Pav", "for2": 260, "rating": 4.3, "tone": "lake", "emoji": "🍛", "veg": "Pure Veg", "area": "Talao Pali, Thane West", "hours": "7:00 AM – 10:00 PM" }
+]

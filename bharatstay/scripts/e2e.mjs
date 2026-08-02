@@ -13,6 +13,10 @@ const ADMIN = { email: 'admin@bharatstay.in', password: 'bharat@123' };
 
 let pass = 0;
 let fail = 0;
+/** Waits for a locator instead of sampling it once, so a slow render is not a failure. */
+const visible = (locator, timeout = 15000) =>
+  locator.waitFor({ state: 'visible', timeout }).then(() => true).catch(() => false);
+
 const ok = (name, cond, extra = '') => {
   (cond ? pass++ : fail++);
   console.log(`${cond ? 'PASS' : 'FAIL'}  ${name}${extra && !cond ? ` — ${extra}` : ''}`);
@@ -76,7 +80,7 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   if (token) {
     const page = await ctx.newPage();
     await page.goto(`${BASE}/partner/status/${token}`, { waitUntil: 'networkidle' });
-    ok('partner: applicant can read status without an account', await page.getByText(businessName).first().isVisible());
+    ok('partner: applicant can read status without an account', await visible(page.getByText(businessName).first()));
   }
   await ctx.close();
 }
@@ -100,7 +104,7 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   // approve the application we just submitted
   await page.goto(`${BASE}/admin/applications`, { waitUntil: 'networkidle' });
   const card = page.locator('article').filter({ hasText: businessName }).first();
-  ok('admin: new application shows in the queue', await card.isVisible());
+  ok('admin: new application shows in the queue', await visible(card));
 
   await card.getByRole('button', { name: /Approve karke live karo/ }).click();
   await page.waitForTimeout(2500);
@@ -109,10 +113,10 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   const anon = await browser.newContext();
   const anonPage = await anon.newPage();
   await anonPage.goto(`${BASE}/search?q=${encodeURIComponent(businessName)}`, { waitUntil: 'networkidle' });
-  const live = await anonPage.getByText(businessName).first().isVisible().catch(() => false);
+  const live = await visible(anonPage.getByText(businessName).first());
   ok('approval: listing is live for a logged-out visitor', live);
 
-  const priceShown = await anonPage.getByText('₹4,200').first().isVisible().catch(() => false);
+  const priceShown = await visible(anonPage.getByText('₹4,200').first());
   ok('approval: submitted price carried over', priceShown);
   await anon.close();
 
@@ -130,7 +134,7 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   const anon2 = await browser.newContext();
   const anon2Page = await anon2.newPage();
   await anon2Page.goto(`${BASE}/search?q=${encodeURIComponent(businessName)}`, { waitUntil: 'networkidle' });
-  const newPrice = await anon2Page.getByText('₹5,555').first().isVisible().catch(() => false);
+  const newPrice = await visible(anon2Page.getByText('₹5,555').first());
   ok('admin: price edit visible to a logged-out visitor', newPrice);
   await anon2.close();
 

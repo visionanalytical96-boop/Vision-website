@@ -112,6 +112,36 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ----------------------------------------------------------- rides */}
+        {enabled.has('rides') && (
+          <section className="mx-auto mt-20 max-w-6xl px-5">
+            <div className="card grid gap-8 p-8 sm:p-12 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+              <div>
+                <p className="eyebrow">Nayi service</p>
+                <h2 className="display mt-3 text-[clamp(26px,4vw,40px)]">
+                  Bike, e-bike aur <span style={{ color: 'var(--laterite)' }}>auto</span> rides
+                </h2>
+                <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed" style={{ color: 'var(--basalt)' }}>
+                  Badlapur se Karjat tak local trips — station se ghar, ghar se naka. Aas-paas ka sabse nazdeeki
+                  rider apne aap match hota hai aur aap use live map par aate hue dekh sakte hain.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Link href="/ride" className="btn btn-primary">Ride book karo</Link>
+                  <Link href="/rider/apply" className="btn btn-secondary">Rider banna hai?</Link>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {([['\u{1F3CD}\uFE0F', 'Bike'], ['\u26A1', 'E-bike'], ['\u{1F6FA}', 'Auto']] as const).map(([e, l]) => (
+                  <div key={l} className="card p-4 text-center">
+                    <div className="text-[30px]" aria-hidden>{e}</div>
+                    <div className="mt-1 text-[13px] font-semibold">{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ------------------------------------------------------- near home */}
         <Section
           eyebrow="Ghar ke paas"

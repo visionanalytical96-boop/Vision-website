@@ -165,8 +165,24 @@ async function main() {
   }
   console.log(`reviews       ${reviews.length}`);
 
+  // ---- fares for the bike/auto ride service
+  const fares = [
+    ['BIKE', 'Bike', 20, 8, 30, 6],
+    ['EBIKE', 'E-bike', 20, 7, 30, 6],
+    ['AUTO', 'Auto', 30, 14, 40, 7],
+  ];
+  for (const [vehicleType, label, baseFare, perKm, minFare, matchRadiusKm] of fares) {
+    await prisma.fareRule.upsert({
+      where: { vehicleType },
+      create: { vehicleType, label, baseFare, perKm, minFare, matchRadiusKm },
+      update: { label },
+    });
+  }
+  console.log(`fares         ${fares.length}`);
+
   // ---- which services the site offers (admin can switch these off)
   const services = [
+    ['rides', 'Bike & Auto Rides'],
     ['stays', 'Hotels, Villas & Farmhouses'],
     ['restaurants', 'Restaurants & Dining'],
     ['weekend', 'Badlapur → Karjat Weekend'],

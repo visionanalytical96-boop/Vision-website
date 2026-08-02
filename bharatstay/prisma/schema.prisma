@@ -262,6 +262,7 @@ model Photo {
   activityId    String?
   weekendSpotId String?
   applicationId String?
+  riderId       String?
 
   stay        Stay?               @relation(fields: [stayId], references: [id], onDelete: Cascade)
   restaurant  Restaurant?         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -269,6 +270,7 @@ model Photo {
   activity    Activity?           @relation(fields: [activityId], references: [id], onDelete: Cascade)
   weekendSpot WeekendSpot?        @relation(fields: [weekendSpotId], references: [id], onDelete: Cascade)
   application PartnerApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  rider       Rider?              @relation(fields: [riderId], references: [id], onDelete: Cascade)
 
   @@index([stayId, sort])
   @@index([restaurantId, sort])
@@ -442,4 +444,136 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// ------------------------------------------------------- bike & auto rides
+//
+// A live ride service for the Badlapur–Karjat belt. Riders stream their
+// position from the browser's Geolocation API; matching is done server-side by
+// straight-line distance. Road routing would need a paid Directions API, so
+// distances and fares are labelled as estimates everywhere they are shown.
+
+enum VehicleType {
+  BIKE
+  EBIKE
+  AUTO
+}
+
+enum RiderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model Rider {
+  id     String      @id @default(cuid())
+  status RiderStatus @default(PENDING)
+
+  name          String
+  phone         String      @unique
+  vehicleType   VehicleType
+  vehicleNumber String
+  licenceNumber String?
+  area          String
+  city          String
+
+  /// Set when an approved rider signs in; links the rider to their login.
+  userId String? @unique
+
+  /// Live position, refreshed by the rider's phone while they are online.
+  /// `lastSeenAt` is what makes "online" trustworthy — a stale heartbeat means
+  /// the rider is treated as offline no matter what the flag says.
+  online     Boolean   @default(false)
+  lat        Float?
+  lng        Float?
+  accuracyM  Float?
+  lastSeenAt DateTime?
+
+  adminNote  String?
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos Photo[]
+  rides  Ride[]
+
+  @@index([status, online])
+  @@index([online, lastSeenAt])
+}
+
+enum RideStatus {
+  REQUESTED
+  ACCEPTED
+  ARRIVED
+  ONGOING
+  COMPLETED
+  CANCELLED
+  NO_RIDER
+}
+
+model Ride {
+  id     String     @id @default(cuid())
+  ref    String     @unique
+  status RideStatus @default(REQUESTED)
+
+  vehicleType VehicleType
+
+  customerId    String?
+  customerName  String
+  customerPhone String
+
+  pickupLabel String
+  pickupLat   Float
+  pickupLng   Float
+  dropLabel   String
+  dropLat     Float
+  dropLng     Float
+
+  /// Straight-line distance. Road distance is longer; the UI says so.
+  distanceKm  Float
+  baseFare    Int
+  distanceFare Int
+  fare        Int
+
+  riderId String?
+  rider   Rider?  @relation(fields: [riderId], references: [id], onDelete: SetNull)
+
+  /// The rider currently being offered this ride, and when that offer lapses.
+  offeredToId    String?
+  offerExpiresAt DateTime?
+  /// Riders who declined or timed out, so they are not offered it again.
+  declinedBy     String[] @default([])
+
+  /// Customer reads this to the rider so a trip cannot be started by mistake.
+  startOtp String
+
+  acceptedAt  DateTime?
+  arrivedAt   DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  cancelReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([riderId, createdAt])
+  @@index([customerId, createdAt])
+  @@index([offeredToId, offerExpiresAt])
+}
+
+/// Admin-editable pricing, one row per vehicle type.
+model FareRule {
+  vehicleType VehicleType @id
+  label       String
+  baseFare    Int
+  perKm       Int
+  minFare     Int
+  /// How far away a rider can be and still be offered the ride.
+  matchRadiusKm Float   @default(6)
+  enabled     Boolean @default(true)
+  updatedAt   DateTime @updatedAt
 }

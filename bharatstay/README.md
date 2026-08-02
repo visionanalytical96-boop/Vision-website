@@ -5,6 +5,11 @@ Konkan tak. Next.js 14 (App Router) + Postgres + Prisma.
 
 ## Kya-kya hai
 
+- **Bike, e-bike aur auto rides** (`/ride`) — Badlapur–Karjat belt ke liye live
+  ride service. Rider khud register karta hai (`/rider/apply`), admin approve
+  karta hai, phir rider apne phone se online jaake (`/rider`) rides leta hai.
+  Sabse nazdeeki online rider apne aap match hota hai, customer use live map par
+  aata hua dekhta hai, aur trip 4-digit OTP se shuru hoti hai.
 - **Public site** — home, stays (filters + detail), restaurants, Badlapur→Karjat
   weekend planner, packages, activities, map, search, booking + voucher.
 - **Partner listing form** (`/partner/apply`) — koi bhi farmhouse/hotel/restaurant
@@ -61,6 +66,12 @@ Yeh cheezein paid account ke bina chal nahi saktin, isliye inka mock mode hai:
   hai. `msg91` + `SMS_API_KEY` set karne par asli SMS jayega.
 - **Payment** — `PAYMENT_PROVIDER=mock` par booking bina paise kate confirm hoti
   hai. Razorpay keys daalne par asli charge hoga.
+- **Ride distance aur ETA** — doori seedhi rekha (haversine) se nikaal kar
+  raaste ke hisaab se 1.3x ki jaati hai. Asli road routing aur ETA ke liye paid
+  Directions API chahiye, isliye har jagah ise "anumaanit" likha hai aur
+  turn-by-turn ke liye Google Maps ka link diya hai.
+- **Rider location** browser ke Geolocation API se aati hai, isliye rider ka page
+  khula rehna zaroori hai. Background tracking ke liye asli mobile app chahiye.
 - **Photos** — seed ke saath koi photo nahi aati; jab tak upload nahi hoti, har
   listing ka `tone` ek drawn scene banata hai. Photos admin panel se ya partner
   form se upload hoti hain.

@@ -2,7 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { db } from '@/lib/db';
 
-export type ServiceKey = 'stays' | 'restaurants' | 'weekend' | 'packages' | 'activities' | 'cabs' | 'map';
+export type ServiceKey = 'rides' | 'stays' | 'restaurants' | 'weekend' | 'packages' | 'activities' | 'cabs' | 'map';
 
 const FALLBACK_SETTINGS: Record<string, string> = {
   brandA: 'Bharat',
@@ -37,6 +37,7 @@ export const getEnabledServices = cache(async (): Promise<Set<string>> => {
 export async function getNavLinks(): Promise<{ href: string; label: string }[]> {
   const enabled = await getEnabledServices();
   const all: { key: ServiceKey; href: string; label: string }[] = [
+    { key: 'rides', href: '/ride', label: 'Rides' },
     { key: 'stays', href: '/stays', label: 'Stays' },
     { key: 'restaurants', href: '/restaurants', label: 'Restaurants' },
     { key: 'weekend', href: '/weekend', label: 'Weekend' },

@@ -1,0 +1,24 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# local logs
+*.log
+
+# uploaded photo pack — imported into the database by pnpm import-photos
+/photos/
+
+# Cloudflare build output and local secrets
+.open-next/
+.wrangler/
+.dev.vars
+
+# Prisma generates this on every build
+src/generated/

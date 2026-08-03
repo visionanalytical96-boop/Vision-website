@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bharatstay",
+  "main": ".open-next/worker.js",
+  // September 2024 or later is what the Node compatibility layer needs.
+  "compatibility_date": "2025-03-25",
+  // nodejs_compat gives us Buffer, node:crypto and the TCP sockets the
+  // Postgres driver runs on. Without it the app will not boot.
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  "vars": {
+    "NODE_ENV": "production",
+    "SMS_PROVIDER": "mock"
+  }
+
+  // Secrets are deliberately NOT here — this file is committed. Push them with
+  // `wrangler secret put <NAME>`: DATABASE_URL, JWT_SECRET, ADMIN_EMAIL,
+  // ADMIN_PASSWORD. DATABASE_URL must be your provider's *pooled* connection
+  // string (on Neon, the host ending in `-pooler`); a Worker can spike to many
+  // concurrent instances and a direct connection string will run Postgres out
+  // of sessions. See DEPLOY-CLOUDFLARE.md.
+}

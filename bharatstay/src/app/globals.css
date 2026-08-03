@@ -1,0 +1,507 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  BharatStay — Sahyadri monsoon palette.
+  Colours come from the belt this site actually sells: wet forest, Konkan
+  laterite soil, ghat mist, turmeric. Not a generic travel palette.
+*/
+:root {
+  --ink: #10261f;        /* wet forest, near-black green */
+  --ink-soft: #1b3830;
+  --mist: #edf1ec;       /* fog on a ghat — the page ground */
+  --mist-deep: #dee5dd;
+  --paper: #fbfcfa;
+  --laterite: #b4472b;   /* Konkan soil — actions live here */
+  --laterite-lift: #c85735;
+  --monsoon: #1f6f5c;    /* deep teal-green — links, secondary */
+  --turmeric: #e0a426;   /* ratings and small highlights only */
+  --basalt: #3d4a45;     /* secondary text */
+  --basalt-soft: #6b7b74;
+  --line: #cdd7cf;
+
+  /* Semantic surfaces. These exist because --ink is a *text* colour that the
+     glass theme flips to near-white; anything using it as a background would
+     turn white-on-white. Use these for backgrounds instead. */
+  --panel: var(--ink);        /* dark block: footers, headers, hero bands */
+  --panel-ink: var(--mist);
+  --surface: var(--paper);    /* inputs and pills sitting on top of anything */
+  --surface-ink: var(--ink);
+  --header-bg: color-mix(in srgb, var(--mist) 88%, transparent);
+
+  --rail: var(--ink);
+  --radius: 14px;
+  --shadow-card: 0 1px 2px rgb(16 38 31 / 0.06), 0 8px 24px -12px rgb(16 38 31 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(16 38 31 / 0.08), 0 18px 40px -18px rgb(16 38 31 / 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mist: #0d1a16;
+    --mist-deep: #142520;
+    --paper: #12211c;
+    --ink: #eaf1ec;
+    --ink-soft: #cfdcd5;
+    --basalt: #a9b9b2;
+    --basalt-soft: #7e8f88;
+    --line: #24382f;
+    --laterite: #e0714d;
+    --laterite-lift: #ec8460;
+    --monsoon: #4fae94;
+    --rail: #3f5c51;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+  }
+}
+
+* {
+  border-color: var(--line);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--mist);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- type */
+
+.display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+}
+
+.data {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-feature-settings: 'tnum';
+}
+
+/* Small uppercase label used above section headings. */
+.eyebrow {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--basalt-soft);
+}
+
+/* ---------------------------------------------------------------- parts */
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.card-hover {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+  text-align: center;
+}
+
+.btn-primary {
+  background: var(--laterite);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--laterite-lift); }
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+.btn-secondary:hover { border-color: var(--rail); background: var(--mist-deep); }
+
+.btn-ink {
+  background: var(--ink);
+  color: var(--mist);
+}
+.btn-ink:hover { background: var(--ink-soft); }
+
+.btn-sm { padding: 7px 13px; font-size: 13px; border-radius: 8px; }
+
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--basalt);
+  margin-bottom: 5px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-size: 14.5px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--monsoon);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--monsoon) 18%, transparent);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--basalt);
+  background: var(--paper);
+}
+
+.chip-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--mist);
+}
+
+/* ---------------------------------------------------- the step indicator */
+/*
+  Connected dots used by every multi-step form on the site. Left-to-right
+  order is what carries the meaning, so one device serves them all.
+*/
+.rail {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.rail-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.rail-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 3px solid var(--rail);
+  background: var(--mist);
+  flex: 0 0 auto;
+}
+
+.rail-dot-on {
+  background: var(--laterite);
+  border-color: var(--laterite);
+}
+
+.rail-link {
+  flex: 1 1 auto;
+  height: 3px;
+  background: var(--rail);
+  margin-top: 5px;
+  min-width: 18px;
+  border-radius: 2px;
+}
+
+.rail-link-dim { opacity: 0.28; }
+
+@keyframes rail-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.rail-animate .rail-link {
+  transform-origin: left center;
+  animation: rail-draw 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rail-animate .rail-link { animation: none; }
+  .card-hover { transition: none; }
+  .card-hover:hover { transform: none; }
+}
+
+/* ---------------------------------------------------------------- a11y */
+
+:focus-visible {
+  outline: 2px solid var(--monsoon);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Wide content (tables, the rail on small screens) scrolls inside itself
+   rather than pushing the page sideways. */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* ==================================================================
+   GLASS THEME
+   Frosted, floating surfaces over a live background. Every value here
+   reads from a CSS variable that the admin panel writes, so the look is
+   changed from the site itself rather than by editing this file.
+   ================================================================== */
+
+:root {
+  --glass-blur: 18px;
+  --glass-alpha: 0.55;          /* how solid the frosted panel is */
+  --glass-tint: 255 255 255;    /* rgb triplet the panel is tinted with */
+  --glass-border: 0.22;         /* border brightness */
+  --glass-radius: 20px;
+  --glass-float: 1;             /* 0 turns the lift + hover motion off */
+  --glass-bg-from: #0d1f1a;
+  --glass-bg-to: #16352c;
+  --glass-accent: #e0a426;
+}
+
+/* The page background the glass sits on. Without something behind it,
+   frosted glass just looks like a grey box. */
+.glass-root {
+  position: relative;
+  min-height: 100vh;
+  background: var(--glass-bg-to);
+}
+
+/* The gradient lives in its own fixed layer rather than as a fixed background
+   on <body>: fixed backgrounds are unreliable on iOS Safari and only paint the
+   first viewport, which leaves the rest of a long page bare. */
+.glass-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, color-mix(in srgb, var(--glass-accent) 26%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 88% 8%, color-mix(in srgb, var(--laterite) 30%, transparent), transparent 62%),
+    linear-gradient(160deg, var(--glass-bg-from), var(--glass-bg-to));
+}
+
+.glass {
+  background: rgb(var(--glass-tint) / var(--glass-alpha));
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border: 1px solid rgb(255 255 255 / var(--glass-border));
+  border-radius: var(--glass-radius);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 1.6)) inset,
+    0 18px 50px -20px rgb(0 0 0 / 0.55);
+}
+
+/* Panels that lift off the page — the "floating window" look. */
+.glass-float {
+  transform: translateY(calc(var(--glass-float) * -2px));
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease;
+}
+
+.glass-float:hover {
+  transform: translateY(calc(var(--glass-float) * -8px)) scale(calc(1 + var(--glass-float) * 0.006));
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 2)) inset,
+    0 32px 70px -24px rgb(0 0 0 / 0.65);
+}
+
+/* A darker pane for hero/nav areas where text must stay legible. */
+.glass-dark {
+  background: rgb(8 20 16 / calc(var(--glass-alpha) + 0.18));
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border: 1px solid rgb(255 255 255 / var(--glass-border));
+  border-radius: var(--glass-radius);
+}
+
+/* Netflix-style row: wide, snapping, scrolls sideways inside itself. */
+.glass-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 300px);
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+}
+
+.glass-rail > * {
+  scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-float,
+  .glass-float:hover {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Safari and Firefox without backdrop-filter fall back to a solid panel
+   rather than unreadable transparent text. */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-dark {
+    background: rgb(var(--glass-tint) / 0.92);
+  }
+}
+
+/* ---- the site's surfaces become glass -------------------------------
+   Rather than sprinkling .glass through every component, the existing
+   .card / .chip / field styles are re-pointed at the glass treatment, so
+   the whole site changes with the theme instead of only new screens. */
+
+.glass-root {
+  color: #eaf1ec;
+}
+
+.glass-root .card {
+  background: rgb(var(--glass-tint) / var(--glass-alpha));
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border: 1px solid rgb(255 255 255 / var(--glass-border));
+  border-radius: var(--glass-radius);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 1.6)) inset,
+    0 18px 50px -20px rgb(0 0 0 / 0.5);
+  color: #eaf1ec;
+}
+
+.glass-root .card-hover {
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease;
+}
+
+.glass-root .card-hover:hover {
+  transform: translateY(calc(var(--glass-float) * -8px));
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / calc(var(--glass-border) * 2)) inset,
+    0 32px 70px -24px rgb(0 0 0 / 0.62);
+}
+
+/* Text tokens re-tuned for a dark, translucent ground. */
+.glass-root {
+  --ink: #f2f7f4;
+  --ink-soft: #e2ece6;
+  /* Kept bright enough to clear WCAG AA on the frosted panel — muted text on
+     glass goes unreadable far sooner than it does on a solid card. */
+  --basalt: #d6e3dc;
+  --basalt-soft: #b3c5bc;
+  --line: rgb(255 255 255 / 0.16);
+  --paper: rgb(255 255 255 / 0.08);
+  /* Light, not transparent: several sections use --mist as their TEXT colour
+     on a dark ground, so blanking it here makes that text disappear. The page
+     background comes from .glass-root's gradient instead. */
+  --mist: #eef4f0;
+  --mist-deep: rgb(255 255 255 / 0.12);
+  --rail: rgb(255 255 255 / 0.5);
+  /* Dark blocks stay dark here — the gradient behind them is already dark, so
+     they become a deeper frosted pane rather than a solid slab. */
+  --panel: rgb(6 20 16 / 0.55);
+  --panel-ink: #eef4f0;
+  --surface: rgb(255 255 255 / 0.12);
+  --surface-ink: #eef4f0;
+  --header-bg: rgb(9 26 21 / 0.62);
+  --turmeric: #f0be55;
+  --monsoon: #5fc5a7;
+  --laterite: #e2734f;
+  --laterite-lift: #ef8965;
+}
+
+.glass-root .chip {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.18);
+  color: #dbe7e1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-root .chip-on {
+  background: rgb(255 255 255 / 0.92);
+  border-color: transparent;
+  color: #10261f;
+}
+
+.glass-root .field input,
+.glass-root .field select,
+.glass-root .field textarea {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.2);
+  color: #eef4f0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-root .field input::placeholder,
+.glass-root .field textarea::placeholder {
+  color: rgb(255 255 255 / 0.45);
+}
+
+.glass-root .field select option {
+  background: #16352c;
+  color: #eef4f0;
+}
+
+.glass-root .btn-secondary {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.22);
+  color: #eef4f0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-root .btn-secondary:hover {
+  background: rgb(255 255 255 / 0.18);
+  border-color: rgb(255 255 255 / 0.34);
+}
+
+.glass-root .btn-ink {
+  background: rgb(255 255 255 / 0.92);
+  color: #10261f;
+}
+.glass-root .btn-ink:hover { background: #fff; }
+
+/* Sections that used to paint themselves ink now let the background show. */
+.glass-root section[style*="var(--ink)"] {
+  background: transparent !important;
+}
+
+.glass-root table thead tr { border-color: rgb(255 255 255 / 0.16); }
+.glass-root .divide-y > * + * { border-color: rgb(255 255 255 / 0.12); }

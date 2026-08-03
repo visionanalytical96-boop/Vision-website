@@ -1,0 +1,649 @@
+// BharatStay — Maharashtra stays, restaurants and weekend trips.
+//
+// Scope note: flights, buses, trains and coupons were removed from the product.
+// What remains is what the site actually sells: stays, restaurants, packages,
+// activities and cabs, plus the partner-onboarding and admin-editing machinery.
+
+generator client {
+  // The `prisma-client` generator emits plain TypeScript with no native query
+  // engine, which is what makes this run on Cloudflare. Queries reach Postgres
+  // through the node-postgres driver adapter instead (see src/lib/db.ts).
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------- accounts
+
+enum UserRole {
+  ADMIN
+  PARTNER
+  CUSTOMER
+}
+
+model User {
+  id           String    @id @default(cuid())
+  role         UserRole  @default(CUSTOMER)
+  name         String
+  email        String?   @unique
+  phone        String?   @unique
+  // Only ever set for ADMIN accounts; PBKDF2 hash, never a plaintext password.
+  passwordHash String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  bookings Booking[]
+  reviews  Review[]
+  wishlist Wishlist[]
+
+  @@index([role])
+}
+
+/// Short-lived login codes. The code itself is stored hashed so a database
+/// dump cannot be replayed into someone's account.
+model OtpChallenge {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}
+
+// ---------------------------------------------------------------- catalogue
+
+enum StayType {
+  HOTEL
+  RESORT
+  VILLA
+  HOMESTAY
+  FARM_STAY
+}
+
+model Destination {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  name    String
+  state   String
+  tone    String
+  emoji   String
+  desc    String
+  price   Int
+  count   Int
+  lat     Float?
+  lng     Float?
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+
+  @@index([visible])
+}
+
+model Stay {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  type      StayType
+  city      String
+  area      String
+  address   String
+  star      Int      @default(3)
+  tone      String   @default("forest")
+  room      String
+  meal      String
+  amenities String[]
+
+  /// Rupees. `basePrice` is the strike-through rate, `price` is what is charged.
+  basePrice Int
+  price     Int
+  taxPct    Int @default(12)
+
+  rating      Float   @default(4.0)
+  reviewCount Int     @default(0)
+  freeCancel  Boolean @default(true)
+  payAtHotel  Boolean @default(false)
+  couple      Boolean @default(true)
+  family      Boolean @default(true)
+
+  lat     Float?
+  lng     Float?
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+
+  /// Set when the listing came in through the partner form rather than the seed.
+  applicationId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos   Photo[]
+  bookings Booking[]
+  reviews  Review[]
+  wishlist Wishlist[]
+
+  @@index([city, visible])
+  @@index([visible, price])
+}
+
+model Restaurant {
+  id      String @id @default(cuid())
+  slug    String @unique
+  name    String
+  city    String
+  area    String
+  address String
+  cuisine String
+  vegType String
+  hours   String
+  emoji   String @default("🍽️")
+  tone    String @default("saffron")
+
+  /// Typical cost for two, in rupees.
+  costForTwo Int
+  rating     Float   @default(4.0)
+  visible    Boolean @default(true)
+  sort       Int     @default(0)
+
+  lat Float?
+  lng Float?
+
+  applicationId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos Photo[]
+
+  @@index([city, visible])
+}
+
+model Package {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  dest      String
+  tone      String
+  emoji     String
+  nights    Int
+  days      Int
+  hotel     String
+  meal      String
+  transport String
+  sights    String[]
+  price     Int
+  visible   Boolean  @default(true)
+  sort      Int      @default(0)
+
+  photos   Photo[]
+  bookings Booking[]
+}
+
+model Activity {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  title    String
+  city     String
+  tone     String
+  emoji    String
+  hours    Int
+  category String
+  price    Int
+  visible  Boolean @default(true)
+  sort     Int     @default(0)
+
+  photos Photo[]
+}
+
+model Cab {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  name      String
+  icon      String
+  seats     Int
+  bags      Int
+  perKm     Int
+  allowance Int
+  category  String
+  visible   Boolean @default(true)
+  sort      Int     @default(0)
+}
+
+/// Badlapur → Karjat weekend planner content.
+model WeekendSpot {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  name    String
+  place   String
+  scene   String
+  tone    String
+  dist    String
+  tag     String
+  desc    String
+  lat     Float?
+  lng     Float?
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+
+  photos Photo[]
+}
+
+model WeekendPlan {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  title   String
+  price   Int
+  per     String
+  /// [["7:00 AM", "Badlapur se shuru"], ...]
+  steps   Json
+  visible Boolean @default(true)
+  sort    Int     @default(0)
+}
+
+// ---------------------------------------------------------------- photos
+
+/// Image bytes live in Postgres rather than on a volume so that uploads survive
+/// redeploys and behave identically in local dev. Everything is resized on the
+/// way in, so rows stay small.
+model Photo {
+  id        String   @id @default(cuid())
+  data      Bytes
+  mimeType  String
+  width     Int
+  height    Int
+  bytes     Int
+  alt       String   @default("")
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+
+  stayId        String?
+  restaurantId  String?
+  packageId     String?
+  activityId    String?
+  weekendSpotId String?
+  applicationId String?
+  riderId       String?
+
+  stay        Stay?               @relation(fields: [stayId], references: [id], onDelete: Cascade)
+  restaurant  Restaurant?         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  package     Package?            @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  activity    Activity?           @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  weekendSpot WeekendSpot?        @relation(fields: [weekendSpotId], references: [id], onDelete: Cascade)
+  application PartnerApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  rider       Rider?              @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([stayId, sort])
+  @@index([restaurantId, sort])
+  @@index([applicationId])
+}
+
+// ------------------------------------------------- partner onboarding form
+
+enum ApplicationKind {
+  STAY
+  RESTAURANT
+}
+
+enum ApplicationStatus {
+  PENDING
+  NEEDS_INFO
+  APPROVED
+  REJECTED
+}
+
+/// Filled in by a farmhouse/hotel/restaurant owner through the public link at
+/// /partner/apply. Nothing here is visible on the site until an admin approves
+/// it, at which point a Stay or Restaurant row is created from these fields.
+model PartnerApplication {
+  id     String            @id @default(cuid())
+  kind   ApplicationKind
+  status ApplicationStatus @default(PENDING)
+
+  /// Unguessable token the applicant uses to check status without an account.
+  publicToken String @unique
+
+  businessName String
+  ownerName    String
+  email        String
+  phone        String
+  city         String
+  area         String
+  address      String
+  description  String
+
+  // Stay-shaped fields
+  stayType  StayType?
+  rooms     Int?
+  maxGuests Int?
+  roomName  String?
+  mealPlan  String?
+  amenities String[] @default([])
+
+  // Restaurant-shaped fields
+  cuisine    String?
+  vegType    String?
+  hours      String?
+  costForTwo Int?
+
+  /// Asking price per night (stays). Admin can change it before or after approval.
+  price Int?
+
+  /// Filled in by the admin when rejecting or asking for more information.
+  adminNote    String?
+  reviewedAt   DateTime?
+  reviewedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos Photo[]
+
+  @@index([status, createdAt])
+}
+
+// ---------------------------------------------------------------- bookings
+
+enum BookingKind {
+  STAY
+  PACKAGE
+}
+
+enum BookingStatus {
+  PENDING
+  /// Customer says they have paid and gave a UTR; an admin has not checked yet.
+  AWAITING_VERIFICATION
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id     String        @id @default(cuid())
+  ref    String        @unique
+  kind   BookingKind
+  status BookingStatus @default(PENDING)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  guestName  String
+  guestEmail String
+  guestPhone String
+
+  stayId    String?
+  stay      Stay?    @relation(fields: [stayId], references: [id], onDelete: SetNull)
+  packageId String?
+  package   Package? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+
+  checkIn  DateTime?
+  checkOut DateTime?
+  nights   Int       @default(1)
+  guests   Int       @default(2)
+  rooms    Int       @default(1)
+
+  baseAmount  Int
+  addonAmount Int @default(0)
+  taxAmount   Int
+  totalAmount Int
+
+  gstin       String?
+  gstCompany  String?
+  paymentMode String  @default("upi")
+
+  /// The 12-digit UTR the customer reads off their UPI app. Without a payment
+  /// gateway this is the only thread tying a booking to a bank transfer, so
+  /// the admin checks it against the real statement before confirming.
+  upiRef        String?
+  upiSubmittedAt DateTime?
+  upiVerifiedAt  DateTime?
+  upiRejectedNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model Review {
+  id    String @id @default(cuid())
+  name  String
+  city  String
+  stars Int
+  kind  String
+  text  String
+  tone  String @default("forest")
+  emoji String @default("👤")
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  stayId String?
+  stay   Stay?   @relation(fields: [stayId], references: [id], onDelete: Cascade)
+
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------- site admin
+
+/// Lets the admin switch whole sections of the site on and off. A disabled
+/// service disappears from navigation, search and the sitemap.
+model ServiceToggle {
+  key     String  @id
+  label   String
+  enabled Boolean @default(true)
+  sort    Int     @default(0)
+}
+
+/// Free-form key/value site settings (brand text, hero copy, contact email,
+/// GSTIN, admin notes) so copy changes do not need a redeploy.
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actorName String
+  action    String
+  entity    String
+  entityId  String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ------------------------------------------------------- bike & auto rides
+//
+// A live ride service for the Badlapur–Karjat belt. Riders stream their
+// position from the browser's Geolocation API; matching is done server-side by
+// straight-line distance. Road routing would need a paid Directions API, so
+// distances and fares are labelled as estimates everywhere they are shown.
+
+enum VehicleType {
+  BIKE
+  EBIKE
+  AUTO
+  CAB
+  CAB_XL
+}
+
+enum RiderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model Rider {
+  id     String      @id @default(cuid())
+  status RiderStatus @default(PENDING)
+
+  name          String
+  phone         String      @unique
+  vehicleType   VehicleType
+  vehicleNumber String
+  licenceNumber String?
+  area          String
+  city          String
+
+  /// Set when an approved rider signs in; links the rider to their login.
+  userId String? @unique
+
+  /// Live position, refreshed by the rider's phone while they are online.
+  /// `lastSeenAt` is what makes "online" trustworthy — a stale heartbeat means
+  /// the rider is treated as offline no matter what the flag says.
+  online     Boolean   @default(false)
+  lat        Float?
+  lng        Float?
+  accuracyM  Float?
+  lastSeenAt DateTime?
+
+  adminNote  String?
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos Photo[]
+  rides  Ride[]
+
+  @@index([status, online])
+  @@index([online, lastSeenAt])
+}
+
+enum RideStatus {
+  REQUESTED
+  ACCEPTED
+  ARRIVED
+  ONGOING
+  COMPLETED
+  CANCELLED
+  NO_RIDER
+}
+
+model Ride {
+  id     String     @id @default(cuid())
+  ref    String     @unique
+  status RideStatus @default(REQUESTED)
+
+  vehicleType VehicleType
+
+  customerId    String?
+  customerName  String
+  customerPhone String
+
+  pickupLabel String
+  pickupLat   Float
+  pickupLng   Float
+  dropLabel   String
+  dropLat     Float
+  dropLng     Float
+
+  /// Straight-line distance. Road distance is longer; the UI says so.
+  distanceKm  Float
+  baseFare    Int
+  distanceFare Int
+  fare        Int
+
+  riderId String?
+  rider   Rider?  @relation(fields: [riderId], references: [id], onDelete: SetNull)
+
+  /// The rider currently being offered this ride, and when that offer lapses.
+  offeredToId    String?
+  offerExpiresAt DateTime?
+  /// Riders who declined or timed out, so they are not offered it again.
+  declinedBy     String[] @default([])
+
+  /// Customer reads this to the rider so a trip cannot be started by mistake.
+  startOtp String
+
+  acceptedAt  DateTime?
+  arrivedAt   DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  cancelReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([riderId, createdAt])
+  @@index([customerId, createdAt])
+  @@index([offeredToId, offerExpiresAt])
+}
+
+/// Admin-editable pricing, one row per vehicle type.
+model FareRule {
+  vehicleType VehicleType @id
+  label       String
+  baseFare    Int
+  perKm       Int
+  minFare     Int
+  /// How far away a rider can be and still be offered the ride.
+  matchRadiusKm Float   @default(6)
+  /// Passengers the vehicle seats — 1 on a bike, 3 in an auto, 4 in a cab.
+  seats         Int     @default(1)
+  enabled     Boolean @default(true)
+  updatedAt   DateTime @updatedAt
+}
+
+// ------------------------------------------------- saved stays & messages
+
+/// A stay a logged-in customer has saved. One row per person per stay, so the
+/// unique pair is what makes the heart button idempotent — a double tap
+/// toggles rather than piling up duplicates.
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  stayId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stay Stay @relation(fields: [stayId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stayId])
+  @@index([userId, createdAt])
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+/// Sent from the public contact form. Kept in the database rather than emailed
+/// because there is no outbound mail service configured — the admin inbox is
+/// the delivery mechanism.
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  body      String
+  status    MessageStatus @default(NEW)
+  createdAt DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+/// Newsletter signups from the footer. Email is unique so a repeat signup is a
+/// no-op instead of an error the visitor has to understand.
+model NewsletterSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

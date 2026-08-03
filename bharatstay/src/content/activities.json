@@ -1,0 +1,82 @@
+[
+  {
+    "id": "a0",
+    "title": "Kolad River Rafting",
+    "city": "Kolad",
+    "tone": "forest",
+    "emoji": "🚣",
+    "hrs": 3,
+    "cat": "Adventure",
+    "price": 1299
+  },
+  {
+    "id": "a1",
+    "title": "Kamshet Paragliding",
+    "city": "Kamshet",
+    "tone": "mountain",
+    "emoji": "🪂",
+    "hrs": 1,
+    "cat": "Adventure",
+    "price": 2799
+  },
+  {
+    "id": "a2",
+    "title": "Bhivpuri Waterfall Rappelling",
+    "city": "Bhivpuri",
+    "tone": "forest",
+    "emoji": "🧗",
+    "hrs": 3,
+    "cat": "Adventure",
+    "price": 999
+  },
+  {
+    "id": "a3",
+    "title": "Harishchandragad Trek",
+    "city": "Malshej Ghat",
+    "tone": "mountain",
+    "emoji": "⛰️",
+    "hrs": 8,
+    "cat": "Trek",
+    "price": 1199
+  },
+  {
+    "id": "a4",
+    "title": "Tarkarli Scuba Diving",
+    "city": "Tarkarli",
+    "tone": "ocean",
+    "emoji": "🤿",
+    "hrs": 2,
+    "cat": "Adventure",
+    "price": 2499
+  },
+  {
+    "id": "a5",
+    "title": "Ajanta–Ellora Guided Tour",
+    "city": "Aurangabad",
+    "tone": "heritage",
+    "emoji": "🛕",
+    "hrs": 6,
+    "cat": "Heritage",
+    "price": 1499
+  },
+  {
+    "id": "a6",
+    "title": "Alibaug Water Sports Combo",
+    "city": "Alibaug",
+    "tone": "ocean",
+    "emoji": "🚤",
+    "hrs": 2,
+    "cat": "Beach",
+    "price": 1099
+  },
+  {
+    "id": "a7",
+    "title": "Mumbai Heritage Walk",
+    "city": "Mumbai",
+    "tone": "royal",
+    "emoji": "🚶",
+    "hrs": 3,
+    "cat": "Heritage",
+    "price": 599
+  }
+]

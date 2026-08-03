@@ -1,0 +1,146 @@
+[
+  {
+    "id": "p0",
+    "title": "Lonavala Monsoon Weekend",
+    "dest": "Lonavala",
+    "tone": "forest",
+    "emoji": "🌧️",
+    "n": 2,
+    "d": 3,
+    "hotel": "4-Star Resort",
+    "meal": "Breakfast",
+    "transport": "Pickup Mumbai/Pune se",
+    "sights": [
+      "Bhushi Dam",
+      "Tiger Point",
+      "Lohagad Fort"
+    ],
+    "price": 5999
+  },
+  {
+    "id": "p1",
+    "title": "Mahabaleshwar–Panchgani",
+    "dest": "Mahabaleshwar",
+    "tone": "farm",
+    "emoji": "🍓",
+    "n": 3,
+    "d": 4,
+    "hotel": "4-Star",
+    "meal": "Breakfast & Dinner",
+    "transport": "AC cab sightseeing",
+    "sights": [
+      "Venna Lake",
+      "Table Land",
+      "Strawberry Farm"
+    ],
+    "price": 7499
+  },
+  {
+    "id": "p2",
+    "title": "Alibaug Beach Villa Weekend",
+    "dest": "Alibaug",
+    "tone": "ocean",
+    "emoji": "🏖️",
+    "n": 2,
+    "d": 3,
+    "hotel": "Private Villa",
+    "meal": "Cook Included",
+    "transport": "Ro-Ro ferry + cab",
+    "sights": [
+      "Kihim Beach",
+      "Kolaba Fort",
+      "Water Sports"
+    ],
+    "price": 8999
+  },
+  {
+    "id": "p3",
+    "title": "Tarkarli Scuba & Konkan",
+    "dest": "Tarkarli",
+    "tone": "ocean",
+    "emoji": "🐠",
+    "n": 3,
+    "d": 4,
+    "hotel": "Beach Homestay",
+    "meal": "Malvani Meals",
+    "transport": "Cab from Kudal stn",
+    "sights": [
+      "Scuba Diving",
+      "Sindhudurg Fort",
+      "Devbagh Beach"
+    ],
+    "price": 9999
+  },
+  {
+    "id": "p4",
+    "title": "Ajanta–Ellora Heritage",
+    "dest": "Aurangabad",
+    "tone": "heritage",
+    "emoji": "🛕",
+    "n": 2,
+    "d": 3,
+    "hotel": "4-Star",
+    "meal": "Breakfast",
+    "transport": "AC cab + guide",
+    "sights": [
+      "Ajanta Caves",
+      "Ellora Caves",
+      "Daulatabad Fort"
+    ],
+    "price": 8499
+  },
+  {
+    "id": "p5",
+    "title": "Bhandardara Lakeside Camping",
+    "dest": "Bhandardara",
+    "tone": "lake",
+    "emoji": "🏕️",
+    "n": 1,
+    "d": 2,
+    "hotel": "Lakeside Tents",
+    "meal": "All Meals + BBQ",
+    "transport": "Shared transport",
+    "sights": [
+      "Wilson Dam",
+      "Randha Falls",
+      "Stargazing"
+    ],
+    "price": 2999
+  },
+  {
+    "id": "p6",
+    "title": "Malshej Monsoon Special",
+    "dest": "Malshej Ghat",
+    "tone": "forest",
+    "emoji": "🌊",
+    "n": 1,
+    "d": 2,
+    "hotel": "Ghat Resort",
+    "meal": "All Meals",
+    "transport": "MTDC route cab",
+    "sights": [
+      "Waterfalls",
+      "Flamingo Point",
+      "Harishchandragad base"
+    ],
+    "price": 2499
+  },
+  {
+    "id": "p7",
+    "title": "Matheran Toy Train Getaway",
+    "dest": "Matheran",
+    "tone": "mountain",
+    "emoji": "🚂",
+    "n": 2,
+    "d": 3,
+    "hotel": "Heritage Hotel",
+    "meal": "All Meals",
+    "transport": "Neral toy train tickets",
+    "sights": [
+      "Panorama Point",
+      "Charlotte Lake",
+      "Echo Point"
+    ],
+    "price": 6499
+  }
+]

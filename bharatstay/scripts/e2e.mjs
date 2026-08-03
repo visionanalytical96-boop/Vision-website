@@ -139,8 +139,10 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   const anon = await browser.newContext();
   const anonPage = await anon.newPage();
   await anonPage.goto(`${BASE}/search?q=${encodeURIComponent(businessName)}`, { waitUntil: 'networkidle' });
-  const live = await visible(anonPage.getByText(businessName).first());
-  ok('approval: listing is live for a logged-out visitor', live);
+  // Must be the result card, not just the text: the search heading echoes the
+  // query back, so a plain getByText here passes even when nothing was found.
+  const card2 = anonPage.locator('a[href^="/stays/"]').filter({ hasText: businessName }).first();
+  ok('approval: listing is live for a logged-out visitor', await visible(card2));
 
   const priceShown = await visible(anonPage.getByText('₹4,200').first());
   ok('approval: submitted price carried over', priceShown);

@@ -26,6 +26,14 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Nothing here can be prerendered: the layout reads the admin-editable theme
+ * from the database on every render. Declaring it once at the root also means
+ * the build no longer needs a reachable database — a page that forgot its own
+ * `force-dynamic` used to fail the build instead of just rendering late.
+ */
+export const dynamic = 'force-dynamic';
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Read once per render so an admin theme change shows up on the next load
   // without a redeploy.

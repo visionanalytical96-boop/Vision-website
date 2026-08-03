@@ -1,7 +1,8 @@
 # BharatStay
 
 Maharashtra ke stays, restaurants aur weekend trips — Badlapur–Karjat belt se
-Konkan tak. Next.js 14 (App Router) + Postgres + Prisma.
+Konkan tak. Next.js 15 (App Router) + React 19 + Postgres + Prisma 7.
+Cloudflare Workers par chalti hai, aur kisi bhi Node host par bhi.
 
 ## Kya-kya hai
 
@@ -35,7 +36,7 @@ Konkan tak. Next.js 14 (App Router) + Postgres + Prisma.
   services **add aur delete**, stays aur restaurants
   ka full CRUD with price editing aur photo upload, service on/off toggles, site
   ka text, bookings aur customers.
-- **Auth** — admin email + password (argon2id hash, httpOnly JWT cookie),
+- **Auth** — admin email + password (PBKDF2-SHA256 hash, httpOnly JWT cookie),
   customer phone + OTP (server-side generated, hashed, 5-min expiry, 3 attempts).
 
 ## Local par chalane ke liye
@@ -63,13 +64,14 @@ JSON dobara nikaalta hai.
 
 ## Deploy
 
-Yeh ek normal Next.js app hai — kisi bhi Node hosting par chalti hai (Vercel,
-Render, Fly, apna VPS). Zaroorat sirf ek Postgres database aur in variables ki
-hai:
+Cloudflare Workers ke liye poora step-by-step: **[DEPLOY-CLOUDFLARE.md](DEPLOY-CLOUDFLARE.md)**.
+
+Yeh ek normal Next.js app bhi hai — kisi bhi Node host par chalti hai (Render,
+Fly, apna VPS). Zaroorat sirf ek Postgres database aur in variables ki hai:
 
 | Variable | Kya hai |
 |---|---|
-| `DATABASE_URL` | Postgres ka connection string |
+| `DATABASE_URL` | Postgres ka connection string. Production mein **pooled** endpoint hona chahiye. |
 | `JWT_SECRET` | Session cookie sign karta hai. `openssl rand -base64 32` |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Pehle deploy par admin account banta hai. Password kam se kam 12 akshar ka — `openssl rand -base64 24` se banaiye. Seed kamzor ya jaana-pehchana password reject kar deta hai. |
 | `NEXT_PUBLIC_APP_URL` | Public URL |
@@ -81,8 +83,9 @@ settings** se set hota hai, aur wahi customer ko dikhta hai.
 Build aur release commands:
 
 ```bash
-pnpm install --frozen-lockfile && pnpm build   # build
-pnpm release && pnpm start                     # migrate + seed, phir chalu
+pnpm install --frozen-lockfile
+pnpm cf:build && pnpm cf:deploy     # Cloudflare
+pnpm build:node && pnpm release && pnpm start   # Node host
 ```
 
 ## Abhi kya asli nahi hai

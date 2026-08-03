@@ -1,7 +1,7 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
-import type { UserRole } from '@prisma/client';
+import type { UserRole } from '@/generated/prisma/client';
 
 const COOKIE = 'bs_session';
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -30,7 +30,7 @@ export async function createSession(session: Session): Promise<void> {
     .setExpirationTime(`${MAX_AGE_SECONDS}s`)
     .sign(secret());
 
-  cookies().set(COOKIE, token, {
+  (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
@@ -40,7 +40,7 @@ export async function createSession(session: Session): Promise<void> {
 }
 
 export async function getSession(): Promise<Session | null> {
-  const token = cookies().get(COOKIE)?.value;
+  const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret());
@@ -58,6 +58,6 @@ export async function getSession(): Promise<Session | null> {
   }
 }
 
-export function destroySession(): void {
-  cookies().delete(COOKIE);
+export async function destroySession(): Promise<void> {
+  (await cookies()).delete(COOKIE);
 }

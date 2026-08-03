@@ -14,3 +14,11 @@ next-env.d.ts
 
 # uploaded photo pack — imported into the database by pnpm import-photos
 /photos/
+
+# Cloudflare build output and local secrets
+.open-next/
+.wrangler/
+.dev.vars
+
+# Prisma generates this on every build
+src/generated/

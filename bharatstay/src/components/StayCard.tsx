@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Photo, Stay } from '@prisma/client';
+import type { Photo, Stay } from '@/generated/prisma/client';
 import { Cover } from './Cover';
 import { INR, stayTypeLabel } from '@/lib/format';
 

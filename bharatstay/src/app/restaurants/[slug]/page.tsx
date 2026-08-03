@@ -12,13 +12,15 @@ import { getSettings } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params: paramsPromise }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await paramsPromise;
   const r = await db.restaurant.findUnique({ where: { slug: params.slug }, select: { name: true, city: true, cuisine: true } });
   if (!r) return { title: 'Restaurant not found' };
   return { title: `${r.name}, ${r.city}`, description: `${r.name} — ${r.cuisine}, ${r.city}, Maharashtra.` };
 }
 
-export default async function RestaurantDetailPage({ params }: { params: { slug: string } }) {
+export default async function RestaurantDetailPage({ params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+  const params = await paramsPromise;
   const r = await db.restaurant.findUnique({
     where: { slug: params.slug },
     include: { photos: { select: { id: true }, orderBy: { sort: 'asc' } } },

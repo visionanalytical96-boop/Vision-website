@@ -5,12 +5,16 @@
 // activities and cabs, plus the partner-onboarding and admin-editing machinery.
 
 generator client {
-  provider = "prisma-client-js"
+  // The `prisma-client` generator emits plain TypeScript with no native query
+  // engine, which is what makes this run on Cloudflare. Queries reach Postgres
+  // through the node-postgres driver adapter instead (see src/lib/db.ts).
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "nodejs"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ---------------------------------------------------------------- accounts
@@ -27,7 +31,7 @@ model User {
   name         String
   email        String?   @unique
   phone        String?   @unique
-  // Only ever set for ADMIN accounts; argon2id hash, never a plaintext password.
+  // Only ever set for ADMIN accounts; PBKDF2 hash, never a plaintext password.
   passwordHash String?
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())

@@ -1,5 +1,6 @@
 'use client';
 
+import { resizeFormPhotos } from '@/lib/resize-image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { INR } from '@/lib/format';
@@ -70,6 +71,7 @@ export function RestaurantTable({ rows }: { rows: RestaurantRow[] }) {
               e.preventDefault();
               const data = new FormData(e.currentTarget);
               if (current) data.set('id', current.id);
+              await resizeFormPhotos(data);
               const res = await fetch('/api/admin/restaurants', { method: 'POST', body: data });
               if (res.ok) {
                 router.refresh();

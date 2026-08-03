@@ -11,7 +11,8 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: 'Reject',
 };
 
-export default async function AdminApplicationsPage({ searchParams }: { searchParams: { status?: string } }) {
+export default async function AdminApplicationsPage({ searchParams: searchParamsPromise }: { searchParams: Promise<{ status?: string }> }) {
+  const searchParams = await searchParamsPromise;
   const filter = searchParams.status ?? 'open';
   const where =
     filter === 'all'

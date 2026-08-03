@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -39,9 +40,9 @@ export default function FindApplicationPage() {
         </button>
       </form>
 
-      <a href="/" className="mt-10 text-[13px]" style={{ color: 'var(--basalt-soft)' }}>
+      <Link href="/" className="mt-10 text-[13px]" style={{ color: 'var(--basalt-soft)' }}>
         ← Home
-      </a>
+      </Link>
     </main>
   );
 }

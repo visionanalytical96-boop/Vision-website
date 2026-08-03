@@ -28,10 +28,11 @@ const SORTS = [
 ] as const;
 
 export default async function StaysPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { city?: string; type?: string; sort?: string; max?: string };
+  searchParams: Promise<{ city?: string; type?: string; sort?: string; max?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   const { city, type, sort = 'price', max } = searchParams;
   const maxPrice = max ? Number(max) : undefined;
 

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getNavLinks, getSettings } from '@/lib/site';
+import { Logo } from './Logo';
 
 export async function SiteFooter() {
   const [links, settings] = await Promise.all([getNavLinks(), getSettings()]);
@@ -9,9 +10,12 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="display text-[24px]">
-              {settings.brandA}
-              <span style={{ color: 'var(--turmeric)' }}>{settings.brandB}</span>
+            <div className="inline-flex items-center gap-3">
+              <Logo size={38} />
+              <span className="display text-[24px]">
+                {settings.brandA}
+                <span style={{ color: 'var(--turmeric)' }}>{settings.brandB}</span>
+              </span>
             </div>
             <p className="mt-3 max-w-[34ch] text-[13.5px] leading-relaxed opacity-70">{settings.tagline}</p>
           </div>

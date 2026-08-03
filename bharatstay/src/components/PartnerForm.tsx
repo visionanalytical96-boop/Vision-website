@@ -1,5 +1,6 @@
 'use client';
 
+import { resizeFormPhotos } from '@/lib/resize-image';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
 import { Rail } from './Rail';
@@ -97,6 +98,7 @@ export function PartnerForm() {
     amenities.forEach((a) => data.append('amenities', a));
     data.delete('photos');
     files.forEach((f) => data.append('photos', f));
+    await resizeFormPhotos(data);
 
     try {
       const res = await fetch('/api/partner/apply', { method: 'POST', body: data });

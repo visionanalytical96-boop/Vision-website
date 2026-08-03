@@ -8,10 +8,11 @@ import { getSession } from '@/lib/auth/session';
 export const dynamic = 'force-dynamic';
 
 export default async function BookPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { stay?: string; in?: string; out?: string; guests?: string; rooms?: string };
+  searchParams: Promise<{ stay?: string; in?: string; out?: string; guests?: string; rooms?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   if (!searchParams.stay) redirect('/stays');
 
   const stay = await db.stay.findUnique({ where: { slug: searchParams.stay } });

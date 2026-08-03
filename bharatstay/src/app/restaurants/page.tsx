@@ -17,10 +17,11 @@ export const metadata: Metadata = {
 const VEG = ['Pure Veg', 'Veg & Non-veg', 'Non-veg Special', 'Seafood Special'];
 
 export default async function RestaurantsPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { city?: string; veg?: string };
+  searchParams: Promise<{ city?: string; veg?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   const enabled = await getEnabledServices();
   if (!enabled.has('restaurants')) notFound();
 

@@ -1,6 +1,6 @@
 import 'server-only';
 import { randomInt } from 'node:crypto';
-import type { VehicleType } from '@prisma/client';
+import type { VehicleType } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 
 /** A rider whose heartbeat is older than this is treated as offline. */

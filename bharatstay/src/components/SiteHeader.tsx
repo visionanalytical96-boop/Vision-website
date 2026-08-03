@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getNavLinks, getSettings } from '@/lib/site';
 import { getSession } from '@/lib/auth/session';
 import { LogoutButton } from './LogoutButton';
+import { LogoWordmark } from './Logo';
 
 export async function SiteHeader() {
   const [links, settings, session] = await Promise.all([getNavLinks(), getSettings(), getSession()]);
@@ -12,9 +13,8 @@ export async function SiteHeader() {
       style={{ background: 'var(--header-bg)' }}
     >
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3">
-        <Link href="/" className="display text-[21px] shrink-0" style={{ color: 'var(--ink)' }}>
-          {settings.brandA}
-          <span style={{ color: 'var(--laterite)' }}>{settings.brandB}</span>
+        <Link href="/" className="shrink-0" style={{ color: 'var(--ink)' }} aria-label={`${settings.brandA}${settings.brandB} — home`}>
+          <LogoWordmark brandA={settings.brandA} brandB={settings.brandB} />
         </Link>
 
         <nav className="scroll-x ml-2 hidden flex-1 md:block">

@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic';
  * once the ride is accepted — before that the customer has no business
  * holding a rider's name and number.
  */
-export async function GET(_request: Request, { params }: { params: { ref: string } }) {
+export async function GET(_request: Request, { params: paramsPromise }: { params: Promise<{ ref: string }> }) {
+  const params = await paramsPromise;
   await expireStaleOffers();
 
   const ride = await db.ride.findUnique({

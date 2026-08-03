@@ -1,5 +1,6 @@
 'use client';
 
+import { resizeFormPhotos } from '@/lib/resize-image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -52,6 +53,7 @@ export function StayEditor({ stay, onClose }: { stay: StayRow | null; onClose: (
           data.delete('amenities');
           amenities.forEach((a) => data.append('amenities', a));
 
+          await resizeFormPhotos(data);
           const res = await fetch('/api/admin/stays', { method: 'POST', body: data });
           const json = await res.json().catch(() => ({}));
           setBusy(false);

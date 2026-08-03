@@ -1,7 +1,22 @@
 import 'server-only';
-import { randomInt } from 'node:crypto';
-import { hash, verify } from '@node-rs/argon2';
+import { hashSecret, verifySecret } from './hash';
 import { db } from '@/lib/db';
+
+/**
+ * Six random digits from WebCrypto, which every runtime has — `node:crypto`
+ * is only partly available on Cloudflare. Values at the top of the 32-bit
+ * range are rejected rather than folded in, so no code is likelier than another.
+ */
+function sixDigitCode(): string {
+  const limit = Math.floor(2 ** 32 / 1_000_000) * 1_000_000;
+  const buf = new Uint32Array(1);
+  let n: number;
+  do {
+    crypto.getRandomValues(buf);
+    n = buf[0] ?? 0;
+  } while (n >= limit);
+  return String(n % 1_000_000).padStart(6, '0');
+}
 
 const TTL_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
@@ -26,12 +41,12 @@ export async function sendOtp(rawPhone: string): Promise<SendResult> {
     return { ok: false, error: 'Bahut saare OTP bhej diye. Ek ghante baad dobara koshish karein.' };
   }
 
-  const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+  const code = sixDigitCode();
   const expiresAt = new Date(Date.now() + TTL_MS);
 
   // Any earlier code for this number stops working the moment a new one is sent.
   await db.otpChallenge.updateMany({ where: { phone, consumed: false }, data: { consumed: true } });
-  await db.otpChallenge.create({ data: { phone, codeHash: await hash(code), expiresAt } });
+  await db.otpChallenge.create({ data: { phone, codeHash: await hashSecret(code), expiresAt } });
 
   const delivery = await deliverSms(phone, code);
   if (delivery === 'failed') return { ok: false, error: 'OTP bhejne mein dikkat hui — dobara koshish karein' };
@@ -59,7 +74,7 @@ export async function verifyOtp(rawPhone: string, rawCode: string): Promise<Veri
     return { ok: false, error: 'OTP expire ho gaya — naya OTP bhejiye' };
   }
 
-  if (await verify(challenge.codeHash, code)) {
+  if (await verifySecret(challenge.codeHash, code)) {
     await db.otpChallenge.update({ where: { id: challenge.id }, data: { consumed: true } });
     return { ok: true, phone };
   }

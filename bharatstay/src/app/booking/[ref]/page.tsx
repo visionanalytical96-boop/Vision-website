@@ -12,7 +12,8 @@ import { upiConfigured, upiPayLink, upiQrDataUrl } from '@/lib/upi';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Booking voucher', robots: { index: false } };
 
-export default async function VoucherPage({ params }: { params: { ref: string } }) {
+export default async function VoucherPage({ params: paramsPromise }: { params: Promise<{ ref: string }> }) {
+  const params = await paramsPromise;
   const [booking, settings] = await Promise.all([
     db.booking.findUnique({ where: { ref: params.ref }, include: { stay: true } }),
     getSettings(),

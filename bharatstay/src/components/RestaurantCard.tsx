@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Photo, Restaurant } from '@prisma/client';
+import type { Photo, Restaurant } from '@/generated/prisma/client';
 import { Cover } from './Cover';
 import { INR } from '@/lib/format';
 

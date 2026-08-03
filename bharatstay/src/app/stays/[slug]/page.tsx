@@ -13,7 +13,8 @@ import { BookingBox } from '@/components/BookingBox';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params: paramsPromise }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await paramsPromise;
   const stay = await db.stay.findUnique({ where: { slug: params.slug }, select: { name: true, city: true, area: true } });
   if (!stay) return { title: 'Stay not found' };
   return {
@@ -22,7 +23,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function StayDetailPage({ params }: { params: { slug: string } }) {
+export default async function StayDetailPage({ params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+  const params = await paramsPromise;
   const stay = await db.stay.findUnique({
     where: { slug: params.slug },
     include: { photos: { select: { id: true }, orderBy: { sort: 'asc' } } },

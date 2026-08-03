@@ -13,12 +13,14 @@ export const metadata: Metadata = { title: 'Application status', robots: { index
 const FLOW = ['Bheja gaya', 'Review mein', 'Faisla'];
 
 export default async function PartnerStatusPage({
-  params,
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { token: string };
-  searchParams: { new?: string };
+  params: Promise<{ token: string }>;
+  searchParams: Promise<{ new?: string }>;
 }) {
+  const params = await paramsPromise;
+  const searchParams = await searchParamsPromise;
   const app = await db.partnerApplication.findUnique({
     where: { publicToken: params.token },
     include: { photos: { select: { id: true }, orderBy: { sort: 'asc' } } },

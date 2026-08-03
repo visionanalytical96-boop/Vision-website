@@ -11,7 +11,8 @@ import { RestaurantCard } from '@/components/RestaurantCard';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Search', robots: { index: false } };
 
-export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
+export default async function SearchPage({ searchParams: searchParamsPromise }: { searchParams: Promise<{ q?: string }> }) {
+  const searchParams = await searchParamsPromise;
   const q = (searchParams.q ?? '').trim();
   const enabled = await getEnabledServices();
 

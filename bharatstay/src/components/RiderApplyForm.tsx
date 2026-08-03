@@ -1,5 +1,6 @@
 'use client';
 
+import { resizeFormPhotos } from '@/lib/resize-image';
 import { useState } from 'react';
 
 const VEHICLES = [
@@ -42,6 +43,7 @@ export function RiderApplyForm() {
         setError(null);
         const data = new FormData(e.currentTarget);
         data.set('vehicleType', vehicleType);
+        await resizeFormPhotos(data);
         const res = await fetch('/api/rider/apply', { method: 'POST', body: data });
         const json = await res.json().catch(() => ({}));
         setBusy(false);

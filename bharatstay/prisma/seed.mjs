@@ -5,13 +5,33 @@
  * existing database refreshes the seed content without touching anything the
  * admin has since added through the panel.
  */
-import { PrismaClient } from '@prisma/client';
-import { hash } from '@node-rs/argon2';
+import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
+/**
+ * Same PBKDF2 format as src/lib/auth/hash.ts — this file is plain .mjs and
+ * cannot import the TypeScript module. If one side changes, the e2e check
+ * "admin: correct password accepted" fails immediately.
+ */
+const PBKDF2_ITERATIONS = 600_000;
+
+async function hash(secret) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), 'PBKDF2', false, [
+    'deriveBits',
+  ]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: PBKDF2_ITERATIONS },
+    key,
+    256,
+  );
+  const b64 = (b) => Buffer.from(b).toString('base64');
+  return `pbkdf2-sha256$${PBKDF2_ITERATIONS}$${b64(salt)}$${b64(new Uint8Array(bits))}`;
+}
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const load = (f) => JSON.parse(readFileSync(resolve(root, 'src/content', f), 'utf8'));
 

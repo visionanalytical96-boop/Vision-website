@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { verify } from '@node-rs/argon2';
+import { DUMMY_HASH, isLegacyHash, verifySecret } from '@/lib/auth/hash';
 import { createSession } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 
@@ -19,14 +19,20 @@ export async function POST(request: Request) {
   // be told apart from a wrong password.
   const invalid = NextResponse.json({ error: 'Galat email ya password' }, { status: 401 });
   if (!user?.passwordHash || user.role !== 'ADMIN') {
-    await verify(
-      '$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHR2YWx1ZQ$8Kc0YvJXBmYUOJcHkPBhTAOWLmY0Zk5aVXBqSjNwbXM',
-      parsed.data.password,
-    ).catch(() => false);
+    await verifySecret(DUMMY_HASH, parsed.data.password);
     return invalid;
   }
 
-  if (!(await verify(user.passwordHash, parsed.data.password).catch(() => false))) return invalid;
+  // A password stored by the old argon2 build cannot be checked in this
+  // runtime. Say so plainly instead of pretending the password is wrong.
+  if (isLegacyHash(user.passwordHash)) {
+    return NextResponse.json(
+      { error: 'Password purane format mein hai — `pnpm db:seed` chalakar admin dobara banaiye' },
+      { status: 409 },
+    );
+  }
+
+  if (!(await verifySecret(user.passwordHash, parsed.data.password))) return invalid;
 
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession({ userId: user.id, role: user.role, name: user.name, email: user.email ?? undefined });

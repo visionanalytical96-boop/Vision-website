@@ -9,7 +9,9 @@ import { db } from '@/lib/db';
  */
 export const THEME_FIELDS = [
   { key: 'glassBlur', css: '--glass-blur', label: 'Blur', hint: 'Kitna dhundhla — zyada matlab zyada frosted', unit: 'px', type: 'range', min: 0, max: 40, step: 1, fallback: '18' },
-  { key: 'glassAlpha', css: '--glass-alpha', label: 'Transparency', hint: '0 = poori tarah paardarshi, 1 = solid', unit: '', type: 'range', min: 0.1, max: 0.95, step: 0.05, fallback: '0.55' },
+  // Low by default: a white tint at high alpha turns the panel into a pale slab
+  // and the light text on it stops being readable.
+  { key: 'glassAlpha', css: '--glass-alpha', label: 'Transparency', hint: '0 = poori tarah paardarshi, 1 = solid', unit: '', type: 'range', min: 0.05, max: 0.95, step: 0.05, fallback: '0.15' },
   { key: 'glassBorder', css: '--glass-border', label: 'Border shine', hint: 'Kinare ki chamak', unit: '', type: 'range', min: 0, max: 0.6, step: 0.02, fallback: '0.22' },
   { key: 'glassRadius', css: '--glass-radius', label: 'Corner round', hint: 'Kone kitne gol', unit: 'px', type: 'range', min: 0, max: 40, step: 2, fallback: '20' },
   { key: 'glassFloat', css: '--glass-float', label: 'Floating', hint: '0 = bilkul flat, 1 = pura floating', unit: '', type: 'range', min: 0, max: 1.6, step: 0.1, fallback: '1' },

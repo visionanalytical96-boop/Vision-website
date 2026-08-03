@@ -5,7 +5,7 @@ export async function SiteFooter() {
   const [links, settings] = await Promise.all([getNavLinks(), getSettings()]);
 
   return (
-    <footer className="mt-20 border-t" style={{ background: 'var(--ink)', color: 'var(--mist)' }}>
+    <footer className="mt-20 border-t" style={{ background: 'var(--panel)', color: 'var(--panel-ink)' }}>
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>

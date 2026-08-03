@@ -57,7 +57,7 @@ export default async function HomePage() {
 
       <main>
         {/* ---------------------------------------------------------- hero */}
-        <section style={{ background: 'var(--ink)', color: 'var(--mist)' }}>
+        <section style={{ background: 'var(--panel)', color: 'var(--panel-ink)' }}>
           <div className="mx-auto max-w-6xl px-5 pb-14 pt-16 sm:pt-20">
             <p className="eyebrow" style={{ color: 'color-mix(in srgb, var(--mist) 55%, transparent)' }}>
               Badlapur · Karjat · Lonavala · Konkan
@@ -184,7 +184,7 @@ export default async function HomePage() {
           <section className="mx-auto mt-20 max-w-6xl px-5">
             <div
               className="overflow-hidden rounded-2xl p-8 sm:p-12"
-              style={{ background: 'var(--ink)', color: 'var(--mist)' }}
+              style={{ background: 'var(--panel)', color: 'var(--panel-ink)' }}
             >
               <p className="eyebrow" style={{ color: 'color-mix(in srgb, var(--mist) 50%, transparent)' }}>
                 Weekend planner

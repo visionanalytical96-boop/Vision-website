@@ -71,7 +71,7 @@ export default async function VoucherPage({ params }: { params: { ref: string } 
         )}
 
         <div className="card mt-7 overflow-hidden">
-          <div className="border-b p-6" style={{ background: 'var(--ink)', color: 'var(--mist)' }}>
+          <div className="border-b p-6" style={{ background: 'var(--panel)', color: 'var(--panel-ink)' }}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="eyebrow" style={{ color: 'color-mix(in srgb, var(--mist) 55%, transparent)' }}>

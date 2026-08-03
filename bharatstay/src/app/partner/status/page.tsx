@@ -32,7 +32,7 @@ export default function FindApplicationPage() {
           onChange={(e) => setToken(e.target.value)}
           placeholder="Application code ya poora link"
           className="flex-1 rounded-xl border px-4 py-3 text-[15px] outline-none"
-          style={{ background: 'var(--paper)', borderColor: 'var(--line)', color: 'var(--ink)' }}
+          style={{ background: 'var(--surface)', borderColor: 'var(--line)', color: 'var(--surface-ink)' }}
         />
         <button className="btn btn-primary shrink-0" type="submit">
           Kholo

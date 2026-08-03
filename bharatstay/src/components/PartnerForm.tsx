@@ -283,7 +283,7 @@ export function PartnerForm() {
                   <button
                     type="button"
                     className="absolute right-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                    style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+                    style={{ background: 'var(--surface)', color: 'var(--surface-ink)' }}
                     onClick={() => setFiles((prev) => prev.filter((_, x) => x !== i))}
                   >
                     Hatao

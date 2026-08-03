@@ -9,7 +9,7 @@ export async function SiteHeader() {
   return (
     <header
       className="sticky top-0 z-40 border-b backdrop-blur"
-      style={{ background: 'color-mix(in srgb, var(--mist) 88%, transparent)' }}
+      style={{ background: 'var(--header-bg)' }}
     >
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3">
         <Link href="/" className="display text-[21px] shrink-0" style={{ color: 'var(--ink)' }}>

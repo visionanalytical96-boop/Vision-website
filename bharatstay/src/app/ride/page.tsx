@@ -29,7 +29,7 @@ export default async function RidePage() {
     <>
       <SiteHeader />
       <main>
-        <section style={{ background: 'var(--ink)', color: 'var(--mist)' }}>
+        <section style={{ background: 'var(--panel)', color: 'var(--panel-ink)' }}>
           <div className="mx-auto max-w-4xl px-5 pb-10 pt-14">
             <p className="eyebrow" style={{ color: 'color-mix(in srgb, var(--mist) 55%, transparent)' }}>
               Badlapur → Karjat belt

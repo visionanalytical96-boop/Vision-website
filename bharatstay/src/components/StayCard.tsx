@@ -14,7 +14,7 @@ export function StayCard({ stay, index = 0 }: { stay: StayWithPhotos; index?: nu
         <Cover photoId={stay.photos[0]?.id} tone={stay.tone} alt={stay.name} seed={index} />
         <span
           className="absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-          style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+          style={{ background: 'var(--surface)', color: 'var(--surface-ink)' }}
         >
           {stayTypeLabel(stay.type)}
         </span>

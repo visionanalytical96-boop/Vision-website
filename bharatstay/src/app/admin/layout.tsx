@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen">
-      <header className="border-b" style={{ background: 'var(--ink)', color: 'var(--mist)' }}>
+      <header className="border-b" style={{ background: 'var(--panel)', color: 'var(--panel-ink)' }}>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-5 py-3">
           <Link href="/admin" className="display text-[20px]">
             Bharat<span style={{ color: 'var(--turmeric)' }}>Stay</span>

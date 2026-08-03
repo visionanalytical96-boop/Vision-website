@@ -250,7 +250,7 @@ export function RiderConsole({ name, vehicleNumber, mapsKey }: { name: string; v
                   inputMode="numeric"
                   placeholder="Customer ka 4-digit OTP"
                   className="flex-1 rounded-lg border px-4 py-2.5 text-[15px] outline-none"
-                  style={{ background: 'var(--paper)', borderColor: 'var(--line)', color: 'var(--ink)', letterSpacing: '0.3em' }}
+                  style={{ background: 'var(--surface)', borderColor: 'var(--line)', color: 'var(--surface-ink)', letterSpacing: '0.3em' }}
                 />
                 <button className="btn btn-primary" disabled={busy || otp.length !== 4} onClick={() => trip('start', { otp })}>
                   Trip shuru

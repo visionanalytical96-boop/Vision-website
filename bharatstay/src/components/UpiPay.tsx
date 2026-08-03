@@ -137,7 +137,7 @@ export function UpiPay({
             placeholder="123456789012"
             required
             className="flex-1 rounded-lg border px-4 py-2.5 text-[15px] outline-none"
-            style={{ background: 'var(--paper)', borderColor: 'var(--line)', color: 'var(--ink)', minWidth: '200px', letterSpacing: '0.1em' }}
+            style={{ background: 'var(--surface)', borderColor: 'var(--line)', color: 'var(--surface-ink)', minWidth: '200px', letterSpacing: '0.1em' }}
           />
           <button className="btn btn-primary" disabled={busy || utr.length !== 12}>
             {busy ? 'Bhej rahe hain…' : 'Bhej dijiye'}

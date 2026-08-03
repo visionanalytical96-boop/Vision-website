@@ -38,7 +38,7 @@ export function StayTable({ stays }: { stays: StayRow[] }) {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Naam, sheher ya area se dhoondo"
           className="flex-1 rounded-lg border px-4 py-2.5 text-[14px] outline-none"
-          style={{ background: 'var(--paper)', borderColor: 'var(--line)', color: 'var(--ink)', minWidth: '220px' }}
+          style={{ background: 'var(--surface)', borderColor: 'var(--line)', color: 'var(--surface-ink)', minWidth: '220px' }}
         />
         <button
           className="btn btn-primary btn-sm"

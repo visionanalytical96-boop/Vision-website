@@ -21,6 +21,15 @@
   --basalt-soft: #6b7b74;
   --line: #cdd7cf;
 
+  /* Semantic surfaces. These exist because --ink is a *text* colour that the
+     glass theme flips to near-white; anything using it as a background would
+     turn white-on-white. Use these for backgrounds instead. */
+  --panel: var(--ink);        /* dark block: footers, headers, hero bands */
+  --panel-ink: var(--mist);
+  --surface: var(--paper);    /* inputs and pills sitting on top of anything */
+  --surface-ink: var(--ink);
+  --header-bg: color-mix(in srgb, var(--mist) 88%, transparent);
+
   --rail: var(--ink);
   --radius: 14px;
   --shadow-card: 0 1px 2px rgb(16 38 31 / 0.06), 0 8px 24px -12px rgb(16 38 31 / 0.18);
@@ -423,6 +432,13 @@ body {
   --mist: #eef4f0;
   --mist-deep: rgb(255 255 255 / 0.12);
   --rail: rgb(255 255 255 / 0.5);
+  /* Dark blocks stay dark here — the gradient behind them is already dark, so
+     they become a deeper frosted pane rather than a solid slab. */
+  --panel: rgb(6 20 16 / 0.55);
+  --panel-ink: #eef4f0;
+  --surface: rgb(255 255 255 / 0.12);
+  --surface-ink: #eef4f0;
+  --header-bg: rgb(9 26 21 / 0.62);
   --turmeric: #f0be55;
   --monsoon: #5fc5a7;
   --laterite: #e2734f;

@@ -34,7 +34,7 @@ export default async function WeekendPage() {
     <>
       <SiteHeader />
       <main>
-        <section style={{ background: 'var(--ink)', color: 'var(--mist)' }}>
+        <section style={{ background: 'var(--panel)', color: 'var(--panel-ink)' }}>
           <div className="mx-auto max-w-6xl px-5 pb-12 pt-14">
             <p className="eyebrow" style={{ color: 'color-mix(in srgb, var(--mist) 55%, transparent)' }}>
               Weekend planner

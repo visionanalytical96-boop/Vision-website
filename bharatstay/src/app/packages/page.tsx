@@ -36,7 +36,7 @@ export default async function PackagesPage() {
                 <Scene tone={p.tone} seed={i + 1} />
                 <span
                   className="data absolute right-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-medium"
-                  style={{ background: 'var(--paper)', color: 'var(--ink)' }}
+                  style={{ background: 'var(--surface)', color: 'var(--surface-ink)' }}
                 >
                   {p.nights}N / {p.days}D
                 </span>

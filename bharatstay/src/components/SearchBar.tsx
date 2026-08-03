@@ -26,7 +26,7 @@ export function SearchBar({ defaultValue = '', autoFocus = false }: { defaultVal
         onChange={(e) => setQ(e.target.value)}
         placeholder="Badlapur farmhouse, Karjat villa, misal near me…"
         className="flex-1 rounded-xl border px-4 py-3 text-[15px] outline-none transition-shadow focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--monsoon)_18%,transparent)]"
-        style={{ background: 'var(--paper)', borderColor: 'var(--line)', color: 'var(--ink)' }}
+        style={{ background: 'var(--surface)', borderColor: 'var(--line)', color: 'var(--surface-ink)' }}
       />
       <button type="submit" className="btn btn-primary shrink-0">
         Search

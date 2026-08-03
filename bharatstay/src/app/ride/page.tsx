@@ -59,7 +59,6 @@ export default async function RidePage() {
             }))}
             defaultName={session?.name ?? ''}
             defaultPhone={session?.phone ?? ''}
-            mapsKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}
           />
 
           <div className="card mt-10 p-6">

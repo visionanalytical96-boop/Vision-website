@@ -6,7 +6,11 @@ export type MapPin = {
   lat: number;
   lng: number;
   label: string;
-  kind: 'pickup' | 'drop' | 'rider' | 'me';
+  kind: 'pickup' | 'drop' | 'rider' | 'me' | 'place';
+  /** Link shown inside the pin's popup — used by listing maps. */
+  href?: string;
+  /** How many listings this pin stands for; scales the dot. */
+  weight?: number;
 };
 
 const STYLE: Record<MapPin['kind'], { fill: string; r: number }> = {
@@ -14,13 +18,14 @@ const STYLE: Record<MapPin['kind'], { fill: string; r: number }> = {
   drop: { fill: 'var(--laterite)', r: 8 },
   rider: { fill: 'var(--turmeric)', r: 10 },
   me: { fill: 'var(--monsoon)', r: 7 },
+  place: { fill: 'var(--laterite)', r: 7 },
 };
 
 /**
  * Live map of the Badlapur–Karjat area, drawn from real coordinates. It is our
  * own SVG rather than an embedded provider map: no API key needed, and it
  * renders identically offline. When a Google Maps key is configured the
- * GoogleMap component takes over and this becomes the fallback.
+ * LiveMap draws the real OpenStreetMap; this is its offline fallback.
  */
 export function BeltMap({ pins, className = '' }: { pins: MapPin[]; className?: string }) {
   // Reference points so a pin has something to sit against.

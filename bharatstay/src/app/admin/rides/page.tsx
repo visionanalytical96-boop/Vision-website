@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { INR } from '@/lib/format';
 import { VEHICLE_EMOJI, VEHICLE_LABEL, onlineWhere } from '@/lib/rides';
-import { GoogleMap } from '@/components/GoogleMap';
+import { LiveMap } from '@/components/LiveMap';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +29,7 @@ export default async function AdminRidesPage() {
 
       {pins.length > 0 && (
         <div className="card mt-6 p-4">
-          <GoogleMap apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY} pins={pins} height={420} />
+          <LiveMap pins={pins} height={420} />
           <p className="mt-3 text-[12.5px]" style={{ color: 'var(--basalt-soft)' }}>
             Peela = online rider, hara = chalu ride ka pickup. Har 30 second mein page refresh karke taaza dekh sakte hain.
           </p>

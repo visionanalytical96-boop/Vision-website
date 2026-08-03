@@ -24,6 +24,19 @@ if (!ADMIN.password) {
   process.exit(1);
 }
 
+/**
+ * A 1x1 PNG stands in for OpenStreetMap tiles. The suite must not depend on a
+ * live tile server — that would make it fail for network reasons, not code ones.
+ */
+const TILE_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+const stubTiles = (ctx) =>
+  ctx.route('**tile.openstreetmap.org/**', (r) =>
+    r.fulfill({ status: 200, contentType: 'image/png', body: TILE_PNG }),
+  );
+
 let pass = 0;
 let fail = 0;
 /** Waits for a locator instead of sampling it once, so a slow render is not a failure. */
@@ -246,6 +259,55 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   await ctx.close();
 }
 
+// ------------------------------------------------------- openstreetmap
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await stubTiles(ctx);
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/map`, { waitUntil: 'domcontentloaded' });
+
+  ok('map: OpenStreetMap tiles render', await visible(page.locator('img.leaflet-tile-loaded').first()));
+
+  // Required by OSM's licence — a missing credit is a licence breach, not a nit.
+  const credit = page.locator('.leaflet-control-attribution');
+  ok('map: OpenStreetMap credit is shown', await visible(credit));
+  ok(
+    'map: credit names OpenStreetMap',
+    (await credit.innerText()).includes('OpenStreetMap'),
+    await credit.innerText(),
+  );
+
+  ok('map: city pins drawn', (await page.locator('path.leaflet-interactive').count()) > 0);
+
+  // A pin has to lead somewhere — that is the whole point of the map page.
+  // Forced because neighbouring city pins overlap at this zoom.
+  await page.locator('path.leaflet-interactive').first().click({ force: true });
+  // Scoped to the popup body — `.leaflet-popup a` would also match its close button.
+  ok('map: pin popup links to that city', await visible(page.locator('.leaflet-popup-content a')));
+  await ctx.close();
+
+  // Stays detail page carries its own map.
+  const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await stubTiles(ctx2);
+  const p2 = await ctx2.newPage();
+  await p2.goto(`${BASE}/stays/kondeshwar-greens-farm-stay-badlapur`, { waitUntil: 'domcontentloaded' });
+  ok('map: stay page shows the property on a map', await visible(p2.locator('img.leaflet-tile-loaded').first()));
+  await ctx2.close();
+
+  // Tile server down must degrade, not blank out.
+  const ctx3 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await ctx3.route('**tile.openstreetmap.org/**', (r) => r.abort());
+  const p3 = await ctx3.newPage();
+  await p3.goto(`${BASE}/map`, { waitUntil: 'domcontentloaded' });
+  ok('map: falls back to our own drawing if OSM is unreachable', await visible(p3.getByText('apna naksha dikha rahe hain')));
+  // The fallback must replace the map, not stack on top of a broken one.
+  ok(
+    'map: fallback replaces the broken map instead of stacking on it',
+    (await p3.locator('.leaflet-container').count()) === 0,
+  );
+  await ctx3.close();
+}
+
 // ------------------------------------------------------------ otp login
 {
   const ctx = await browser.newContext();
@@ -283,6 +345,7 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   ];
   for (const width of [1440, 390]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+    await stubTiles(ctx);
     const page = await ctx.newPage();
     const errors = [];
     page.on('console', (m) => m.type() === 'error' && errors.push(`${page.url()}: ${m.text()}`));

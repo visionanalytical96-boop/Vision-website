@@ -23,6 +23,16 @@ if (!ADMIN.password) {
 const RIDER_AT = { latitude: 19.1551, longitude: 73.2661 };
 const FAR_AWAY = { latitude: 18.9107, longitude: 73.3233 }; // Karjat — outside the 6 km radius
 
+/** OSM tiles are stubbed so the suite never depends on a live tile server. */
+const TILE_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+const stubTiles = (ctx) =>
+  ctx.route('**tile.openstreetmap.org/**', (r) =>
+    r.fulfill({ status: 200, contentType: 'image/png', body: TILE_PNG }),
+  );
+
 let pass = 0;
 let fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -250,6 +260,7 @@ let startOtp = null;
 // ------------------------------------------------------------- pages render
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  await stubTiles(ctx);
   const page = await ctx.newPage();
   const errors = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));

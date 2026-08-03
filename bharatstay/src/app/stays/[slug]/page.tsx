@@ -7,6 +7,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { StayCard } from '@/components/StayCard';
 import { Gallery } from '@/components/Gallery';
 import { INR, mapDirectionsUrl, mapSearchUrl, stayTypeLabel } from '@/lib/format';
+import { LiveMap } from '@/components/LiveMap';
 import { getSettings } from '@/lib/site';
 import { BookingBox } from '@/components/BookingBox';
 
@@ -129,6 +130,14 @@ export default async function StayDetailPage({ params }: { params: { slug: strin
               <p className="mt-2 text-[14px]" style={{ color: 'var(--basalt)' }}>
                 {stay.address}
               </p>
+              {stay.lat != null && stay.lng != null && (
+                <div className="mt-4">
+                  <LiveMap
+                    pins={[{ lat: stay.lat, lng: stay.lng, label: stay.name, kind: 'place' }]}
+                    height={280}
+                  />
+                </div>
+              )}
               <div className="mt-4 flex flex-wrap gap-2">
                 <a className="btn btn-secondary btn-sm" href={mapSearchUrl(`${stay.name}, ${stay.area}`)} target="_blank" rel="noopener noreferrer">
                   Google Maps par dekho

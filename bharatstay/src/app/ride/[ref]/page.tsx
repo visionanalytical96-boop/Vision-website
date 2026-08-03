@@ -16,7 +16,7 @@ export default async function RideTrackPage({ params }: { params: { ref: string 
     <>
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-5 py-8">
-        <RideTracker refCode={params.ref} mapsKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY} />
+        <RideTracker refCode={params.ref} />
       </main>
       <SiteFooter />
     </>

@@ -31,7 +31,7 @@ See `.env.example` for the full list. Categories:
 - Payments need no keys — the owner's UPI ID is set in the admin panel's Site settings, not in the environment
 - Messaging (SMS gateway, WhatsApp Business API, transactional email)
 - Storage (S3-compatible bucket credentials)
-- Maps provider key
+- Maps: none needed — the site uses OpenStreetMap tiles, which take no key
 
 **Never** commit `.env.local` or any file containing real secrets. `.env.example` must only ever contain empty placeholders.
 

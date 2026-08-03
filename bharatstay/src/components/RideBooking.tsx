@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BELT_LANDMARKS, inBelt } from '@/lib/belt';
-import { GoogleMap } from './GoogleMap';
+import { LiveMap } from './LiveMap';
 import type { MapPin } from './BeltMap';
 import { INR } from '@/lib/format';
 
@@ -17,12 +17,10 @@ export function RideBooking({
   fares,
   defaultName,
   defaultPhone,
-  mapsKey,
 }: {
   fares: Fare[];
   defaultName: string;
   defaultPhone: string;
-  mapsKey?: string;
 }) {
   const router = useRouter();
   const [vehicleType, setVehicleType] = useState(fares[0]?.vehicleType ?? 'BIKE');
@@ -136,7 +134,7 @@ export function RideBooking({
 
       {pins.length > 0 && (
         <div className="card mt-6 p-4">
-          <GoogleMap apiKey={mapsKey} pins={pins} route height={380} />
+          <LiveMap pins={pins} route height={380} />
         </div>
       )}
 

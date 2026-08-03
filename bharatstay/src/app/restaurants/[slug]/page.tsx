@@ -7,6 +7,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { Gallery } from '@/components/Gallery';
 import { INR, mapDirectionsUrl, mapSearchUrl } from '@/lib/format';
+import { LiveMap } from '@/components/LiveMap';
 import { getSettings } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
@@ -79,6 +80,12 @@ export default async function RestaurantDetailPage({ params }: { params: { slug:
             </div>
           ))}
         </dl>
+
+        {r.lat != null && r.lng != null && (
+          <div className="mt-6">
+            <LiveMap pins={[{ lat: r.lat, lng: r.lng, label: r.name, kind: 'place' }]} height={280} />
+          </div>
+        )}
 
         <div className="mt-6 flex flex-wrap gap-2">
           <a className="btn btn-primary btn-sm" href={mapDirectionsUrl(`${r.name}, ${r.area}`)} target="_blank" rel="noopener noreferrer">

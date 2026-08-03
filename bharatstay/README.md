@@ -24,9 +24,12 @@ Konkan tak. Next.js 14 (App Router) + Postgres + Prisma.
   GPay/PhonePe/Paytm khulta hai, amount pehle se bhara hua. Paisa seedha aapke
   bank mein — na commission, na merchant account. Customer UTR daalta hai aur
   aap `/admin/payments` par statement se milaan karke booking confirm karte ho.
-- **Google Maps** — `NEXT_PUBLIC_GOOGLE_MAPS_KEY` set karte hi asli Google Map
-  (markers, live rider, satellite, street view) chalu ho jaata hai. Key na ho
-  to site apna banaya naksha dikhati hai — kuch toota nahi.
+- **Naksha — OpenStreetMap** (Leaflet se). Asli street map, zoom, pan, har pin
+  par popup. **Koi API key nahi, koi billing nahi, koi limit ka bill nahi.**
+  Stays aur restaurants ke detail page, `/map`, aur rides ka live tracking —
+  sab isi par. OSM ka attribution kone mein dikhta hai (license ki shart hai,
+  hataiye mat). Tile server na pahunche to site apna banaya naksha dikha deti
+  hai.
 - **Photos** — har listing par kai photos, lightbox gallery ke saath.
 - **Admin panel** (`/admin`) — applications approve/reject, riders aur fares,
   services **add aur delete**, stays aur restaurants
@@ -70,7 +73,6 @@ hai:
 | `JWT_SECRET` | Session cookie sign karta hai. `openssl rand -base64 32` |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Pehle deploy par admin account banta hai. Password kam se kam 12 akshar ka — `openssl rand -base64 24` se banaiye. Seed kamzor ya jaana-pehchana password reject kar deta hai. |
 | `NEXT_PUBLIC_APP_URL` | Public URL |
-| `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Asli Google Maps ke liye (billing wala Google Cloud project) |
 | `SMS_PROVIDER` | `mock` (default) ya `msg91` |
 
 Payment ke liye koi env variable nahi hai — UPI ID admin panel ke **Site
@@ -100,8 +102,11 @@ Yeh cheezein paid account ke bina chal nahi saktin, isliye inka mock mode hai:
   turn-by-turn ke liye Google Maps ka link diya hai.
 - **Rider location** browser ke Geolocation API se aati hai, isliye rider ka page
   khula rehna zaroori hai. Background tracking ke liye asli mobile app chahiye.
-- **Google Maps** key ke bina site apna banaya naksha dikhati hai. Asli Maps ke
-  liye billing wala Google Cloud project chahiye.
+- **OSM ke tile server donation par chalte hain** aur unki usage policy sirf
+  chhoti site ke liye hai. Traffic badhe (ya OSM block kar de) to kisi paid
+  tile provider ka URL `NEXT_PUBLIC_MAP_TILE_URL` mein daal dijiye —
+  attribution `NEXT_PUBLIC_MAP_TILE_ATTRIBUTION` se badal jayegi, aur code
+  mein kuch chhoona nahi padega.
 - **Photos** — `photos/` folder ki tasveerein `pnpm import-photos` se database
   mein aati hain aur us sheher ke stays/restaurants par lag jaati hain. Jis
   listing ki photo nahi hai, uska `tone` ek drawn scene banata hai.

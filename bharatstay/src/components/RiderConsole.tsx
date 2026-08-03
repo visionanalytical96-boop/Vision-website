@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GoogleMap } from './GoogleMap';
+import { LiveMap } from './LiveMap';
 import type { MapPin } from './BeltMap';
 import { INR, mapDirectionsUrl } from '@/lib/format';
 
@@ -17,7 +17,7 @@ type Active = {
 
 const PING_MS = 8000;
 
-export function RiderConsole({ name, vehicleNumber, mapsKey }: { name: string; vehicleNumber: string; mapsKey?: string }) {
+export function RiderConsole({ name, vehicleNumber }: { name: string; vehicleNumber: string }) {
   const [online, setOnline] = useState(false);
   const [pos, setPos] = useState<{ lat: number; lng: number; accuracyM?: number } | null>(null);
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -271,7 +271,7 @@ export function RiderConsole({ name, vehicleNumber, mapsKey }: { name: string; v
 
       {pins.length > 0 && (
         <div className="card mt-6 p-4">
-          <GoogleMap apiKey={mapsKey} pins={pins} route height={360} />
+          <LiveMap pins={pins} route height={360} />
         </div>
       )}
 

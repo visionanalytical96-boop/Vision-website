@@ -6,26 +6,25 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { SearchBar } from '@/components/SearchBar';
 import { StayCard } from '@/components/StayCard';
 import { RestaurantCard } from '@/components/RestaurantCard';
-import { Rail } from '@/components/Rail';
 import { Scene } from '@/components/Scene';
 import { INR } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
-/** The actual Central Railway sequence — order and distance are real. */
-const LINE = [
-  { label: 'Badlapur', note: '0 km', href: '/stays?city=Badlapur' },
-  { label: 'Vangani', note: '8 km', href: '/stays?city=Vangani' },
-  { label: 'Shelu', note: '13 km', href: '/stays?city=Karjat' },
-  { label: 'Neral', note: '18 km', href: '/stays?city=Neral' },
-  { label: 'Bhivpuri Rd', note: '22 km', href: '/stays?city=Bhivpuri' },
-  { label: 'Karjat', note: '27 km', href: '/stays?city=Karjat' },
+/** What the site actually books — each tile opens that filter. */
+const OFFERINGS = [
+  { label: 'Farmhouse', emoji: '🌾', href: '/stays?type=FARM_STAY' },
+  { label: 'Villa', emoji: '🏡', href: '/stays?type=VILLA' },
+  { label: 'Homestay', emoji: '🛏️', href: '/stays?type=HOMESTAY' },
+  { label: 'Resort', emoji: '🏝️', href: '/stays?type=RESORT' },
+  { label: 'Hotel', emoji: '🏨', href: '/stays?type=HOTEL' },
+  { label: 'Restaurant', emoji: '🍽️', href: '/restaurants' },
 ];
 
 export default async function HomePage() {
   const [settings, enabled] = await Promise.all([getSettings(), getEnabledServices()]);
 
-  const [nearby, topStays, restaurants, destinations, spotCount, stayCount] = await Promise.all([
+  const [nearby, topStays, restaurants, destinations, spotCount, stayCount, restaurantCount] = await Promise.all([
     db.stay.findMany({
       where: { visible: true, city: { in: ['Badlapur', 'Karjat', 'Neral', 'Bhivpuri', 'Vangani', 'Ambernath'] } },
       include: { photos: { select: { id: true }, orderBy: { sort: 'asc' }, take: 1 } },
@@ -49,6 +48,7 @@ export default async function HomePage() {
     db.destination.findMany({ where: { visible: true }, orderBy: { sort: 'asc' }, take: 12 }),
     db.weekendSpot.count({ where: { visible: true } }),
     db.stay.count({ where: { visible: true } }),
+    db.restaurant.count({ where: { visible: true } }),
   ]);
 
   return (
@@ -60,13 +60,13 @@ export default async function HomePage() {
         <section style={{ background: 'var(--ink)', color: 'var(--mist)' }}>
           <div className="mx-auto max-w-6xl px-5 pb-14 pt-16 sm:pt-20">
             <p className="eyebrow" style={{ color: 'color-mix(in srgb, var(--mist) 55%, transparent)' }}>
-              Central line · Badlapur → Karjat
+              Badlapur · Karjat · Lonavala · Konkan
             </p>
 
             <h1 className="display mt-4 text-[clamp(40px,8vw,84px)]">
-              Ghar se ek ghanta.
+              Rehna, khaana,
               <br />
-              <span style={{ color: 'var(--turmeric)' }}>Poora Maharashtra.</span>
+              <span style={{ color: 'var(--turmeric)' }}>ghoomna — sab yahan.</span>
             </h1>
 
             <p className="mt-5 max-w-[52ch] text-[16px] leading-relaxed opacity-75">{settings.heroSubtitle}</p>
@@ -75,32 +75,22 @@ export default async function HomePage() {
               <SearchBar />
             </div>
 
-            {/* The signature device: every stop is a real station, every number
-                a real distance, and each one is a live filter. */}
-            <div
-              className="mt-12 rounded-2xl border p-5 sm:p-6"
-              style={{ borderColor: 'rgb(255 255 255 / 0.14)', background: 'rgb(255 255 255 / 0.04)' }}
-            >
-              <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
-                <span className="eyebrow" style={{ color: 'color-mix(in srgb, var(--mist) 50%, transparent)' }}>
-                  Local train · har 15–20 min
-                </span>
-                <span className="data text-[12px] opacity-60">ticket ₹10–15</span>
-              </div>
-              <div style={{ ['--rail' as string]: 'rgb(255 255 255 / 0.4)' }}>
-                <Rail stops={LINE} animate onDark />
-              </div>
-              <p className="mt-5 text-[13px] opacity-60">
-                Har station ek weekend hai — station par tap karke uske stays dekho.
-              </p>
+            {/* What the site books, said plainly and made clickable. */}
+            <div className="mt-10 grid grid-cols-3 gap-3 sm:grid-cols-6">
+              {OFFERINGS.map((o) => (
+                <Link key={o.label} href={o.href} className="card card-hover p-4 text-center">
+                  <div className="text-[26px]" aria-hidden>{o.emoji}</div>
+                  <div className="mt-1.5 text-[13px] font-semibold">{o.label}</div>
+                </Link>
+              ))}
             </div>
 
             <dl className="mt-10 grid grid-cols-3 gap-6 border-t pt-8" style={{ borderColor: 'rgb(255 255 255 / 0.12)' }}>
               {(
                 [
                   [stayCount, 'stays listed'],
+                  [restaurantCount, 'restaurants'],
                   [destinations.length, 'destinations'],
-                  [spotCount, 'weekend spots'],
                 ] as const
               ).map(([n, label]) => (
                 <div key={label}>
@@ -122,8 +112,8 @@ export default async function HomePage() {
                   Bike, e-bike aur <span style={{ color: 'var(--laterite)' }}>auto</span> rides
                 </h2>
                 <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed" style={{ color: 'var(--basalt)' }}>
-                  Badlapur se Karjat tak local trips — station se ghar, ghar se naka. Aas-paas ka sabse nazdeeki
-                  rider apne aap match hota hai aur aap use live map par aate hue dekh sakte hain.
+                  Badlapur se Karjat tak chhoti trips. Aas-paas ka sabse nazdeeki rider apne aap match hota hai
+                  aur aap use live map par aate hue dekh sakte hain.
                 </p>
                 <div className="mt-7 flex flex-wrap gap-3">
                   <Link href="/ride" className="btn btn-primary">Ride book karo</Link>
@@ -146,7 +136,7 @@ export default async function HomePage() {
         <Section
           eyebrow="Ghar ke paas"
           title="Badlapur–Karjat belt"
-          blurb="Local train pakdo, ek ghante mein pahuch jao. Yeh belt is site ka ghar hai."
+          blurb="Ghar ke paas ki jagahein — ek ghante ke andar pahunch jao."
           href="/stays?city=Badlapur"
           linkLabel="Saare nearby stays"
         >

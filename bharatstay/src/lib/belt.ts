@@ -1,7 +1,7 @@
 /**
- * The Badlapur–Karjat belt: the only area the ride service covers today.
- * These landmarks give people something to pick when the browser cannot get a
- * location fix, and they bound the live map.
+ * The Badlapur–Karjat area the service covers today. These landmarks give
+ * people something to pick when the browser cannot get a location fix, and
+ * they bound the live map.
  */
 export const BELT_LANDMARKS: { label: string; lat: number; lng: number }[] = [
   { label: 'Badlapur Station (East)', lat: 19.1551, lng: 73.2661 },
@@ -33,14 +33,3 @@ export const projectBelt = (lat: number, lng: number, w = 1000, h = 760) => ({
   x: ((lng - BELT_BOUNDS.minLng) / (BELT_BOUNDS.maxLng - BELT_BOUNDS.minLng)) * w,
   y: h - ((lat - BELT_BOUNDS.minLat) / (BELT_BOUNDS.maxLat - BELT_BOUNDS.minLat)) * h,
 });
-
-/** Station order along the Central line, drawn as the spine of the live map. */
-export const BELT_LINE = [
-  'Ambernath Station',
-  'Badlapur Station (East)',
-  'Vangani Station',
-  'Shelu Station',
-  'Neral Station',
-  'Bhivpuri Road Station',
-  'Karjat Station',
-];

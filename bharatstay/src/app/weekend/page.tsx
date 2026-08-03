@@ -6,7 +6,6 @@ import { getEnabledServices } from '@/lib/site';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { StayCard } from '@/components/StayCard';
-import { Rail } from '@/components/Rail';
 import { Scene } from '@/components/Scene';
 import { INR, mapDirectionsUrl } from '@/lib/format';
 
@@ -15,15 +14,6 @@ export const metadata: Metadata = {
   title: 'Badlapur → Karjat weekend',
   description: 'Waterfall, dam, fort, caves aur rafting — Badlapur se Karjat tak ka weekend plan, ghante-wise.',
 };
-
-const LINE = [
-  { label: 'Badlapur', note: '0 km' },
-  { label: 'Vangani', note: '8 km' },
-  { label: 'Shelu', note: '13 km' },
-  { label: 'Neral', note: '18 km' },
-  { label: 'Bhivpuri Rd', note: '22 km' },
-  { label: 'Karjat', note: '27 km' },
-];
 
 export default async function WeekendPage() {
   const enabled = await getEnabledServices();
@@ -53,22 +43,9 @@ export default async function WeekendPage() {
               Badlapur <span style={{ color: 'var(--turmeric)' }}>→</span> Karjat
             </h1>
             <p className="mt-4 max-w-[56ch] text-[15.5px] leading-relaxed opacity-75">
-              Ghar ke paas ka perfect weekend — waterfalls, dam, forts, caves, rafting aur riverside villas. Sab
-              kuch Central line par, Badlapur se ek ghante ke andar.
+              Ghar ke paas ka perfect weekend — waterfalls, dam, forts, caves, rafting aur riverside villas.
+              Badlapur se ek ghante ke andar, sab kuch.
             </p>
-
-            <div
-              className="mt-10 rounded-2xl border p-5 sm:p-6"
-              style={{ borderColor: 'rgb(255 255 255 / 0.14)', background: 'rgb(255 255 255 / 0.04)' }}
-            >
-              <div style={{ ['--rail' as string]: 'rgb(255 255 255 / 0.4)' }}>
-                <Rail stops={LINE} onDark animate />
-              </div>
-              <p className="mt-5 text-[13px] opacity-60">
-                Local train ticket ₹10–15 · har 15–20 min · weekend bheed se bachne ke liye subah 7 baje se pehle
-                nikliye.
-              </p>
-            </div>
           </div>
         </section>
 
@@ -161,7 +138,7 @@ export default async function WeekendPage() {
             <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="eyebrow">Rukna kahan</p>
-                <h2 className="display mt-2 text-[clamp(24px,4vw,36px)]">Is line par stays</h2>
+                <h2 className="display mt-2 text-[clamp(24px,4vw,36px)]">Aas-paas ke stays</h2>
               </div>
               <Link href="/stays?city=Karjat" className="text-[14px] font-semibold" style={{ color: 'var(--laterite)' }}>
                 Saare dekho →

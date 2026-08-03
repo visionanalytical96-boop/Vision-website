@@ -56,13 +56,15 @@ asli source hai** — admin panel ke changes JSON ko overwrite nahi karte.
 `pnpm extract-content` purane single-file app (`standalone/BharatStay.html`) se
 JSON dobara nikaalta hai.
 
-## Deploy (Railway)
+## Deploy
 
-Service ko in variables ki zaroorat hai:
+Yeh ek normal Next.js app hai — kisi bhi Node hosting par chalti hai (Vercel,
+Render, Fly, apna VPS). Zaroorat sirf ek Postgres database aur in variables ki
+hai:
 
 | Variable | Kya hai |
 |---|---|
-| `DATABASE_URL` | Postgres — Railway apne aap deta hai |
+| `DATABASE_URL` | Postgres ka connection string |
 | `JWT_SECRET` | Session cookie sign karta hai. `openssl rand -base64 32` |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Pehle deploy par admin account banta hai. Password kam se kam 12 akshar ka — `openssl rand -base64 24` se banaiye. Seed kamzor ya jaana-pehchana password reject kar deta hai. |
 | `NEXT_PUBLIC_APP_URL` | Public URL |
@@ -71,7 +73,12 @@ Service ko in variables ki zaroorat hai:
 | `SMS_PROVIDER` | `mock` (default) ya `msg91` |
 | `PAYMENT_PROVIDER` | `mock` (default) ya `razorpay` |
 
-`railway.json` build aur release (migrate + seed) command set karta hai.
+Build aur release commands:
+
+```bash
+pnpm install --frozen-lockfile && pnpm build   # build
+pnpm release && pnpm start                     # migrate + seed, phir chalu
+```
 
 ## Abhi kya asli nahi hai
 

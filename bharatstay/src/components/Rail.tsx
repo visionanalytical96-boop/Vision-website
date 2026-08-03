@@ -10,9 +10,9 @@ export type RailStop = {
 };
 
 /**
- * The route line. On the home page it is the actual Central Railway sequence
- * from Badlapur to Karjat; on multi-step forms it is the steps. In both cases
- * left-to-right order is information, which is why the same device serves both.
+ * A horizontal step indicator: connected dots with a label and an optional
+ * note under each. Left-to-right order carries meaning, so the same component
+ * serves every multi-step form on the site.
  */
 export function Rail({
   stops,

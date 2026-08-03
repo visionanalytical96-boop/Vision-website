@@ -1,6 +1,6 @@
 'use client';
 
-import { BELT_LANDMARKS, BELT_LINE, projectBelt } from '@/lib/belt';
+import { BELT_LANDMARKS, projectBelt } from '@/lib/belt';
 
 export type MapPin = {
   lat: number;
@@ -17,34 +17,24 @@ const STYLE: Record<MapPin['kind'], { fill: string; r: number }> = {
 };
 
 /**
- * Live map of the Badlapur–Karjat belt, drawn from real coordinates. It is our
- * own SVG rather than an embedded provider map: no API key, no key leakage, and
- * it renders identically offline. For satellite detail every screen links out
- * to Google Maps instead.
+ * Live map of the Badlapur–Karjat area, drawn from real coordinates. It is our
+ * own SVG rather than an embedded provider map: no API key needed, and it
+ * renders identically offline. When a Google Maps key is configured the
+ * GoogleMap component takes over and this becomes the fallback.
  */
 export function BeltMap({ pins, className = '' }: { pins: MapPin[]; className?: string }) {
-  const line = BELT_LINE.map((name) => {
-    const l = BELT_LANDMARKS.find((x) => x.label === name)!;
-    return { ...projectBelt(l.lat, l.lng), label: name.replace(' Station', '') };
-  });
+  // Reference points so a pin has something to sit against.
+  const places = BELT_LANDMARKS.filter((l) => /Badlapur Station \(East\)|Ambernath|Karjat Station|Neral|Bhivpuri|Vangani/.test(l.label))
+    .map((l) => ({ ...projectBelt(l.lat, l.lng), label: l.label.replace(' Station', '').replace(' (East)', '').replace(' Road', '') }));
 
   return (
     <div className={`scroll-x ${className}`}>
-      <svg viewBox="0 0 1000 760" style={{ width: '100%', minWidth: '560px', height: 'auto' }} role="img" aria-label="Badlapur se Karjat tak ka naksha">
+      <svg viewBox="0 0 1000 760" style={{ width: '100%', minWidth: '560px', height: 'auto' }} role="img" aria-label="Badlapur–Karjat ka naksha">
         <rect width="1000" height="760" rx="14" fill="var(--mist-deep)" />
 
-        {/* the Central line, drawn through the real station coordinates */}
-        <polyline
-          points={line.map((p) => `${p.x},${p.y}`).join(' ')}
-          fill="none"
-          stroke="var(--rail)"
-          strokeWidth="4"
-          strokeLinejoin="round"
-          opacity="0.45"
-        />
-        {line.map((p) => (
+        {places.map((p) => (
           <g key={p.label}>
-            <circle cx={p.x} cy={p.y} r="6" fill="var(--paper)" stroke="var(--rail)" strokeWidth="3" />
+            <circle cx={p.x} cy={p.y} r="5" fill="var(--rail)" opacity="0.55" />
             <text x={p.x + 11} y={p.y + 4} fontSize="15" fill="var(--basalt)" fontFamily="var(--font-body)">
               {p.label}
             </text>

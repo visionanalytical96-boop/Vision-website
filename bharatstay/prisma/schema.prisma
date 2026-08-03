@@ -234,7 +234,7 @@ model WeekendPlan {
   title   String
   price   Int
   per     String
-  /// [["7:00 AM", "Badlapur station se shuru"], ...]
+  /// [["7:00 AM", "Badlapur se shuru"], ...]
   steps   Json
   visible Boolean @default(true)
   sort    Int     @default(0)

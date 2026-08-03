@@ -189,11 +189,10 @@ body {
   color: var(--mist);
 }
 
-/* ------------------------------------------------------- the route line */
+/* ---------------------------------------------------- the step indicator */
 /*
-  The signature device. Station order and spacing carry real information —
-  these are the actual Central Railway stops between Badlapur and Karjat —
-  so the same component doubles as the step indicator on multi-step forms.
+  Connected dots used by every multi-step form on the site. Left-to-right
+  order is what carries the meaning, so one device serves them all.
 */
 .rail {
   display: flex;

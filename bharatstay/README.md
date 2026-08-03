@@ -19,9 +19,11 @@ Konkan tak. Next.js 14 (App Router) + Postgres + Prisma.
 - **Partner listing form** (`/partner/apply`) — koi bhi farmhouse/hotel/restaurant
   owner bina login ke form bhar sakta hai, photos ke saath. Submit karne par ek
   private status link milta hai (`/partner/status/<token>`).
-- **Payments** — Razorpay checkout se UPI QR scanner, Google Pay, PhonePe,
-  card aur netbanking. Signature server par verify hota hai, aur webhook hi
-  aakhri sach hai.
+- **Payments** — seedha UPI, koi gateway nahi. Admin panel mein apna UPI ID
+  daaliye; customer ko QR banke dikhta hai (kisi bhi app se scan) ya phone par
+  GPay/PhonePe/Paytm khulta hai, amount pehle se bhara hua. Paisa seedha aapke
+  bank mein — na commission, na merchant account. Customer UTR daalta hai aur
+  aap `/admin/payments` par statement se milaan karke booking confirm karte ho.
 - **Google Maps** — `NEXT_PUBLIC_GOOGLE_MAPS_KEY` set karte hi asli Google Map
   (markers, live rider, satellite, street view) chalu ho jaata hai. Key na ho
   to site apna banaya naksha dikhati hai — kuch toota nahi.
@@ -69,9 +71,10 @@ hai:
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Pehle deploy par admin account banta hai. Password kam se kam 12 akshar ka — `openssl rand -base64 24` se banaiye. Seed kamzor ya jaana-pehchana password reject kar deta hai. |
 | `NEXT_PUBLIC_APP_URL` | Public URL |
 | `NEXT_PUBLIC_GOOGLE_MAPS_KEY` | Asli Google Maps ke liye (billing wala Google Cloud project) |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET` | Asli payment ke liye |
 | `SMS_PROVIDER` | `mock` (default) ya `msg91` |
-| `PAYMENT_PROVIDER` | `mock` (default) ya `razorpay` |
+
+Payment ke liye koi env variable nahi hai — UPI ID admin panel ke **Site
+settings** se set hota hai, aur wahi customer ko dikhta hai.
 
 Build aur release commands:
 
@@ -86,17 +89,19 @@ Yeh cheezein paid account ke bina chal nahi saktin, isliye inka mock mode hai:
 
 - **SMS OTP** — `SMS_PROVIDER=mock` par code SMS nahi jata, screen par dikhta
   hai. `msg91` + `SMS_API_KEY` set karne par asli SMS jayega.
-- **Payment** — `PAYMENT_PROVIDER=mock` par booking bina paise kate confirm hoti
-  hai. Razorpay keys daalne par asli charge hoga.
+- **Payment ka confirmation haath se hota hai** — paisa asli hai aur seedha
+  aapke UPI par aata hai, lekin gateway na hone se site ko apne aap pata nahi
+  chalta ki paisa aaya. Customer ka UTR queue mein aata hai aur aap bank
+  statement se milaan karke confirm karte ho. Bina verify kiye booking kabhi
+  confirm nahi hoti.
 - **Ride distance aur ETA** — doori seedhi rekha (haversine) se nikaal kar
   raaste ke hisaab se 1.3x ki jaati hai. Asli road routing aur ETA ke liye paid
   Directions API chahiye, isliye har jagah ise "anumaanit" likha hai aur
   turn-by-turn ke liye Google Maps ka link diya hai.
 - **Rider location** browser ke Geolocation API se aati hai, isliye rider ka page
   khula rehna zaroori hai. Background tracking ke liye asli mobile app chahiye.
-- **Google Maps** aur **payments** dono key ke bina mock/fallback mode mein
-  chalte hain. Dono ke liye paid account chahiye — Google Cloud (billing) aur
-  Razorpay merchant.
+- **Google Maps** key ke bina site apna banaya naksha dikhati hai. Asli Maps ke
+  liye billing wala Google Cloud project chahiye.
 - **Photos** — `photos/` folder ki tasveerein `pnpm import-photos` se database
   mein aati hain aur us sheher ke stays/restaurants par lag jaati hain. Jis
   listing ki photo nahi hai, uska `tone` ek drawn scene banata hai.

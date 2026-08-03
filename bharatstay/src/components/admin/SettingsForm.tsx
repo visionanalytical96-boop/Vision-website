@@ -9,6 +9,8 @@ const FIELDS: { key: string; label: string; hint?: string; long?: boolean }[] = 
   { key: 'tagline', label: 'Tagline', hint: 'Footer mein dikhta hai' },
   { key: 'heroTitle', label: 'Home page ka bada heading' },
   { key: 'heroSubtitle', label: 'Home page ki neeche wali line', long: true },
+  { key: 'upiId', label: 'Aapka UPI ID', hint: 'Jaise: 9876543210@okhdfcbank — yahin par customer ka paisa aayega' },
+  { key: 'upiName', label: 'UPI par naam', hint: 'Customer ko payment screen par yeh naam dikhega' },
   { key: 'supportEmail', label: 'Support email' },
   { key: 'city', label: 'Sheher', hint: 'Footer mein address ke jagah' },
   { key: 'gstin', label: 'GSTIN', hint: 'Khaali chhodo to receipt par nahi aayega' },

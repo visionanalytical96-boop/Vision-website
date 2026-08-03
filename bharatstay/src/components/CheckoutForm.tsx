@@ -233,7 +233,7 @@ export function CheckoutForm({
           </div>
         </dl>
         <p className="mt-4 text-[12.5px]" style={{ color: 'var(--basalt-soft)' }}>
-          Agle step par UPI, Google Pay, PhonePe ya card se pay kar sakte hain.
+          Agle step par UPI QR milega — GPay, PhonePe ya kisi bhi bank app se pay kijiye.
         </p>
       </aside>
     </div>

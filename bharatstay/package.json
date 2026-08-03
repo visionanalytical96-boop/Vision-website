@@ -2,7 +2,7 @@
   "name": "bharatstay",
   "version": "0.1.0",
   "private": true,
-  "description": "BharatStay \u2014 Maharashtra ke stays, restaurants aur weekend trips",
+  "description": "BharatStay — Maharashtra ke stays, restaurants aur weekend trips",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build && cp -r public .next/standalone/ 2>/dev/null; cp -r .next/static .next/standalone/.next/",
@@ -21,6 +21,7 @@
     "@prisma/client": "^5.22.0",
     "jose": "^6.2.7",
     "next": "^14.2.35",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.35.3",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@types/google.maps": "^3.65.4",
     "@types/node": "^20.14.9",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",

@@ -8,7 +8,13 @@
  */
 import { chromium } from 'playwright-core';
 
+// Use a hostname, not a bare IP: the session cookie is Secure in production and
+// Playwright's request context only sends Secure cookies over https or localhost.
 const BASE = process.env.BASE_URL ?? 'http://localhost:3210';
+if (/^https?:\/\/\d+\.\d+\.\d+\.\d+/.test(BASE)) {
+  console.error('BASE_URL mein IP ki jagah localhost use kijiye — warna admin session cookie nahi jaata.');
+  process.exit(1);
+}
 const ADMIN = {
   email: process.env.ADMIN_EMAIL ?? 'admin@bharatstay.in',
   password: process.env.ADMIN_PASSWORD,
@@ -161,6 +167,82 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   await page.getByRole('switch', { name: /Restaurants & Dining chalu karo/ }).click();
   await page.waitForTimeout(2000);
 
+  await ctx.close();
+}
+
+// -------------------------------------------------------- upi payments
+{
+  const ctx = await browser.newContext();
+  await ctx.request.post(`${BASE}/api/auth/admin`, { data: ADMIN });
+
+  // Owner sets a UPI ID; without one customers cannot pay at all.
+  const setUpi = await ctx.request.post(`${BASE}/api/admin/site`, {
+    data: { kind: 'settings', values: { upiId: 'testowner@okhdfcbank', upiName: 'BharatStay Test' } },
+    failOnStatusCode: false,
+  });
+  ok('upi: owner can save a UPI ID', setUpi.ok(), `got ${setUpi.status()}`);
+
+  const anon = await browser.newContext();
+  const book = await anon.request.post(`${BASE}/api/bookings`, {
+    data: {
+      staySlug: 'kondeshwar-greens-farm-stay-badlapur',
+      checkIn: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      checkOut: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
+      guests: 2, rooms: 1,
+      guestName: 'UPI Tester', guestEmail: 'upi@test.com', guestPhone: '9998887770',
+    },
+    failOnStatusCode: false,
+  });
+  const b = await book.json();
+  ok('upi: booking starts unpaid', book.ok() && Boolean(b.ref), JSON.stringify(b).slice(0, 120));
+
+  const page = await anon.newPage();
+  await page.goto(`${BASE}/booking/${b.ref}`, { waitUntil: 'networkidle' });
+  ok('upi: QR shown to the customer', await visible(page.locator('img[alt*="UPI QR"]')));
+
+  const badUtr = await anon.request.post(`${BASE}/api/payments`, {
+    data: { ref: b.ref, utr: '12345' },
+    failOnStatusCode: false,
+  });
+  ok('upi: short UTR rejected', badUtr.status() === 400, `got ${badUtr.status()}`);
+
+  const utr = String(Date.now()).slice(-12).padStart(12, '9');
+  const good = await anon.request.post(`${BASE}/api/payments`, {
+    data: { ref: b.ref, utr },
+    failOnStatusCode: false,
+  });
+  ok('upi: valid UTR accepted', good.ok(), `got ${good.status()}`);
+
+  const dup = await anon.request.post(`${BASE}/api/payments`, {
+    data: { ref: b.ref, utr },
+    failOnStatusCode: false,
+  });
+  ok('upi: booking already awaiting verification is not re-submitted', dup.status() === 409, `got ${dup.status()}`);
+
+  // Not confirmed until a human checks the bank.
+  await page.goto(`${BASE}/booking/${b.ref}`, { waitUntil: 'networkidle' });
+  ok('upi: stays unconfirmed until verified', await visible(page.getByText('verify ho raha hai')));
+
+  const guard = await anon.request.post(`${BASE}/api/admin/payments`, {
+    data: { id: 'x', action: 'verify' },
+    failOnStatusCode: false,
+  });
+  ok('upi: only an admin can verify', guard.status() === 401, `got ${guard.status()}`);
+
+  const admin = await ctx.newPage();
+  await admin.goto(`${BASE}/admin/payments`, { waitUntil: 'networkidle' });
+  const row = admin.locator('article').filter({ hasText: b.ref }).first();
+  ok('upi: payment appears in the admin queue', await visible(row));
+  await row.getByRole('button', { name: /Payment mila/ }).click();
+  await row.getByRole('button', { name: /Haan, confirm karo/ }).click();
+  await admin.waitForTimeout(2500);
+
+  const anon2 = await browser.newContext();
+  const anon2Page = await anon2.newPage();
+  await anon2Page.goto(`${BASE}/booking/${b.ref}`, { waitUntil: 'networkidle' });
+  ok('upi: admin verification confirms the booking', await visible(anon2Page.getByText('Booking confirm ho gayi')));
+  await anon2.close();
+  await anon.close();
   await ctx.close();
 }
 

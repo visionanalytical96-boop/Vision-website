@@ -28,7 +28,7 @@ npm run start   # serves the production build on $PORT (default 3000)
 See `.env.example` for the full list. Categories:
 
 - Core app (`NEXTAUTH_SECRET`/`JWT_SECRET`, `DATABASE_URL`, `REDIS_URL`, `NEXT_PUBLIC_APP_URL`)
-- Payment gateways (Razorpay, Cashfree, PayU, Stripe, PhonePe, Paytm) — all optional, only required for the providers you enable via `PAYMENT_PROVIDER`
+- Payments need no keys — the owner's UPI ID is set in the admin panel's Site settings, not in the environment
 - Messaging (SMS gateway, WhatsApp Business API, transactional email)
 - Storage (S3-compatible bucket credentials)
 - Maps provider key

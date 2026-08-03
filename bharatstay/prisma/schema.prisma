@@ -350,6 +350,8 @@ enum BookingKind {
 
 enum BookingStatus {
   PENDING
+  /// Customer says they have paid and gave a UTR; an admin has not checked yet.
+  AWAITING_VERIFICATION
   CONFIRMED
   CANCELLED
   COMPLETED
@@ -386,7 +388,15 @@ model Booking {
 
   gstin       String?
   gstCompany  String?
-  paymentMode String  @default("mock")
+  paymentMode String  @default("upi")
+
+  /// The 12-digit UTR the customer reads off their UPI app. Without a payment
+  /// gateway this is the only thread tying a booking to a bank transfer, so
+  /// the admin checks it against the real statement before confirming.
+  upiRef        String?
+  upiSubmittedAt DateTime?
+  upiVerifiedAt  DateTime?
+  upiRejectedNote String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

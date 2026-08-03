@@ -87,15 +87,19 @@ graph TD
 Every third-party integration (payments, GDS, hotel inventory, SMS, WhatsApp, email, maps, GST, insurance) is accessed through a narrow TypeScript interface defined in the domain layer, e.g.:
 
 ```ts
-// src/lib/providers/payment/PaymentProvider.ts
-export interface PaymentProvider {
-  createOrder(input: CreateOrderInput): Promise<PaymentOrder>;
-  verifyWebhookSignature(payload: string, signature: string): boolean;
-  refund(input: RefundInput): Promise<RefundResult>;
-}
+// src/lib/sms.ts
+export type SmsResult = 'sent' | 'mock' | 'failed';
+export function deliverSms(phone: string, body: string): Promise<SmsResult>;
 ```
 
-Concrete implementations (`RazorpayProvider`, `CashfreeProvider`, `MockPaymentProvider`, ...) implement this interface. The active provider is selected via environment variable (`PAYMENT_PROVIDER=mock|razorpay|cashfree|payu|stripe`) and resolved through a small factory — this keeps route handlers and UI code provider-agnostic, and lets the whole app run end-to-end on `Mock*Provider` implementations with zero real credentials, which is the current state of this scaffold.
+**Payments do not use this pattern — there is no gateway at all.** Money moves
+over UPI straight from the customer's app to the owner's bank account
+(`src/lib/upi.ts` builds the `upi://pay` deep link and its QR). Nothing calls
+back to tell the site that money arrived, so the customer submits the 12-digit
+UTR, the booking sits in `AWAITING_VERIFICATION`, and an admin confirms it
+against the bank statement. This trades automation for zero fees and no
+merchant account; the UI states the trade-off to the customer rather than
+implying an instant confirmation.
 
 The same pattern applies to: `HotelInventoryProvider`, `FlightSearchProvider` (GDS), `BusInventoryProvider`, `RailSearchProvider` (IRCTC-authorised), `CabProvider`, `SmsProvider`, `WhatsAppProvider`, `EmailProvider`, `MapsProvider`, `GstInvoiceProvider`, `InsuranceProvider`.
 

@@ -6,8 +6,8 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { getSettings } from '@/lib/site';
 import { INR, mapDirectionsUrl } from '@/lib/format';
-import { PayButton } from '@/components/PayButton';
-import { paymentsLive } from '@/lib/payments';
+import { UpiPay } from '@/components/UpiPay';
+import { upiConfigured, upiPayLink, upiQrDataUrl } from '@/lib/upi';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Booking voucher', robots: { index: false } };
@@ -19,21 +19,47 @@ export default async function VoucherPage({ params }: { params: { ref: string } 
   ]);
   if (!booking) notFound();
 
+  const upiReady = upiConfigured(settings);
+  const payeeName = settings.upiName || `${settings.brandA}${settings.brandB}`;
+  const payLink = upiReady
+    ? upiPayLink({ upiId: settings.upiId!, payeeName, amount: booking.totalAmount, note: booking.ref })
+    : null;
+  const qrDataUrl = payLink ? await upiQrDataUrl(payLink) : null;
+
   return (
     <>
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-5 py-12">
-        {booking.status === 'PENDING' ? (
-          <div className="card p-6">
-            <p className="eyebrow">Payment baaki hai</p>
-            <h2 className="display mt-2 text-[24px]">{INR(booking.totalAmount)}</h2>
-            <p className="mt-2 text-[13.5px]" style={{ color: 'var(--basalt)' }}>
-              Pay karte hi booking confirm ho jayegi aur yahi page aapka voucher ban jayega.
-            </p>
-            <div className="mt-5">
-              <PayButton refCode={booking.ref} amount={booking.totalAmount} name={booking.guestName} />
-            </div>
+        {booking.status === 'AWAITING_VERIFICATION' ? (
+          <div
+            className="rounded-xl px-5 py-4 text-[14.5px]"
+            style={{ background: 'color-mix(in srgb, var(--turmeric) 20%, transparent)' }}
+          >
+            <strong>Payment mil gaya, verify ho raha hai.</strong> Aapka UTR{' '}
+            <span className="data">{booking.upiRef}</span> darj ho gaya hai. Bank statement se milaan karke hum
+            booking confirm kar denge — tab tak yeh page khula rakhiye ya link save kar lijiye.
           </div>
+        ) : booking.status === 'PENDING' ? (
+          upiReady && payLink && qrDataUrl ? (
+            <UpiPay
+              refCode={booking.ref}
+              amount={booking.totalAmount}
+              payLink={payLink}
+              qrDataUrl={qrDataUrl}
+              upiId={settings.upiId!}
+              payeeName={payeeName}
+              rejectedNote={booking.upiRejectedNote}
+            />
+          ) : (
+            <div className="card p-6">
+              <p className="eyebrow">Payment baaki hai</p>
+              <h2 className="display mt-2 text-[24px]">{INR(booking.totalAmount)}</h2>
+              <p className="mt-3 text-[14px] leading-relaxed" style={{ color: 'var(--basalt)' }}>
+                Online payment abhi chalu nahi hai — malik ne apna UPI ID set nahi kiya. Booking hold par hai;{' '}
+                {settings.supportEmail} par is reference ke saath likhiye aur payment ka tareeka pooch lijiye.
+              </p>
+            </div>
+          )
         ) : (
           <div
             className="rounded-xl px-5 py-4 text-[14.5px]"
@@ -41,11 +67,6 @@ export default async function VoucherPage({ params }: { params: { ref: string } 
           >
             <strong>Booking confirm ho gayi.</strong> Yeh page aapka voucher hai — screenshot le lijiye ya link
             save kar lijiye.
-            {!paymentsLive() && (
-              <span style={{ color: 'var(--basalt)' }}>
-                {' '}Payment gateway abhi connect nahi hai, isliye paise nahi kate.
-              </span>
-            )}
           </div>
         )}
 

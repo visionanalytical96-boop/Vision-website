@@ -205,6 +205,8 @@ async function main() {
     tagline: 'Maharashtra ke stays, restaurants aur weekend trips',
     heroTitle: 'Maharashtra, ghar ke paas se shuru',
     heroSubtitle: 'Badlapur se Karjat, Lonavala se Konkan — farmhouse, villa, hotel aur asli Maharashtrian khana, sab ek jagah.',
+    upiId: '',
+    upiName: '',
     supportEmail: 'support@bharatstay.example',
     gstin: '',
     city: 'Badlapur, Maharashtra',

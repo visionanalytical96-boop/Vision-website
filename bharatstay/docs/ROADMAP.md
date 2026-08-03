@@ -18,7 +18,7 @@
 1. **Auth wiring** — real password hashing + session/JWT issuance, OTP send/verify via SMS provider adapter, Google/Apple/Facebook OAuth.
 2. **Flight/bus/cab passenger & seat-selection detail pages** — results pages exist and link into checkout with a flat amount; dedicated seat-map/passenger-details steps (per the original brief) aren't built, so checkout skips straight to guest details.
 3. **Package/activity detail pages** — `/packages` and `/activities` are listing-only; `/packages/[slug]` detail pages aren't built.
-4. **Real payment integration** — wire `PaymentProvider` interface to a real Razorpay/Cashfree/PayU/Stripe sandbox; implement webhook signature verification.
+4. **Automatic payment reconciliation** — payments are real UPI transfers today, but confirmation is manual. Either poll a bank statement/UPI collect API, or add a gateway, so a paid booking confirms itself instead of waiting on an admin.
 5. **PDF generation** — server-side PDF rendering (e.g. `@react-pdf/renderer` or Puppeteer) for vouchers/receipts; QR code generation for booking verification.
 6. **Persistence** — connect Prisma schema to a real PostgreSQL instance, replace mock-data reads with DB queries + Redis caching for search.
 7. **Travel agent (B2B) dashboard** — registration, KYC, wallet, credit limit, markup/commission control, sub-agents, white-label vouchers.

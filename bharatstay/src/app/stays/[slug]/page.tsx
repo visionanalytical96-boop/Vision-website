@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
+import { getSavedStayIds } from '@/lib/wishlist';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { StayCard } from '@/components/StayCard';
@@ -10,6 +11,7 @@ import { INR, mapDirectionsUrl, mapSearchUrl, stayTypeLabel } from '@/lib/format
 import { LiveMap } from '@/components/LiveMap';
 import { getSettings } from '@/lib/site';
 import { BookingBox } from '@/components/BookingBox';
+import { WishlistButton } from '@/components/WishlistButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +42,8 @@ export default async function StayDetailPage({ params: paramsPromise }: { params
     getSettings(),
   ]);
 
+  const saved = await getSavedStayIds();
+
   const off = stay.basePrice > stay.price ? Math.round((1 - stay.price / stay.basePrice) * 100) : 0;
   const tax = Math.round((stay.price * stay.taxPct) / 100);
 
@@ -62,6 +66,12 @@ export default async function StayDetailPage({ params: paramsPromise }: { params
             <p className="mt-2 text-[14.5px]" style={{ color: 'var(--basalt)' }}>
               {stay.address}
             </p>
+            <div className="mt-4 flex items-center gap-2">
+              <WishlistButton stayId={stay.id} initialSaved={saved.has(stay.id)} size={38} />
+              <span className="text-[13px]" style={{ color: 'var(--basalt-soft)' }}>
+                {saved.has(stay.id) ? 'Wishlist mein hai' : 'Wishlist mein save karo'}
+              </span>
+            </div>
           </div>
           <div
             className="data rounded-lg px-3 py-2 text-[15px] font-medium"
@@ -170,7 +180,7 @@ export default async function StayDetailPage({ params: paramsPromise }: { params
             <h2 className="display text-[clamp(22px,3.5vw,30px)]">{stay.city} mein aur bhi</h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {nearby.map((s, i) => (
-                <StayCard key={s.id} stay={s} index={i + 11} />
+                <StayCard key={s.id} stay={s} index={i + 11} saved={saved.has(s.id)} />
               ))}
             </div>
           </section>

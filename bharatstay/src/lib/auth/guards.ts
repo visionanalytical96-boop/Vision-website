@@ -29,3 +29,12 @@ export async function requireAdminApi(): Promise<{ session: Session } | { respon
   }
   return { session };
 }
+
+/** Same contract as requireAdminApi, but for any logged-in customer. */
+export async function requireUserApi(): Promise<{ session: Session } | { response: NextResponse }> {
+  const session = await getSession();
+  if (!session) {
+    return { response: NextResponse.json({ error: 'Login zaroori hai' }, { status: 401 }) };
+  }
+  return { session };
+}

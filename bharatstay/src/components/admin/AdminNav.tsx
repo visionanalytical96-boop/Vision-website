@@ -14,6 +14,7 @@ const TABS = [
   { href: '/admin/payments', label: 'Payments' },
   { href: '/admin/bookings', label: 'Bookings' },
   { href: '/admin/customers', label: 'Customers' },
+  { href: '/admin/messages', label: 'Messages' },
   { href: '/admin/theme', label: 'Theme' },
   { href: '/admin/settings', label: 'Site settings' },
 ];

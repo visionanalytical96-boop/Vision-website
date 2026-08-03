@@ -1,0 +1,38 @@
+# systemd unit for BharatStay on an Ubuntu server.
+#
+#   sudo cp deploy/bharatstay.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now bharatstay
+#
+# Logs:  journalctl -u bharatstay -f
+
+[Unit]
+Description=BharatStay (Next.js)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=bharatstay
+WorkingDirectory=/var/www/bharatstay
+
+# Secrets live in this file, not in the unit — root-owned, chmod 600, and it
+# never goes into git.
+EnvironmentFile=/etc/bharatstay.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+
+ExecStart=/usr/bin/node .next/standalone/server.js
+Restart=always
+RestartSec=3
+
+# The app only ever needs to read its own directory and talk to Postgres.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/bharatstay/.next/cache
+
+[Install]
+WantedBy=multi-user.target

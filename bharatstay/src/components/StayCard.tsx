@@ -1,11 +1,21 @@
 import Link from 'next/link';
 import type { Photo, Stay } from '@/generated/prisma/client';
 import { Cover } from './Cover';
+import { WishlistButton } from './WishlistButton';
 import { INR, stayTypeLabel } from '@/lib/format';
 
 export type StayWithPhotos = Stay & { photos: Pick<Photo, 'id'>[] };
 
-export function StayCard({ stay, index = 0 }: { stay: StayWithPhotos; index?: number }) {
+export function StayCard({
+  stay,
+  index = 0,
+  saved = false,
+}: {
+  stay: StayWithPhotos;
+  index?: number;
+  /** Whether the current visitor has this one in their wishlist. */
+  saved?: boolean;
+}) {
   const off = stay.basePrice > stay.price ? Math.round((1 - stay.price / stay.basePrice) * 100) : 0;
 
   return (
@@ -18,6 +28,7 @@ export function StayCard({ stay, index = 0 }: { stay: StayWithPhotos; index?: nu
         >
           {stayTypeLabel(stay.type)}
         </span>
+        <WishlistButton stayId={stay.id} initialSaved={saved} className="absolute bottom-3 right-3 shadow" />
         {off > 0 && (
           <span
             className="data absolute right-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-medium"

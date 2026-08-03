@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { getSavedStayIds } from '@/lib/wishlist';
 import { getEnabledServices, getSettings } from '@/lib/site';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -50,6 +51,8 @@ export default async function HomePage() {
     db.stay.count({ where: { visible: true } }),
     db.restaurant.count({ where: { visible: true } }),
   ]);
+
+  const saved = await getSavedStayIds();
 
   return (
     <>
@@ -142,7 +145,7 @@ export default async function HomePage() {
         >
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {nearby.map((s, i) => (
-              <StayCard key={s.id} stay={s} index={i} />
+              <StayCard key={s.id} stay={s} index={i} saved={saved.has(s.id)} />
             ))}
           </div>
         </Section>
@@ -212,7 +215,7 @@ export default async function HomePage() {
         >
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {topStays.map((s, i) => (
-              <StayCard key={s.id} stay={s} index={i + 7} />
+              <StayCard key={s.id} stay={s} index={i + 7} saved={saved.has(s.id)} />
             ))}
           </div>
         </Section>

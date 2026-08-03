@@ -2,7 +2,7 @@
 
 Maharashtra ke stays, restaurants aur weekend trips — Badlapur–Karjat belt se
 Konkan tak. Next.js 15 (App Router) + React 19 + Postgres + Prisma 7.
-Cloudflare Workers par chalti hai, aur kisi bhi Node host par bhi.
+Apne Ubuntu server (Nginx + Cloudflare) par ya Cloudflare Workers par — dono chalte hain.
 
 ## Kya-kya hai
 
@@ -31,11 +31,15 @@ Cloudflare Workers par chalti hai, aur kisi bhi Node host par bhi.
   sab isi par. OSM ka attribution kone mein dikhta hai (license ki shart hai,
   hataiye mat). Tile server na pahunche to site apna banaya naksha dikha deti
   hai.
+- **Wishlist** — kisi bhi stay par ♥ dabaiye, wo dashboard mein save ho jaata
+  hai. Logged-out hain to login par bhej deta hai, kaam adhoora nahi chhodta.
+- **Contact form** (`/contact`) aur **newsletter** (footer mein) — dono ke
+  message admin panel ke **Messages** tab mein aate hain.
 - **Photos** — har listing par kai photos, lightbox gallery ke saath.
 - **Admin panel** (`/admin`) — applications approve/reject, riders aur fares,
   services **add aur delete**, stays aur restaurants
   ka full CRUD with price editing aur photo upload, service on/off toggles, site
-  ka text, bookings aur customers.
+  ka text, bookings, customers aur contact/newsletter messages.
 - **Auth** — admin email + password (PBKDF2-SHA256 hash, httpOnly JWT cookie),
   customer phone + OTP (server-side generated, hashed, 5-min expiry, 3 attempts).
 
@@ -64,7 +68,9 @@ JSON dobara nikaalta hai.
 
 ## Deploy
 
-Cloudflare Workers ke liye poora step-by-step: **[DEPLOY-CLOUDFLARE.md](DEPLOY-CLOUDFLARE.md)**.
+- **Apna Ubuntu server + Nginx + Cloudflare** — **[DEPLOY-UBUNTU.md](DEPLOY-UBUNTU.md)**
+  (systemd unit aur nginx config `deploy/` mein taiyaar hain)
+- **Cloudflare Workers** — **[DEPLOY-CLOUDFLARE.md](DEPLOY-CLOUDFLARE.md)**
 
 Yeh ek normal Next.js app bhi hai — kisi bhi Node host par chalti hai (Render,
 Fly, apna VPS). Zaroorat sirf ek Postgres database aur in variables ki hai:

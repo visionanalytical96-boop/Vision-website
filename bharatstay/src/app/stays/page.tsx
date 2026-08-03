@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { getSavedStayIds } from '@/lib/wishlist';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { StayCard } from '@/components/StayCard';
@@ -63,6 +64,8 @@ export default async function StaysPage({
     const s = params.toString();
     return s ? `/stays?${s}` : '/stays';
   };
+
+  const saved = await getSavedStayIds();
 
   return (
     <>
@@ -127,7 +130,7 @@ export default async function StaysPage({
         ) : (
           <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {stays.map((s, i) => (
-              <StayCard key={s.id} stay={s} index={i} />
+              <StayCard key={s.id} stay={s} index={i} saved={saved.has(s.id)} />
             ))}
           </div>
         )}

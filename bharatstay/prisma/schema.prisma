@@ -39,6 +39,7 @@ model User {
 
   bookings Booking[]
   reviews  Review[]
+  wishlist Wishlist[]
 
   @@index([role])
 }
@@ -125,6 +126,7 @@ model Stay {
   photos   Photo[]
   bookings Booking[]
   reviews  Review[]
+  wishlist Wishlist[]
 
   @@index([city, visible])
   @@index([visible, price])
@@ -594,4 +596,54 @@ model FareRule {
   seats         Int     @default(1)
   enabled     Boolean @default(true)
   updatedAt   DateTime @updatedAt
+}
+
+// ------------------------------------------------- saved stays & messages
+
+/// A stay a logged-in customer has saved. One row per person per stay, so the
+/// unique pair is what makes the heart button idempotent — a double tap
+/// toggles rather than piling up duplicates.
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  stayId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stay Stay @relation(fields: [stayId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stayId])
+  @@index([userId, createdAt])
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+/// Sent from the public contact form. Kept in the database rather than emailed
+/// because there is no outbound mail service configured — the admin inbox is
+/// the delivery mechanism.
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  body      String
+  status    MessageStatus @default(NEW)
+  createdAt DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+/// Newsletter signups from the footer. Email is unique so a repeat signup is a
+/// no-op instead of an error the visitor has to understand.
+model NewsletterSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { getSavedStayIds } from '@/lib/wishlist';
 import { getEnabledServices } from '@/lib/site';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -41,6 +42,8 @@ export default async function SearchPage({ searchParams: searchParamsPromise }: 
 
   const total = stays.length + restaurants.length;
 
+  const saved = await getSavedStayIds();
+
   return (
     <>
       <SiteHeader />
@@ -71,7 +74,7 @@ export default async function SearchPage({ searchParams: searchParamsPromise }: 
             <h2 className="display text-[clamp(21px,3.5vw,28px)]">Rehne ki jagahein ({stays.length})</h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {stays.map((s, i) => (
-                <StayCard key={s.id} stay={s} index={i} />
+                <StayCard key={s.id} stay={s} index={i} saved={saved.has(s.id)} />
               ))}
             </div>
           </section>

@@ -336,6 +336,84 @@ const businessName = `Test Farmhouse ${Date.now()}`;
   const page = await ctx.newPage();
   await page.goto(`${BASE}/dashboard`, { waitUntil: 'networkidle' });
   ok('otp: dashboard reachable after login', new URL(page.url()).pathname === '/dashboard', page.url());
+
+  // ---- wishlist, as the customer we just logged in as
+  await page.goto(`${BASE}/stays`, { waitUntil: 'networkidle' });
+  const firstCard = page.locator('a[href^="/stays/"]').first();
+  const stayHref = await firstCard.getAttribute('href');
+  const heart = firstCard.getByTestId('wishlist-toggle');
+  await heart.click();
+  await page.waitForTimeout(1200);
+  ok('wishlist: heart fills after saving', (await heart.getAttribute('aria-pressed')) === 'true');
+
+  await page.goto(`${BASE}/dashboard`, { waitUntil: 'networkidle' });
+  ok(
+    'wishlist: saved stay shows in the dashboard',
+    await visible(page.locator(`a[href="${stayHref}"]`).first()),
+  );
+
+  // Tapping again removes it — the unique pair makes this a toggle, not a pile.
+  await page.goto(`${BASE}${stayHref}`, { waitUntil: 'networkidle' });
+  const detailHeart = page.getByTestId('wishlist-toggle').first();
+  ok('wishlist: stay page shows it as already saved', (await detailHeart.getAttribute('aria-pressed')) === 'true');
+  await detailHeart.click();
+  await page.waitForTimeout(1200);
+  await page.goto(`${BASE}/dashboard`, { waitUntil: 'networkidle' });
+  ok(
+    'wishlist: unsaving removes it from the dashboard',
+    await visible(page.getByText('Abhi kuch save nahi kiya')),
+  );
+  await ctx.close();
+}
+
+// ---- a logged-out visitor is sent to login rather than silently ignored
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/stays`, { waitUntil: 'networkidle' });
+  await page.locator('a[href^="/stays/"]').first().getByTestId('wishlist-toggle').click();
+  await page.waitForTimeout(1500);
+  ok('wishlist: logged-out tap goes to login', new URL(page.url()).pathname === '/login', page.url());
+  await ctx.close();
+}
+
+// ------------------------------------------------------ contact form
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/contact`, { waitUntil: 'networkidle' });
+
+  await page.locator('#name').fill('Test Sender');
+  await page.locator('#email').fill(`sender-${Date.now()}@example.com`);
+  await page.locator('#subject').fill('Booking ke baare mein');
+  await page.locator('#body').fill('Yeh e2e ka test message hai, kam se kam das akshar.');
+  await page.getByRole('button', { name: /Message bhejiye/ }).click();
+  ok('contact: message sends', await visible(page.getByTestId('contact-sent')));
+
+  const short = await page.request.post(`${BASE}/api/contact`, {
+    data: { name: 'A', email: 'not-an-email', subject: 'x', body: 'y' },
+    failOnStatusCode: false,
+  });
+  ok('contact: rubbish input is rejected', short.status() === 400, `got ${short.status()}`);
+  await ctx.close();
+}
+
+// -------------------------------------------------------- newsletter
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  const email = `reader-${Date.now()}@example.com`;
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await page.getByTestId('newsletter-email').fill(email);
+  await page.getByRole('button', { name: 'Jodo' }).click();
+  ok('newsletter: signup confirms', await visible(page.getByTestId('newsletter-done')));
+
+  // Signing up twice must not error — people forget they already did.
+  const again = await page.request.post(`${BASE}/api/newsletter`, { data: { email }, failOnStatusCode: false });
+  ok('newsletter: signing up twice is fine', again.ok(), `got ${again.status()}`);
+
+  const bad = await page.request.post(`${BASE}/api/newsletter`, { data: { email: 'nope' }, failOnStatusCode: false });
+  ok('newsletter: invalid email rejected', bad.status() === 400, `got ${bad.status()}`);
   await ctx.close();
 }
 
@@ -343,7 +421,7 @@ const businessName = `Test Farmhouse ${Date.now()}`;
 {
   const routes = [
     '/', '/stays', '/restaurants', '/weekend', '/packages', '/activities', '/map',
-    '/search?q=badlapur', '/partner/apply', '/partner/status', '/login',
+    '/search?q=badlapur', '/partner/apply', '/partner/status', '/login', '/contact',
   ];
   for (const width of [1440, 390]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });

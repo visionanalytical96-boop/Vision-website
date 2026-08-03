@@ -13,6 +13,7 @@ const FALLBACK_SETTINGS: Record<string, string> = {
   upiId: '',
   upiName: '',
   supportEmail: 'support@bharatstay.example',
+  supportPhone: '',
   gstin: '',
   city: 'Badlapur, Maharashtra',
   dataNotice: 'Prices aur timings sample data hain — booking se pehle property se confirm karein.',
@@ -47,5 +48,10 @@ export async function getNavLinks(): Promise<{ href: string; label: string }[]> 
     { key: 'activities', href: '/activities', label: 'Activities' },
     { key: 'map', href: '/map', label: 'Map' },
   ];
-  return all.filter((l) => enabled.has(l.key)).map(({ href, label }) => ({ href, label }));
+  // Contact is not a service the admin can switch off — there always has to be
+  // a way to reach a human.
+  return [
+    ...all.filter((l) => enabled.has(l.key)).map(({ href, label }) => ({ href, label })),
+    { href: '/contact', label: 'Contact' },
+  ];
 }

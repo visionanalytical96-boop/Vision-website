@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { requireUserPage } from '@/lib/auth/guards';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
+import { StayCard } from '@/components/StayCard';
 import { INR } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -11,11 +12,20 @@ export const metadata: Metadata = { title: 'My bookings', robots: { index: false
 
 export default async function DashboardPage() {
   const session = await requireUserPage();
-  const bookings = await db.booking.findMany({
-    where: { userId: session.userId },
-    orderBy: { createdAt: 'desc' },
-    include: { stay: { select: { name: true, city: true, slug: true } } },
-  });
+  const [bookings, saved] = await Promise.all([
+    db.booking.findMany({
+      where: { userId: session.userId },
+      orderBy: { createdAt: 'desc' },
+      include: { stay: { select: { name: true, city: true, slug: true } } },
+    }),
+    db.wishlist.findMany({
+      where: { userId: session.userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        stay: { include: { photos: { select: { id: true }, orderBy: { sort: 'asc' }, take: 1 } } },
+      },
+    }),
+  ]);
 
   const spent = bookings
     .filter((b) => b.status === 'CONFIRMED' || b.status === 'COMPLETED')
@@ -32,8 +42,8 @@ export default async function DashboardPage() {
           {(
             [
               ['Total bookings', String(bookings.length)],
+              ['Wishlist', String(saved.length)],
               ['Confirmed kharch', INR(spent)],
-              ['Phone', session.phone ?? '—'],
             ] as [string, string][]
           ).map(([label, value]) => (
             <div key={label} className="card p-5">
@@ -73,6 +83,26 @@ export default async function DashboardPage() {
             ))}
           </ul>
         )}
+        <section className="mt-14" id="wishlist">
+          <h2 className="display text-[clamp(21px,3.5vw,30px)]">Wishlist</h2>
+          {saved.length === 0 ? (
+            <div className="card mt-6 p-10 text-center">
+              <p className="text-[15px] font-medium">Abhi kuch save nahi kiya</p>
+              <p className="mt-2 text-[14px]" style={{ color: 'var(--basalt-soft)' }}>
+                Kisi bhi stay par ♥ dabaiye — wo yahan aa jayega.
+              </p>
+              <Link href="/stays" className="btn btn-secondary mt-6">
+                Stays dekho
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {saved.map((w, i) => (
+                <StayCard key={w.id} stay={w.stay} index={i} saved />
+              ))}
+            </div>
+          )}
+        </section>
       </main>
       <SiteFooter />
     </>

@@ -1,0 +1,15 @@
+[Unit]
+Description=Watch Syncthing and auto-deploy Vision Analytical / BharatStay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust this path to wherever you copied the deploy/ubuntu/ directory.
+ExecStart=/opt/apps/deploy/watch-syncthing.sh
+Restart=on-failure
+RestartSec=10
+User=root
+
+[Install]
+WantedBy=multi-user.target

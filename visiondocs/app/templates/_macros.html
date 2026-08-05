@@ -1,0 +1,15 @@
+{% macro field(f, autocomplete=none) %}
+<div class="field {{ 'field--error' if f.errors else '' }}">
+    {{ f.label(class="field__label") }}
+    {% if autocomplete %}
+        {{ f(class="field__input", autocomplete=autocomplete) }}
+    {% else %}
+        {{ f(class="field__input") }}
+    {% endif %}
+    {% if f.errors %}
+        <ul class="field__errors">
+            {% for error in f.errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+</div>
+{% endmacro %}

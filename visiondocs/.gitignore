@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.pytest_cache/
+
+# Generated reports - keep the folder, ignore the output
+output/**/*.pdf
+!output/**/.gitkeep

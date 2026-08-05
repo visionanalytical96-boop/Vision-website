@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Service Report {{ report_id }}</title>
+<style>
+    @page {
+        size: A4;
+        margin: 1.8cm 1.6cm 2.2cm;
+        @bottom-center {
+            content: "{{ company_name }} — Service Report " counter(page) " of " counter(pages);
+            font-size: 8pt;
+            color: #888;
+        }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: 'DejaVu Sans', 'Helvetica Neue', Arial, sans-serif;
+        font-size: 10.5pt;
+        color: #222;
+        line-height: 1.45;
+    }
+
+    .doc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 3px solid #1b4f8a;
+        padding-bottom: 10px;
+        margin-bottom: 18px;
+    }
+    .doc-header .company-name {
+        font-size: 20pt;
+        font-weight: 800;
+        color: #1b4f8a;
+        text-transform: uppercase;
+        letter-spacing: -0.5px;
+        margin: 0;
+    }
+    .doc-header .company-name span { color: #00adef; }
+    .doc-header .company-tagline { font-size: 9pt; color: #666; margin: 2px 0 0; }
+    .doc-header .company-contact { font-size: 8.5pt; color: #666; margin-top: 6px; }
+    .doc-header .meta { text-align: right; }
+    .doc-header .doc-title {
+        font-size: 13pt;
+        font-weight: 700;
+        color: #111;
+        margin: 0 0 4px;
+        text-transform: uppercase;
+    }
+    .doc-header .report-id { font-size: 9pt; color: #444; }
+    .doc-header .generated-at { font-size: 8pt; color: #888; }
+
+    h2.section-title {
+        font-size: 10.5pt;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #1b4f8a;
+        border-bottom: 1px solid #dbe4ee;
+        padding-bottom: 3px;
+        margin: 18px 0 8px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 24px;
+    }
+    .info-row { display: flex; padding: 2px 0; border-bottom: 1px dotted #e2e2e2; }
+    .info-row .label { flex: 0 0 40%; color: #666; font-size: 9pt; }
+    .info-row .value { flex: 1; font-weight: 600; }
+
+    .status-pill {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 8.5pt;
+        font-weight: 700;
+        background: #eaf3fb;
+        color: #1b4f8a;
+    }
+
+    .text-block { white-space: pre-wrap; margin: 4px 0 0; }
+    .text-block.empty { color: #999; font-style: italic; }
+
+    table.parts-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+    }
+    table.parts-table th, table.parts-table td {
+        border: 1px solid #dbe4ee;
+        padding: 5px 8px;
+        font-size: 9.5pt;
+        text-align: left;
+    }
+    table.parts-table th {
+        background: #f2f6fb;
+        color: #1b4f8a;
+        text-transform: uppercase;
+        font-size: 8pt;
+    }
+
+    .signoff {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 32px;
+    }
+    .signoff .block { border-top: 1px solid #999; padding-top: 6px; font-size: 9pt; }
+    .signoff .block .role { color: #666; text-transform: uppercase; font-size: 8pt; }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+    <div>
+        <p class="company-name">VISION<span>ANALYTICAL</span></p>
+        <p class="company-tagline">{{ company_tagline }}</p>
+        <p class="company-contact">
+            {{ company_address }}<br>
+            {{ company_phone }} &middot; {{ company_email }}
+        </p>
+    </div>
+    <div class="meta">
+        <p class="doc-title">Service Report</p>
+        <p class="report-id">{{ report_id }}</p>
+        <p class="generated-at">Generated {{ generated_at.strftime('%d %b %Y, %H:%M UTC') }}</p>
+    </div>
+</div>
+
+<h2 class="section-title">Service Info</h2>
+<div class="info-grid">
+    <div class="info-row"><span class="label">Service Date</span><span class="value">{{ service_date.strftime('%d %b %Y') if service_date else '—' }}</span></div>
+    <div class="info-row"><span class="label">Service Type</span><span class="value">{{ service_type }}</span></div>
+    <div class="info-row"><span class="label">Status</span><span class="value"><span class="status-pill">{{ service_status }}</span></span></div>
+    <div class="info-row"><span class="label">Next Service Due</span><span class="value">{{ next_service_date.strftime('%d %b %Y') if next_service_date else '—' }}</span></div>
+</div>
+
+<h2 class="section-title">Customer</h2>
+<div class="info-grid">
+    <div class="info-row"><span class="label">Name</span><span class="value">{{ customer_name }}</span></div>
+    <div class="info-row"><span class="label">Company</span><span class="value">{{ customer_company or '—' }}</span></div>
+    <div class="info-row"><span class="label">Contact Person</span><span class="value">{{ contact_person or '—' }}</span></div>
+    <div class="info-row"><span class="label">Phone</span><span class="value">{{ contact_phone or '—' }}</span></div>
+    <div class="info-row"><span class="label">Email</span><span class="value">{{ contact_email or '—' }}</span></div>
+    <div class="info-row"><span class="label">Address</span><span class="value">{{ customer_address or '—' }}</span></div>
+</div>
+
+<h2 class="section-title">Instrument</h2>
+<div class="info-grid">
+    <div class="info-row"><span class="label">Type</span><span class="value">{{ instrument_type }}</span></div>
+    <div class="info-row"><span class="label">Make / Brand</span><span class="value">{{ instrument_make or '—' }}</span></div>
+    <div class="info-row"><span class="label">Model</span><span class="value">{{ instrument_model or '—' }}</span></div>
+    <div class="info-row"><span class="label">Serial Number</span><span class="value">{{ instrument_serial or '—' }}</span></div>
+</div>
+
+<h2 class="section-title">Reported Complaint / Issue</h2>
+<p class="text-block {{ 'empty' if not complaint }}">{{ complaint or 'None reported.' }}</p>
+
+<h2 class="section-title">Work Performed / Observations</h2>
+<p class="text-block">{{ work_performed }}</p>
+
+<h2 class="section-title">Recommendations</h2>
+<p class="text-block {{ 'empty' if not recommendations }}">{{ recommendations or 'No further recommendations.' }}</p>
+
+{% if parts %}
+<h2 class="section-title">Parts Replaced</h2>
+<table class="parts-table">
+    <thead><tr><th>Part Name</th><th>Part Number</th><th>Qty</th></tr></thead>
+    <tbody>
+        {% for part in parts %}
+        <tr>
+            <td>{{ part.part_name }}</td>
+            <td>{{ part.part_number or '—' }}</td>
+            <td>{{ part.quantity or '—' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<div class="signoff">
+    <div class="block">
+        <div class="role">Service Engineer</div>
+        {{ engineer_name }}
+    </div>
+    <div class="block">
+        <div class="role">Customer Acknowledgement</div>
+        &nbsp;
+    </div>
+</div>
+
+</body>
+</html>

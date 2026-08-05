@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Report Ready{% endblock %}
+
+{% block content %}
+<div class="ready-panel">
+    <h1>Report generated</h1>
+    <p class="lede">Report <strong>{{ report_id }}</strong> is ready.</p>
+    <div class="form-actions">
+        <a class="btn btn--primary" href="{{ url_for('service_reports.download', report_id=report_id) }}">Download PDF</a>
+        <a class="btn btn--ghost" href="{{ url_for('service_reports.new') }}">Create another</a>
+        <a class="btn btn--ghost" href="{{ url_for('service_reports.index') }}">Back to reports</a>
+    </div>
+</div>
+{% endblock %}

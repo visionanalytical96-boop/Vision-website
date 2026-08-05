@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>VisionDocs</h1>
+<p class="lede">Document automation for {{ company_name }}.</p>
+
+<div class="module-grid">
+    <a class="module-card module-card--active" href="{{ url_for('service_reports.index') }}">
+        <span class="module-card__title">Service Reports</span>
+        <span class="module-card__desc">Generate and download instrument service report PDFs.</span>
+    </a>
+
+    {% for title, desc in [
+        ('Customer Management', 'Customer records shared across every document type.'),
+        ('Instrument Database', 'Track installed instruments per customer.'),
+        ('AMC Management', 'Annual maintenance contracts and renewal tracking.'),
+        ('IQ/OQ/PQ Documentation', 'Installation, operational and performance qualification docs.'),
+        ('Calibration Reports', 'Calibration certificates and due-date tracking.'),
+        ('Spare Parts Inventory', 'Stock levels and part usage history.'),
+        ('Quotations', 'Customer quotations and follow-up.'),
+        ('AI Assistant', 'Ollama-backed drafting and lookup assistant.'),
+        ('Nextcloud Integration', 'Sync generated documents to Nextcloud.'),
+        ('User Authentication', 'Accounts and role-based access.'),
+    ] %}
+    <div class="module-card module-card--planned">
+        <span class="module-card__title">{{ title }}</span>
+        <span class="module-card__desc">{{ desc }}</span>
+        <span class="module-card__badge">Planned</span>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

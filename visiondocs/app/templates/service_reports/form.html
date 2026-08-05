@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}New Service Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>New Service Report</h1>
+    <a class="btn btn--ghost" href="{{ url_for('service_reports.index') }}">Back to reports</a>
+</div>
+
+<form method="post" novalidate class="report-form">
+    {{ form.hidden_tag() }}
+
+    <fieldset class="form-section">
+        <legend>Service Info</legend>
+        <div class="field-grid">
+            {{ field(form.service_date) }}
+            {{ field(form.service_type) }}
+        </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+        <legend>Customer</legend>
+        <div class="field-grid">
+            {{ field(form.customer_name, autocomplete="organization") }}
+            {{ field(form.customer_company) }}
+            {{ field(form.contact_person) }}
+            {{ field(form.contact_phone) }}
+            {{ field(form.contact_email) }}
+        </div>
+        {{ field(form.customer_address) }}
+    </fieldset>
+
+    <fieldset class="form-section">
+        <legend>Instrument</legend>
+        <div class="field-grid">
+            {{ field(form.instrument_type) }}
+            {{ field(form.instrument_make) }}
+            {{ field(form.instrument_model) }}
+            {{ field(form.instrument_serial) }}
+        </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+        <legend>Service Details</legend>
+        {{ field(form.complaint) }}
+        {{ field(form.work_performed) }}
+        {{ field(form.recommendations) }}
+        <div class="field-grid">
+            {{ field(form.service_status) }}
+            {{ field(form.next_service_date) }}
+        </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+        <legend>Parts Replaced <span class="legend-hint">(optional)</span></legend>
+        <table class="parts-table">
+            <thead>
+                <tr><th>Part Name</th><th>Part Number</th><th>Qty</th><th></th></tr>
+            </thead>
+            <tbody data-parts-body>
+                {% for part in form.parts %}
+                <tr data-part-row>
+                    <td>{{ part.part_name(class="field__input") }}</td>
+                    <td>{{ part.part_number(class="field__input") }}</td>
+                    <td>{{ part.quantity(class="field__input field__input--qty") }}</td>
+                    <td><button type="button" class="btn btn--icon" data-remove-part title="Remove row">&times;</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn--ghost btn--small" data-add-part>+ Add Part</button>
+
+        <template data-part-template>
+            <td><input class="field__input" type="text" name="parts-__index__-part_name" id="parts-__index__-part_name"></td>
+            <td><input class="field__input" type="text" name="parts-__index__-part_number" id="parts-__index__-part_number"></td>
+            <td><input class="field__input field__input--qty" type="text" name="parts-__index__-quantity" id="parts-__index__-quantity"></td>
+            <td><button type="button" class="btn btn--icon" data-remove-part title="Remove row">&times;</button></td>
+        </template>
+    </fieldset>
+
+    <fieldset class="form-section">
+        <legend>Sign-off</legend>
+        <div class="field-grid">
+            {{ field(form.engineer_name) }}
+        </div>
+    </fieldset>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Generate PDF Report</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block head %}
+<script defer src="{{ url_for('static', filename='js/service_report.js') }}"></script>
+{% endblock %}

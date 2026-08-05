@@ -4,34 +4,38 @@ import { PrismaClient, Role, CategoryKind, ProductKind, StockStatus } from '../s
 import { INSTRUMENT_CATEGORIES } from './seed-data';
 import { SPARE_PART_CATEGORIES } from './seed-data-spare-parts';
 import { REFURBISHED_CATEGORIES } from './seed-data-refurbished';
+import { BLOG_POSTS } from './seed-data-blog';
 
 // Bootstraps the first Admin account. Safe to re-run: does nothing unless
 // SEED_ADMIN_PASSWORD is set, and skips if the account already exists - so
 // there is never a default/known admin password shipped in source control.
-async function seedAdmin(prisma: PrismaClient) {
+// Returns the admin's id (existing or newly created) so it can author seed
+// blog posts, or null if no admin exists yet to attribute them to.
+async function seedAdmin(prisma: PrismaClient): Promise<{ id: string } | null> {
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@visionanalytical.co.in';
   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+
+  const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
+  if (existing) {
+    console.log(`Admin user ${adminEmail} already exists - skipping.`);
+    return { id: existing.id };
+  }
 
   if (!adminPassword) {
     console.warn(
       'SEED_ADMIN_PASSWORD is not set - skipping admin bootstrap.\n' +
         'Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD and re-run `npx prisma db seed` to create the first admin account.',
     );
-    return;
-  }
-
-  const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
-  if (existing) {
-    console.log(`Admin user ${adminEmail} already exists - skipping.`);
-    return;
+    return null;
   }
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
-  await prisma.user.create({
+  const admin = await prisma.user.create({
     data: { email: adminEmail, name: 'Administrator', passwordHash, role: Role.ADMIN },
   });
 
   console.log(`Created admin user: ${adminEmail}`);
+  return { id: admin.id };
 }
 
 // Reference catalog data (categories + a couple of instruments per category).
@@ -177,6 +181,33 @@ async function seedRefurbishedInstruments(prisma: PrismaClient) {
   console.log(`Seeded ${REFURBISHED_CATEGORIES.length} refurbished instrument categories.`);
 }
 
+// Knowledge Center content, attributed to the admin account.
+async function seedBlogPosts(prisma: PrismaClient, authorId: string) {
+  for (const post of BLOG_POSTS) {
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: {
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        category: post.category,
+      },
+      create: {
+        slug: post.slug,
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        category: post.category,
+        authorId,
+        isPublished: true,
+        publishedAt: new Date(),
+      },
+    });
+  }
+
+  console.log(`Seeded ${BLOG_POSTS.length} blog posts.`);
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -185,10 +216,16 @@ async function main() {
 
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
 
-  await seedAdmin(prisma);
+  const admin = await seedAdmin(prisma);
   await seedInstrumentCatalog(prisma);
   await seedSparePartsCatalog(prisma);
   await seedRefurbishedInstruments(prisma);
+
+  if (admin) {
+    await seedBlogPosts(prisma, admin.id);
+  } else {
+    console.log('Skipping blog post seed - no admin user available to author them.');
+  }
 
   await prisma.$disconnect();
 }

@@ -4,6 +4,7 @@ import { roleHomePath } from '@/lib/roles';
 import { MAIN_NAV_LINKS } from '@/lib/site-nav';
 import { buttonVariants } from '@/components/ui/Button';
 import { MobileNav } from './MobileNav';
+import { CartIndicator } from './CartIndicator';
 
 export async function SiteHeader() {
   const session = await getSession();
@@ -28,8 +29,9 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Link href={accountHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+        <div className="hidden items-center gap-2 lg:flex">
+          <CartIndicator />
+          <Link href={accountHref} className={buttonVariants({ variant: 'outline', size: 'sm', className: 'ml-1' })}>
             {session ? 'My Account' : 'Login'}
           </Link>
           <Link href="/contact" className={buttonVariants({ variant: 'primary', size: 'sm' })}>
@@ -37,7 +39,10 @@ export async function SiteHeader() {
           </Link>
         </div>
 
-        <MobileNav isAuthenticated={Boolean(session)} accountHref={accountHref} />
+        <div className="flex items-center gap-1 lg:hidden">
+          <CartIndicator />
+          <MobileNav isAuthenticated={Boolean(session)} accountHref={accountHref} />
+        </div>
       </div>
     </header>
   );

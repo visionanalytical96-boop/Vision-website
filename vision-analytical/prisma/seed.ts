@@ -2,6 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
 import { PrismaClient, Role, CategoryKind, ProductKind, StockStatus } from '../src/generated/prisma/client';
 import { INSTRUMENT_CATEGORIES } from './seed-data';
+import { SPARE_PART_CATEGORIES } from './seed-data-spare-parts';
 
 // Bootstraps the first Admin account. Safe to re-run: does nothing unless
 // SEED_ADMIN_PASSWORD is set, and skips if the account already exists - so
@@ -81,6 +82,53 @@ async function seedInstrumentCatalog(prisma: PrismaClient) {
   console.log(`Seeded ${INSTRUMENT_CATEGORIES.length} instrument categories.`);
 }
 
+// Spare parts: one representative part per part-type category, so the store
+// has a real, browsable catalog across every filter facet the UI exposes.
+async function seedSparePartsCatalog(prisma: PrismaClient) {
+  let index = 0;
+  for (const category of SPARE_PART_CATEGORIES) {
+    const savedCategory = await prisma.category.upsert({
+      where: { slug: category.slug },
+      update: { name: category.name, sortOrder: category.sortOrder },
+      create: {
+        slug: category.slug,
+        name: category.name,
+        sortOrder: category.sortOrder,
+        kind: CategoryKind.SPARE_PART,
+      },
+    });
+
+    const stockStatus = index % 5 === 0 ? StockStatus.LOW_STOCK : StockStatus.IN_STOCK;
+    index += 1;
+
+    const part = category.part;
+    await prisma.product.upsert({
+      where: { sku: part.sku },
+      update: {
+        name: part.name,
+        description: part.description,
+        compatibleBrands: part.compatibleBrands,
+        categoryId: savedCategory.id,
+      },
+      create: {
+        sku: part.sku,
+        slug: part.slug,
+        name: part.name,
+        description: part.description,
+        compatibleBrands: part.compatibleBrands,
+        kind: ProductKind.SPARE_PART,
+        categoryId: savedCategory.id,
+        images: [],
+        stockStatus,
+        stockQuantity: stockStatus === StockStatus.LOW_STOCK ? 3 : 25,
+        priceMinor: null,
+      },
+    });
+  }
+
+  console.log(`Seeded ${SPARE_PART_CATEGORIES.length} spare part categories.`);
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -91,6 +139,7 @@ async function main() {
 
   await seedAdmin(prisma);
   await seedInstrumentCatalog(prisma);
+  await seedSparePartsCatalog(prisma);
 
   await prisma.$disconnect();
 }

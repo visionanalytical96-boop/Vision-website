@@ -198,7 +198,9 @@ model Address {
 model Category {
   id          String       @id @default(cuid())
   name        String
-  slug        String       @unique
+  // Unique per kind, not globally: "HPLC" is a valid slug for both an
+  // instrument category and a refurbished-instrument category.
+  slug        String
   kind        CategoryKind
   description String?
   parentId    String?
@@ -209,6 +211,7 @@ model Category {
   products               Product[]
   refurbishedInstruments RefurbishedInstrument[]
 
+  @@unique([slug, kind])
   @@index([kind])
 }
 

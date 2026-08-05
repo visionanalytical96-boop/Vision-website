@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient, Role, CategoryKind, ProductKind, StockStatus } from '../src/generated/prisma/client';
 import { INSTRUMENT_CATEGORIES } from './seed-data';
 import { SPARE_PART_CATEGORIES } from './seed-data-spare-parts';
+import { REFURBISHED_CATEGORIES } from './seed-data-refurbished';
 
 // Bootstraps the first Admin account. Safe to re-run: does nothing unless
 // SEED_ADMIN_PASSWORD is set, and skips if the account already exists - so
@@ -38,7 +39,7 @@ async function seedAdmin(prisma: PrismaClient) {
 async function seedInstrumentCatalog(prisma: PrismaClient) {
   for (const category of INSTRUMENT_CATEGORIES) {
     const savedCategory = await prisma.category.upsert({
-      where: { slug: category.slug },
+      where: { slug_kind: { slug: category.slug, kind: CategoryKind.INSTRUMENT } },
       update: {
         name: category.name,
         description: category.description,
@@ -88,7 +89,7 @@ async function seedSparePartsCatalog(prisma: PrismaClient) {
   let index = 0;
   for (const category of SPARE_PART_CATEGORIES) {
     const savedCategory = await prisma.category.upsert({
-      where: { slug: category.slug },
+      where: { slug_kind: { slug: category.slug, kind: CategoryKind.SPARE_PART } },
       update: { name: category.name, sortOrder: category.sortOrder },
       create: {
         slug: category.slug,
@@ -129,6 +130,53 @@ async function seedSparePartsCatalog(prisma: PrismaClient) {
   console.log(`Seeded ${SPARE_PART_CATEGORIES.length} spare part categories.`);
 }
 
+// Refurbished instruments: one validated, warranty-backed unit per category.
+async function seedRefurbishedInstruments(prisma: PrismaClient) {
+  for (const category of REFURBISHED_CATEGORIES) {
+    const savedCategory = await prisma.category.upsert({
+      where: { slug_kind: { slug: category.slug, kind: CategoryKind.REFURBISHED } },
+      update: { name: category.name, sortOrder: category.sortOrder },
+      create: {
+        slug: category.slug,
+        name: category.name,
+        sortOrder: category.sortOrder,
+        kind: CategoryKind.REFURBISHED,
+      },
+    });
+
+    const instrument = category.instrument;
+    await prisma.refurbishedInstrument.upsert({
+      where: { slug: instrument.slug },
+      update: {
+        name: instrument.name,
+        brand: instrument.brand,
+        model: instrument.model,
+        condition: instrument.condition,
+        includedAccessories: instrument.includedAccessories,
+        warrantyMonths: instrument.warrantyMonths,
+        description: instrument.description,
+        categoryId: savedCategory.id,
+      },
+      create: {
+        slug: instrument.slug,
+        name: instrument.name,
+        brand: instrument.brand,
+        model: instrument.model,
+        condition: instrument.condition,
+        includedAccessories: instrument.includedAccessories,
+        warrantyMonths: instrument.warrantyMonths,
+        description: instrument.description,
+        categoryId: savedCategory.id,
+        images: [],
+        stockStatus: StockStatus.IN_STOCK,
+        priceMinor: null,
+      },
+    });
+  }
+
+  console.log(`Seeded ${REFURBISHED_CATEGORIES.length} refurbished instrument categories.`);
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -140,6 +188,7 @@ async function main() {
   await seedAdmin(prisma);
   await seedInstrumentCatalog(prisma);
   await seedSparePartsCatalog(prisma);
+  await seedRefurbishedInstruments(prisma);
 
   await prisma.$disconnect();
 }

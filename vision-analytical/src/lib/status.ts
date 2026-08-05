@@ -7,6 +7,7 @@ import {
   InvoiceStatus,
   CrmLeadStatus,
   Priority,
+  RefurbishedCondition,
 } from '@/generated/prisma/client';
 import type { BadgeTone } from '@/components/ui/Badge';
 
@@ -70,6 +71,12 @@ export const crmLeadStatusMeta: Record<CrmLeadStatus, StatusMeta> = {
   PROPOSAL_SENT: { label: 'Proposal sent', tone: 'warning' },
   WON: { label: 'Won', tone: 'success' },
   LOST: { label: 'Lost', tone: 'danger' },
+};
+
+export const refurbishedConditionMeta: Record<RefurbishedCondition, StatusMeta> = {
+  EXCELLENT: { label: 'Excellent condition', tone: 'success' },
+  GOOD: { label: 'Good condition', tone: 'info' },
+  FAIR: { label: 'Fair condition', tone: 'warning' },
 };
 
 export const priorityMeta: Record<Priority, StatusMeta> = {

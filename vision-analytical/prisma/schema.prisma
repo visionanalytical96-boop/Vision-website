@@ -1,0 +1,546 @@
+// Prisma schema for the Vision Analytical platform.
+// See prisma.config.ts for CLI/config wiring (Prisma 7 config format).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  ENGINEER
+  CUSTOMER
+}
+
+enum CategoryKind {
+  INSTRUMENT
+  SPARE_PART
+  REFURBISHED
+}
+
+enum ProductKind {
+  INSTRUMENT
+  SPARE_PART
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  MADE_TO_ORDER
+}
+
+enum RefurbishedCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum QuoteStatus {
+  REQUESTED
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+enum ServiceRequestType {
+  INSTALLATION
+  PREVENTIVE_MAINTENANCE
+  BREAKDOWN
+  CALIBRATION
+  IQ
+  OQ
+  PQ
+  VALIDATION
+  SOFTWARE_INSTALL
+  TRAINING
+  OTHER
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ServiceRequestStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+  CANCELLED
+}
+
+enum AmcType {
+  AMC
+  CMC
+}
+
+enum AmcStatus {
+  ACTIVE
+  EXPIRING_SOON
+  EXPIRED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum CrmLeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+
+enum CrmActivityType {
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+  NOTE
+}
+
+enum BlogCategory {
+  TROUBLESHOOTING
+  FAQ
+  TECHNICAL_ARTICLE
+  INSTRUMENT_GUIDE
+}
+
+enum StockMovementType {
+  PURCHASE_IN
+  SALE_OUT
+  ADJUSTMENT
+  RETURN
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  name         String
+  phone        String?
+  companyName  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  addresses           Address[]
+  orders              Order[]          @relation("CustomerOrders")
+  quotes              Quote[]          @relation("CustomerQuotes")
+  serviceRequests     ServiceRequest[] @relation("CustomerServiceRequests")
+  assignedServiceJobs ServiceRequest[] @relation("EngineerServiceRequests")
+  serviceReports      ServiceReport[]  @relation("EngineerServiceReports")
+  amcContracts        AmcContract[]    @relation("CustomerAmcContracts")
+  invoices            Invoice[]        @relation("CustomerInvoices")
+  assignedLeads       CrmLead[]        @relation("AssignedLeads")
+  crmActivities       CrmActivity[]    @relation("CreatedActivities")
+  blogPosts           BlogPost[]       @relation("AuthoredPosts")
+  stockMovements      StockMovement[]  @relation("RecordedMovements")
+
+  @@index([role])
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  kind        CategoryKind
+  description String?
+  parentId    String?
+  parent      Category?    @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  children    Category[]   @relation("CategoryToSubcategory")
+  sortOrder   Int          @default(0)
+
+  products               Product[]
+  refurbishedInstruments RefurbishedInstrument[]
+
+  @@index([kind])
+}
+
+model Product {
+  id               String      @id @default(cuid())
+  sku              String      @unique
+  slug             String      @unique
+  name             String
+  kind             ProductKind
+  categoryId       String
+  category         Category    @relation(fields: [categoryId], references: [id])
+  brand            String?
+  compatibleBrands String[]
+  description      String
+  images           Json
+  priceMinor       Int?
+  stockStatus      StockStatus @default(IN_STOCK)
+  stockQuantity    Int         @default(0)
+  isPublished      Boolean     @default(true)
+  seoTitle         String?
+  seoDescription   String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  orderItems     OrderItem[]
+  quoteItems     QuoteItem[]
+  stockMovements StockMovement[]
+
+  @@index([kind])
+  @@index([categoryId])
+  @@index([stockStatus])
+}
+
+model RefurbishedInstrument {
+  id                  String               @id @default(cuid())
+  slug                String               @unique
+  name                String
+  categoryId          String
+  category            Category             @relation(fields: [categoryId], references: [id])
+  brand               String
+  model               String?
+  condition           RefurbishedCondition
+  includedAccessories String[]
+  warrantyMonths      Int
+  demoVideoUrl        String?
+  description         String
+  images              Json
+  priceMinor          Int?
+  stockStatus         StockStatus          @default(IN_STOCK)
+  isPublished         Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  orderItems OrderItem[]
+  quoteItems QuoteItem[]
+
+  @@index([categoryId])
+}
+
+// ---------------------------------------------------------------------------
+// Commerce: quotes -> orders -> invoices
+// ---------------------------------------------------------------------------
+
+model Quote {
+  id            String      @id @default(cuid())
+  quoteNumber   String      @unique
+  customerId    String?
+  customer      User?       @relation("CustomerQuotes", fields: [customerId], references: [id])
+  contactName   String
+  contactEmail  String
+  contactPhone  String?
+  status        QuoteStatus @default(REQUESTED)
+  validUntil    DateTime?
+  totalMinor    Int?
+  notes         String?
+  poNumber      String?
+  poDocumentUrl String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items QuoteItem[]
+  order Order?
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model QuoteItem {
+  id                      String                 @id @default(cuid())
+  quoteId                 String
+  quote                   Quote                  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId               String?
+  product                 Product?               @relation(fields: [productId], references: [id], onDelete: SetNull)
+  refurbishedInstrumentId String?
+  refurbishedInstrument   RefurbishedInstrument? @relation(fields: [refurbishedInstrumentId], references: [id], onDelete: SetNull)
+  description             String
+  quantity                Int
+  unitPriceMinor          Int?
+
+  @@index([quoteId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerId      String
+  customer        User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  status          OrderStatus @default(PENDING)
+  subtotalMinor   Int
+  totalMinor      Int
+  shippingAddress Json
+  billingAddress  Json
+  poNumber        String?
+  poDocumentUrl   String?
+  notes           String?
+  sourceQuoteId   String?     @unique
+  sourceQuote     Quote?      @relation(fields: [sourceQuoteId], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items    OrderItem[]
+  invoices Invoice[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model OrderItem {
+  id                      String                 @id @default(cuid())
+  orderId                 String
+  order                   Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId               String?
+  product                 Product?               @relation(fields: [productId], references: [id], onDelete: SetNull)
+  refurbishedInstrumentId String?
+  refurbishedInstrument   RefurbishedInstrument? @relation(fields: [refurbishedInstrumentId], references: [id], onDelete: SetNull)
+  nameSnapshot            String
+  skuSnapshot             String?
+  unitPriceMinor          Int
+  quantity                Int
+  lineTotalMinor          Int
+
+  @@index([orderId])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  customerId    String
+  customer      User          @relation("CustomerInvoices", fields: [customerId], references: [id])
+  orderId       String?
+  order         Order?        @relation(fields: [orderId], references: [id])
+  amcContractId String?
+  amcContract   AmcContract?  @relation(fields: [amcContractId], references: [id])
+  amountMinor   Int
+  status        InvoiceStatus @default(UNPAID)
+  issuedAt      DateTime      @default(now())
+  dueAt         DateTime?
+  pdfUrl        String?
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Service: requests -> reports, AMC/CMC contracts
+// ---------------------------------------------------------------------------
+
+model ServiceRequest {
+  id                    String               @id @default(cuid())
+  ticketNumber          String               @unique
+  customerId            String
+  customer              User                 @relation("CustomerServiceRequests", fields: [customerId], references: [id])
+  type                  ServiceRequestType
+  priority              Priority             @default(NORMAL)
+  status                ServiceRequestStatus @default(OPEN)
+  instrumentDescription String
+  description           String
+  assignedEngineerId    String?
+  assignedEngineer      User?                @relation("EngineerServiceRequests", fields: [assignedEngineerId], references: [id])
+  amcContractId         String?
+  amcContract           AmcContract?         @relation(fields: [amcContractId], references: [id])
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  resolvedAt            DateTime?
+
+  reports ServiceReport[]
+
+  @@index([customerId])
+  @@index([assignedEngineerId])
+  @@index([status])
+}
+
+model ServiceReport {
+  id                   String         @id @default(cuid())
+  serviceRequestId     String
+  serviceRequest       ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  engineerId           String
+  engineer             User           @relation("EngineerServiceReports", fields: [engineerId], references: [id])
+  workPerformed        String
+  partsUsed            Json
+  photos               Json
+  customerSignatureUrl String?
+  reportedAt           DateTime       @default(now())
+
+  @@index([serviceRequestId])
+}
+
+model AmcContract {
+  id                    String    @id @default(cuid())
+  contractNumber        String    @unique
+  customerId            String
+  customer              User      @relation("CustomerAmcContracts", fields: [customerId], references: [id])
+  type                  AmcType
+  instrumentDescription String
+  startDate             DateTime
+  endDate               DateTime
+  visitsIncluded        Int
+  visitsUsed            Int       @default(0)
+  priceMinor            Int?
+  status                AmcStatus @default(ACTIVE)
+  createdAt             DateTime  @default(now())
+
+  serviceRequests ServiceRequest[]
+  invoices        Invoice[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// CRM
+// ---------------------------------------------------------------------------
+
+model CrmLead {
+  id                  String        @id @default(cuid())
+  name                String
+  company             String?
+  email               String?
+  phone               String?
+  source              String?
+  status              CrmLeadStatus @default(NEW)
+  assignedToId        String?
+  assignedTo          User?         @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  notes               String?
+  convertedCustomerId String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  activities CrmActivity[]
+
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model CrmActivity {
+  id          String          @id @default(cuid())
+  leadId      String
+  lead        CrmLead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type        CrmActivityType
+  notes       String
+  createdById String
+  createdBy   User            @relation("CreatedActivities", fields: [createdById], references: [id])
+  createdAt   DateTime        @default(now())
+
+  @@index([leadId])
+}
+
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+
+model BlogPost {
+  id             String       @id @default(cuid())
+  slug           String       @unique
+  title          String
+  excerpt        String
+  content        String
+  category       BlogCategory
+  coverImage     String?
+  authorId       String
+  author         User         @relation("AuthoredPosts", fields: [authorId], references: [id])
+  isPublished    Boolean      @default(false)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([category])
+  @@index([isPublished])
+}
+
+// ---------------------------------------------------------------------------
+// Inventory
+// ---------------------------------------------------------------------------
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  createdAt   DateTime @default(now())
+}
+
+model StockMovement {
+  id          String            @id @default(cuid())
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id])
+  type        StockMovementType
+  quantity    Int
+  reference   String?
+  note        String?
+  createdById String
+  createdBy   User              @relation("RecordedMovements", fields: [createdById], references: [id])
+  createdAt   DateTime          @default(now())
+
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Misc
+// ---------------------------------------------------------------------------
+
+model ContactMessage {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  subject    String?
+  message    String
+  isResolved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}

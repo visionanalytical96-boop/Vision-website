@@ -1,0 +1,29 @@
+import type { ReactNode } from 'react';
+
+interface FormFieldProps {
+  label: string;
+  htmlFor: string;
+  error?: string | string[];
+  hint?: string;
+  required?: boolean;
+  children: ReactNode;
+}
+
+export function FormField({ label, htmlFor, error, hint, required, children }: FormFieldProps) {
+  const errorMessage = Array.isArray(error) ? error[0] : error;
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
+        {label}
+        {required && <span className="text-danger"> *</span>}
+      </label>
+      {children}
+      {errorMessage ? (
+        <p className="text-sm text-danger">{errorMessage}</p>
+      ) : hint ? (
+        <p className="text-sm text-muted">{hint}</p>
+      ) : null}
+    </div>
+  );
+}

@@ -27,6 +27,11 @@ case "$SITE" in
         REQUIRED_FILES="$VISION_ANALYTICAL_REQUIRED_FILES"
         OWNER="$VISION_ANALYTICAL_OWNER"
         RELOAD_CMD="$VISION_ANALYTICAL_RELOAD_CMD"
+        ROLLBACK_CMD="$VISION_ANALYTICAL_RELOAD_CMD"
+        BUILD_TRIGGER_FILES=""
+        BUILD_CMD=""
+        FAST_RELOAD_CMD=""
+        CONFIG_CHECK_CMD=""
         HEALTHCHECK_CMD="${VISION_ANALYTICAL_HEALTHCHECK_CMD:-}"
         ;;
     bharatstay)
@@ -35,7 +40,12 @@ case "$SITE" in
         CURRENT="$BHARATSTAY_CURRENT"
         REQUIRED_FILES="$BHARATSTAY_REQUIRED_FILES"
         OWNER="$BHARATSTAY_OWNER"
-        RELOAD_CMD="$BHARATSTAY_RELOAD_CMD"
+        RELOAD_CMD=""
+        ROLLBACK_CMD="$BHARATSTAY_BUILD_CMD"
+        BUILD_TRIGGER_FILES="$BHARATSTAY_BUILD_TRIGGER_FILES"
+        BUILD_CMD="$BHARATSTAY_BUILD_CMD"
+        FAST_RELOAD_CMD="$BHARATSTAY_FAST_RELOAD_CMD"
+        CONFIG_CHECK_CMD="${BHARATSTAY_CONFIG_CHECK_CMD:-docker compose config -q}"
         HEALTHCHECK_CMD="${BHARATSTAY_HEALTHCHECK_CMD:-}"
         ;;
     *)
@@ -61,6 +71,14 @@ for f in $REQUIRED_FILES; do
     fi
 done
 
+if [[ -n "$CONFIG_CHECK_CMD" ]]; then
+    if ! (cd "$STAGING" && eval "$CONFIG_CHECK_CMD") >>"$LOG_FILE" 2>&1; then
+        log ERROR "Config validation failed for $SITE — aborting (live release untouched)"
+        exit 1
+    fi
+    log INFO "Config validation passed for $SITE"
+fi
+
 PREVIOUS_RELEASE=""
 [[ -L "$CURRENT" ]] && PREVIOUS_RELEASE="$(readlink -f "$CURRENT")"
 
@@ -68,7 +86,7 @@ rollback_and_exit() {
     log ERROR "$1"
     if [[ -n "$PREVIOUS_RELEASE" ]]; then
         ln -sfn "$PREVIOUS_RELEASE" "$CURRENT.tmp" && mv -Tf "$CURRENT.tmp" "$CURRENT"
-        if (cd "$CURRENT" && eval "$RELOAD_CMD") >>"$LOG_FILE" 2>&1; then
+        if (cd "$CURRENT" && eval "$ROLLBACK_CMD") >>"$LOG_FILE" 2>&1; then
             log WARN "Rolled back $SITE to previous release $(basename "$PREVIOUS_RELEASE")"
         else
             log ERROR "Rollback reload failed for $SITE — manual intervention required"
@@ -77,6 +95,25 @@ rollback_and_exit() {
         log ERROR "No previous release for $SITE to roll back to — manual intervention required"
     fi
     exit 1
+}
+
+# Compares a build-trigger file between releases via inode identity: rsync
+# --link-dest hardlinks files it considers unchanged, so a differing
+# device:inode means rsync actually copied a new version of that file.
+build_trigger_changed() {
+    local prev="$1" new="$2" files="$3" rel old_f new_f
+    [[ -z "$prev" ]] && return 0
+
+    for rel in $files; do
+        old_f="$prev/$rel"
+        new_f="$new/$rel"
+        if [[ -e "$old_f" && -e "$new_f" ]]; then
+            [[ "$(stat -c '%d:%i' "$old_f")" != "$(stat -c '%d:%i' "$new_f")" ]] && return 0
+        elif [[ -e "$old_f" || -e "$new_f" ]]; then
+            return 0
+        fi
+    done
+    return 1
 }
 
 # Each release is both the atomic-swap unit and the timestamped backup of
@@ -100,25 +137,47 @@ fi
 # normalized to the same $OWNER.
 chown -R "$OWNER" "$NEW_RELEASE"
 
+if [[ -n "$BUILD_TRIGGER_FILES" ]]; then
+    if build_trigger_changed "$PREVIOUS_RELEASE" "$NEW_RELEASE" "$BUILD_TRIGGER_FILES"; then
+        ACTIVE_RELOAD_CMD="$BUILD_CMD"
+        log INFO "Build-related files changed for $SITE — rebuilding"
+    else
+        ACTIVE_RELOAD_CMD="$FAST_RELOAD_CMD"
+        log INFO "No build-related changes for $SITE — fast reload, no rebuild"
+    fi
+else
+    ACTIVE_RELOAD_CMD="$RELOAD_CMD"
+fi
+
 ln -sfn "$NEW_RELEASE" "$CURRENT.tmp"
 mv -Tf "$CURRENT.tmp" "$CURRENT"
 log INFO "Switched $CURRENT -> $RELEASE_TS"
 
-if ! (cd "$CURRENT" && eval "$RELOAD_CMD") >>"$LOG_FILE" 2>&1; then
+if ! (cd "$CURRENT" && eval "$ACTIVE_RELOAD_CMD") >>"$LOG_FILE" 2>&1; then
     rollback_and_exit "Reload command failed for $SITE"
 fi
 
 if [[ -n "$HEALTHCHECK_CMD" ]]; then
+    consecutive=0
+    elapsed=0
     healthy=false
-    for _ in 1 2 3 4 5; do
+    while (( elapsed < 30 )); do
         if (cd "$CURRENT" && eval "$HEALTHCHECK_CMD") >>"$LOG_FILE" 2>&1; then
-            healthy=true
-            break
+            consecutive=$((consecutive + 1))
+            log INFO "Health check $consecutive/3 passed for $SITE"
+            if (( consecutive >= 3 )); then
+                healthy=true
+                break
+            fi
+        else
+            [[ "$consecutive" -gt 0 ]] && log WARN "Health check failed for $SITE, resetting streak"
+            consecutive=0
         fi
-        sleep 3
+        sleep 2
+        elapsed=$((elapsed + 2))
     done
     if [[ "$healthy" != true ]]; then
-        rollback_and_exit "Health check failed for $SITE after deploy"
+        rollback_and_exit "Health check for $SITE did not reach 3 consecutive passes within 30s"
     fi
 fi
 

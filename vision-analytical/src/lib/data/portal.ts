@@ -58,6 +58,14 @@ export function getCustomerAmcContracts(customerId: string) {
   });
 }
 
+export function getCustomerLinkableAmcContracts(customerId: string) {
+  return prisma.amcContract.findMany({
+    where: { customerId, status: { in: [AmcStatus.ACTIVE, AmcStatus.EXPIRING_SOON] } },
+    select: { id: true, contractNumber: true, type: true, instrumentDescription: true },
+    orderBy: { endDate: 'asc' },
+  });
+}
+
 export function getCustomerInvoices(customerId: string) {
   return prisma.invoice.findMany({
     where: { customerId },

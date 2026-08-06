@@ -22,6 +22,14 @@ export function getAdminEngineers() {
   });
 }
 
+export function getEngineerOptions() {
+  return prisma.user.findMany({
+    where: { role: Role.ENGINEER, isActive: true },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
+}
+
 export function getAdminEngineerById(id: string) {
   return prisma.user.findFirst({
     where: { id, role: Role.ENGINEER },

@@ -46,6 +46,14 @@ export default async function PortalServiceRequestDetailPage(props: PageProps<'/
             <p className="text-muted">Assigned engineer</p>
             <p className="text-foreground">{request.assignedEngineer?.name ?? 'Not yet assigned'}</p>
           </div>
+          {request.amcContract && (
+            <div>
+              <p className="text-muted">Contract</p>
+              <p className="text-foreground">
+                {request.amcContract.contractNumber} ({request.amcContract.type})
+              </p>
+            </div>
+          )}
           <div>
             <p className="text-muted">Raised</p>
             <p className="text-foreground">{formatDateTime(request.createdAt)}</p>

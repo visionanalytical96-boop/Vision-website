@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -51,17 +52,22 @@ export default async function AdminEngineerDetailPage(props: PageProps<'/admin/e
           ) : (
             <ul className="space-y-3">
               {engineer.assignedServiceJobs.map((job) => (
-                <li key={job.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg p-2">
-                  <div>
-                    <p className="font-mono text-sm text-foreground">{job.ticketNumber}</p>
-                    <p className="text-xs text-muted">
-                      {SERVICE_REQUEST_TYPE_LABELS[job.type]} · {job.instrumentDescription}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge meta={priorityMeta[job.priority]} />
-                    <StatusBadge meta={serviceRequestStatusMeta[job.status]} />
-                  </div>
+                <li key={job.id}>
+                  <Link
+                    href={`/admin/service-requests/${job.id}`}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg p-2 hover:bg-surface-muted"
+                  >
+                    <div>
+                      <p className="font-mono text-sm text-foreground">{job.ticketNumber}</p>
+                      <p className="text-xs text-muted">
+                        {SERVICE_REQUEST_TYPE_LABELS[job.type]} · {job.instrumentDescription}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge meta={priorityMeta[job.priority]} />
+                      <StatusBadge meta={serviceRequestStatusMeta[job.status]} />
+                    </div>
+                  </Link>
                 </li>
               ))}
             </ul>

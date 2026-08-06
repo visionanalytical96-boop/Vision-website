@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
+import { setServiceRequestStatus } from '@/lib/service-request-status';
 import { updateJobStatusSchema, submitServiceReportSchema } from '@/lib/validation/engineer';
-import { Role, ServiceRequestStatus } from '@/generated/prisma/client';
+import { Role } from '@/generated/prisma/client';
 
 export async function updateJobStatus(formData: FormData): Promise<void> {
   const session = await requireRole(Role.ENGINEER);
@@ -20,10 +21,7 @@ export async function updateJobStatus(formData: FormData): Promise<void> {
   const job = await prisma.serviceRequest.findFirst({ where: { id: jobId, assignedEngineerId: session.userId } });
   if (!job) return;
 
-  await prisma.serviceRequest.update({
-    where: { id: jobId },
-    data: { status, resolvedAt: status === ServiceRequestStatus.COMPLETED ? new Date() : null },
-  });
+  await setServiceRequestStatus(jobId, status);
 
   revalidatePath(`/engineer/jobs/${jobId}`);
   revalidatePath('/engineer');

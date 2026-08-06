@@ -13,11 +13,36 @@ import { FormField } from '@/components/ui/FormField';
 
 const initialState: ServiceRequestFormState = {};
 
-export function NewServiceRequestForm() {
+interface AmcContractOption {
+  id: string;
+  contractNumber: string;
+  type: string;
+  instrumentDescription: string;
+}
+
+export function NewServiceRequestForm({ amcContracts = [] }: { amcContracts?: AmcContractOption[] }) {
   const [state, formAction, pending] = useActionState(createServiceRequest, initialState);
 
   return (
     <form action={formAction} className="flex max-w-xl flex-col gap-4">
+      {amcContracts.length > 0 && (
+        <FormField
+          label="Cover under an AMC/CMC contract"
+          htmlFor="amcContractId"
+          error={state.errors?.amcContractId}
+          hint="Optional - links this visit to the contract and counts it against your included visits"
+        >
+          <Select id="amcContractId" name="amcContractId" defaultValue="">
+            <option value="">Not covered by a contract</option>
+            {amcContracts.map((contract) => (
+              <option key={contract.id} value={contract.id}>
+                {contract.contractNumber} ({contract.type}) - {contract.instrumentDescription}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+      )}
+
       <FormField label="Service type" htmlFor="type" error={state.errors?.type} required>
         <Select id="type" name="type" defaultValue={ServiceRequestType.BREAKDOWN} required>
           {Object.values(ServiceRequestType).map((type) => (

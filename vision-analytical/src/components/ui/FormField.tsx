@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface FormFieldProps {
   label: string;
@@ -6,14 +7,15 @@ interface FormFieldProps {
   error?: string | string[];
   hint?: string;
   required?: boolean;
+  className?: string;
   children: ReactNode;
 }
 
-export function FormField({ label, htmlFor, error, hint, required, children }: FormFieldProps) {
+export function FormField({ label, htmlFor, error, hint, required, className, children }: FormFieldProps) {
   const errorMessage = Array.isArray(error) ? error[0] : error;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn('flex flex-col gap-1.5', className)}>
       <label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
         {label}
         {required && <span className="text-danger"> *</span>}

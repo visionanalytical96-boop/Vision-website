@@ -1,6 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
+# This subproject uses npm (isolated from the repo root's pnpm workspace),
+# so its lockfile is intentionally committed - override the root .gitignore's
+# blanket "**/package-lock.json" rule (that rule targets the pnpm workspace).
+!package-lock.json
 /node_modules
 /.pnp
 .pnp.*

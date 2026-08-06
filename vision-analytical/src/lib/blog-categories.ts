@@ -1,4 +1,5 @@
-import { BlogCategory } from '@/generated/prisma/client';
+// Enum values, not the client module - see the comment in src/lib/status.ts.
+import { BlogCategory } from '@/generated/prisma/enums';
 
 export const BLOG_CATEGORY_LABELS: Record<BlogCategory, string> = {
   TROUBLESHOOTING: 'Troubleshooting',

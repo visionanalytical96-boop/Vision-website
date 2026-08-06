@@ -1,6 +1,21 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
-import { PrismaClient, Role, CategoryKind, ProductKind, StockStatus } from '../src/generated/prisma/client';
+import {
+  PrismaClient,
+  Role,
+  CategoryKind,
+  ProductKind,
+  StockStatus,
+  OrderStatus,
+  QuoteStatus,
+  InvoiceStatus,
+  AmcType,
+  AmcStatus,
+  ServiceRequestType,
+  ServiceRequestStatus,
+  Priority,
+} from '../src/generated/prisma/client';
+import { generateReferenceNumber } from '../src/lib/reference-number';
 import { INSTRUMENT_CATEGORIES } from './seed-data';
 import { SPARE_PART_CATEGORIES } from './seed-data-spare-parts';
 import { REFURBISHED_CATEGORIES } from './seed-data-refurbished';
@@ -208,6 +223,163 @@ async function seedBlogPosts(prisma: PrismaClient, authorId: string) {
   console.log(`Seeded ${BLOG_POSTS.length} blog posts.`);
 }
 
+// Optional sample transactional data (customer, engineer, order, quote,
+// service request, AMC contract, invoice) for local development/demos.
+// Never runs unless explicitly opted into - this is not real customer data.
+async function seedDemoData(prisma: PrismaClient) {
+  if (process.env.SEED_DEMO_DATA !== 'true') {
+    console.log('SEED_DEMO_DATA is not "true" - skipping demo customer/transactional data.');
+    return;
+  }
+
+  const demoPassword = process.env.SEED_DEMO_PASSWORD ?? 'Demo1234!';
+  const passwordHash = await bcrypt.hash(demoPassword, 12);
+
+  const customer = await prisma.user.upsert({
+    where: { email: 'demo.customer@example.com' },
+    update: {},
+    create: {
+      email: 'demo.customer@example.com',
+      name: 'Demo Customer',
+      companyName: 'Demo Labs Pvt Ltd',
+      phone: '9876500001',
+      passwordHash,
+      role: Role.CUSTOMER,
+    },
+  });
+
+  const engineer = await prisma.user.upsert({
+    where: { email: 'demo.engineer@example.com' },
+    update: {},
+    create: {
+      email: 'demo.engineer@example.com',
+      name: 'Demo Engineer',
+      phone: '9876500002',
+      passwordHash,
+      role: Role.ENGINEER,
+    },
+  });
+
+  const lamp = await prisma.product.findUnique({ where: { sku: 'SP-LAMP-001' } });
+  const column = await prisma.product.findUnique({ where: { sku: 'SP-COL-001' } });
+
+  if (!lamp || !column) {
+    console.warn('Demo data: spare parts not found - run the catalog seed first. Skipping order/quote seed.');
+    return;
+  }
+
+  let order = await prisma.order.findFirst({ where: { customerId: customer.id } });
+  if (!order) {
+    const address = {
+      label: 'Lab',
+      line1: 'Demo Labs Pvt Ltd, MIDC Industrial Area',
+      city: 'Ambarnath',
+      state: 'Maharashtra',
+      postalCode: '421501',
+      country: 'India',
+    };
+
+    order = await prisma.order.create({
+      data: {
+        orderNumber: generateReferenceNumber('ORD'),
+        customerId: customer.id,
+        status: OrderStatus.DELIVERED,
+        subtotalMinor: 450000 + 800000,
+        totalMinor: 450000 + 800000,
+        shippingAddress: address,
+        billingAddress: address,
+        items: {
+          create: [
+            {
+              productId: lamp.id,
+              nameSnapshot: lamp.name,
+              skuSnapshot: lamp.sku,
+              unitPriceMinor: 450000,
+              quantity: 1,
+              lineTotalMinor: 450000,
+            },
+            {
+              productId: column.id,
+              nameSnapshot: column.name,
+              skuSnapshot: column.sku,
+              unitPriceMinor: 800000,
+              quantity: 1,
+              lineTotalMinor: 800000,
+            },
+          ],
+        },
+      },
+    });
+
+    await prisma.invoice.create({
+      data: {
+        invoiceNumber: generateReferenceNumber('INV'),
+        customerId: customer.id,
+        orderId: order.id,
+        amountMinor: order.totalMinor,
+        status: InvoiceStatus.PAID,
+        dueAt: order.createdAt,
+      },
+    });
+  }
+
+  const existingQuote = await prisma.quote.findFirst({ where: { customerId: customer.id } });
+  if (!existingQuote) {
+    await prisma.quote.create({
+      data: {
+        quoteNumber: generateReferenceNumber('QT'),
+        customerId: customer.id,
+        contactName: customer.name,
+        contactEmail: customer.email,
+        contactPhone: customer.phone,
+        status: QuoteStatus.SENT,
+        totalMinor: 125000,
+        validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        items: {
+          create: [{ productId: lamp.id, description: lamp.name, quantity: 2, unitPriceMinor: 62500 }],
+        },
+      },
+    });
+  }
+
+  let amc = await prisma.amcContract.findFirst({ where: { customerId: customer.id } });
+  if (!amc) {
+    amc = await prisma.amcContract.create({
+      data: {
+        contractNumber: generateReferenceNumber('AMC'),
+        customerId: customer.id,
+        type: AmcType.AMC,
+        instrumentDescription: 'Shimadzu LC-2030C Plus (S/N DEMO-0001)',
+        startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+        endDate: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000),
+        visitsIncluded: 4,
+        visitsUsed: 1,
+        priceMinor: 3500000,
+        status: AmcStatus.ACTIVE,
+      },
+    });
+  }
+
+  const existingServiceRequest = await prisma.serviceRequest.findFirst({ where: { customerId: customer.id } });
+  if (!existingServiceRequest) {
+    await prisma.serviceRequest.create({
+      data: {
+        ticketNumber: generateReferenceNumber('SR'),
+        customerId: customer.id,
+        type: ServiceRequestType.PREVENTIVE_MAINTENANCE,
+        priority: Priority.NORMAL,
+        status: ServiceRequestStatus.ASSIGNED,
+        instrumentDescription: 'Shimadzu LC-2030C Plus (S/N DEMO-0001)',
+        description: 'Scheduled preventive maintenance visit under AMC.',
+        assignedEngineerId: engineer.id,
+        amcContractId: amc.id,
+      },
+    });
+  }
+
+  console.log('Seeded demo customer (demo.customer@example.com) and demo engineer (demo.engineer@example.com).');
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -226,6 +398,8 @@ async function main() {
   } else {
     console.log('Skipping blog post seed - no admin user available to author them.');
   }
+
+  await seedDemoData(prisma);
 
   await prisma.$disconnect();
 }

@@ -1,3 +1,6 @@
+// Import enum values from the pure-data enums module, not the client
+// module - the latter has Node-only top-level imports (node:process etc.)
+// that break any client component this ends up bundled into.
 import {
   OrderStatus,
   QuoteStatus,
@@ -8,7 +11,7 @@ import {
   CrmLeadStatus,
   Priority,
   RefurbishedCondition,
-} from '@/generated/prisma/client';
+} from '@/generated/prisma/enums';
 import type { BadgeTone } from '@/components/ui/Badge';
 
 export interface StatusMeta {

@@ -3,10 +3,13 @@ import { notFound } from 'next/navigation';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
+import { Button } from '@/components/ui/Button';
 import { getSession } from '@/lib/dal';
 import { getCustomerQuoteById } from '@/lib/data/portal';
+import { acceptQuote, rejectQuote } from '@/lib/actions/quote-response';
 import { formatDate, formatMinorAmount } from '@/lib/format';
 import { quoteStatusMeta } from '@/lib/status';
+import { QuoteStatus } from '@/generated/prisma/enums';
 
 export const metadata: Metadata = { title: 'Quote Detail' };
 
@@ -54,8 +57,24 @@ export default async function PortalQuoteDetailPage(props: PageProps<'/portal/qu
           </Table>
         </CardContent>
         {quote.totalMinor && (
-          <div className="flex justify-end border-t border-border p-4">
+          <div className="flex flex-wrap items-center justify-end gap-4 border-t border-border p-4">
             <p className="font-medium text-foreground">Total: {formatMinorAmount(quote.totalMinor)}</p>
+            {quote.status === QuoteStatus.SENT && (
+              <div className="flex gap-2">
+                <form action={rejectQuote}>
+                  <input type="hidden" name="quoteId" value={quote.id} />
+                  <Button type="submit" variant="outline" size="sm">
+                    Decline
+                  </Button>
+                </form>
+                <form action={acceptQuote}>
+                  <input type="hidden" name="quoteId" value={quote.id} />
+                  <Button type="submit" variant="primary" size="sm">
+                    Accept Quote
+                  </Button>
+                </form>
+              </div>
+            )}
           </div>
         )}
       </Card>

@@ -22,14 +22,31 @@ const jetbrainsMono = JetBrains_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
+const defaultTitle = 'Vision Analytical | Laboratory Instruments, Spares & Service';
+const defaultDescription =
+  'Analytical instrument sales, refurbished HPLC/GC/LC-MS/UV systems, spare parts, AMC/CMC service, calibration and IQ/OQ/PQ qualification across Maharashtra & Gujarat.';
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Vision Analytical | Laboratory Instruments, Spares & Service',
+    default: defaultTitle,
     template: '%s | Vision Analytical',
   },
-  description:
-    'Analytical instrument sales, refurbished HPLC/GC/LC-MS/UV systems, spare parts, AMC/CMC service, calibration and IQ/OQ/PQ qualification across Maharashtra & Gujarat.',
+  description: defaultDescription,
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    siteName: 'Vision Analytical',
+    title: defaultTitle,
+    description: defaultDescription,
+    url: siteUrl,
+    locale: 'en_IN',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: defaultTitle,
+    description: defaultDescription,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

@@ -7,11 +7,14 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { getRefurbishedInstrumentBySlug } from '@/lib/data/refurbished';
 import { refurbishedConditionMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
 import { whatsappLink } from '@/lib/contact-links';
 import { toImageList } from '@/lib/image-list';
+import { buildProductSchema } from '@/lib/seo/product-schema';
+import { StockStatus } from '@/generated/prisma/enums';
 
 export async function generateMetadata(props: PageProps<'/refurbished/[category]/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
@@ -28,8 +31,20 @@ export default async function RefurbishedDetailPage(props: PageProps<'/refurbish
     redirect(`/refurbished/${instrument.category.slug}/${instrument.slug}`);
   }
 
+  const schema = buildProductSchema({
+    name: instrument.name,
+    description: instrument.description,
+    path: `/refurbished/${categorySlug}/${instrument.slug}`,
+    images: toImageList(instrument.images),
+    priceMinor: instrument.priceMinor,
+    inStock: instrument.stockStatus !== StockStatus.OUT_OF_STOCK,
+    brand: instrument.brand,
+    refurbished: true,
+  });
+
   return (
     <Container className="py-12 sm:py-16">
+      <JsonLd data={schema} />
       <div className="grid gap-10 lg:grid-cols-2">
         <ProductImage images={toImageList(instrument.images)} alt={instrument.name} className="aspect-square w-full rounded-2xl" />
 

@@ -7,11 +7,14 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { getPublishedProductBySlug } from '@/lib/data/products';
 import { stockStatusMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
 import { whatsappLink } from '@/lib/contact-links';
 import { toImageList } from '@/lib/image-list';
+import { buildProductSchema } from '@/lib/seo/product-schema';
+import { StockStatus } from '@/generated/prisma/enums';
 
 export async function generateMetadata(props: PageProps<'/products/[category]/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
@@ -28,8 +31,20 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
     redirect(`/products/${product.category.slug}/${product.slug}`);
   }
 
+  const schema = buildProductSchema({
+    name: product.name,
+    description: product.description,
+    path: `/products/${categorySlug}/${product.slug}`,
+    images: toImageList(product.images),
+    priceMinor: product.priceMinor,
+    inStock: product.stockStatus !== StockStatus.OUT_OF_STOCK,
+    sku: product.sku,
+    brand: product.brand ?? undefined,
+  });
+
   return (
     <Container className="py-12 sm:py-16">
+      <JsonLd data={schema} />
       <div className="grid gap-10 lg:grid-cols-2">
         <ProductImage images={toImageList(product.images)} alt={product.name} className="aspect-square w-full rounded-2xl" />
 

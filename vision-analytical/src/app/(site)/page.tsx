@@ -17,10 +17,39 @@ import {
 } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { whatsappLink, telLink } from '@/lib/contact-links';
 
 export const metadata: Metadata = {
   title: 'Home',
+};
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Vision Analytical',
+  url: siteUrl,
+  description:
+    'Analytical instrument sales, refurbished HPLC/GC/LC-MS/UV systems, spare parts, AMC/CMC service, calibration and IQ/OQ/PQ qualification.',
+  foundingDate: '2016',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Ambarnath',
+    addressRegion: 'Maharashtra',
+    addressCountry: 'IN',
+  },
+  ...(process.env.NEXT_PUBLIC_CONTACT_PHONE
+    ? {
+        contactPoint: {
+          '@type': 'ContactPoint',
+          telephone: process.env.NEXT_PUBLIC_CONTACT_PHONE,
+          contactType: 'sales',
+          areaServed: 'IN',
+        },
+      }
+    : {}),
 };
 
 const OFFERINGS = [
@@ -92,6 +121,8 @@ const WHY_US = [
 export default function HomePage() {
   return (
     <>
+      <JsonLd data={organizationSchema} />
+
       {/* Hero */}
       <section className="relative overflow-hidden bg-slate-950 text-white">
         <div

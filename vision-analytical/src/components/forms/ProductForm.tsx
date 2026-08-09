@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
+import { ImageInput } from '@/components/ui/ImageInput';
+import { toImageList } from '@/lib/image-list';
 
 const initialState: ProductFormState = {};
 
@@ -23,6 +25,10 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
   return (
     <form action={formAction} className="grid max-w-3xl gap-4 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <ImageInput name="image" label="Product photo" defaultImageUrl={toImageList(product?.images)[0]} error={state.errors?.image} hint="JPEG, PNG or WebP, up to 8MB" />
+      </div>
+
       <FormField label="SKU" htmlFor="sku" error={state.errors?.sku} required>
         <Input id="sku" name="sku" defaultValue={product?.sku} required />
       </FormField>

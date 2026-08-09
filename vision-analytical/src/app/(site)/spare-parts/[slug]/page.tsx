@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MessageCircle } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
-import { ProductImagePlaceholder } from '@/components/product/ProductImagePlaceholder';
+import { ProductImage } from '@/components/product/ProductImage';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import { getSparePartBySlug } from '@/lib/data/spare-parts';
 import { stockStatusMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
 import { whatsappLink } from '@/lib/contact-links';
+import { toImageList } from '@/lib/image-list';
 
 export async function generateMetadata(props: PageProps<'/spare-parts/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
@@ -27,7 +28,7 @@ export default async function SparePartDetailPage(props: PageProps<'/spare-parts
   return (
     <Container className="py-12 sm:py-16">
       <div className="grid gap-10 lg:grid-cols-2">
-        <ProductImagePlaceholder className="aspect-square w-full rounded-2xl" />
+        <ProductImage images={toImageList(part.images)} alt={part.name} className="aspect-square w-full rounded-2xl" />
 
         <div>
           <p className="text-sm text-muted">

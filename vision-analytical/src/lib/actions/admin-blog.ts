@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
 import { blogPostFormSchema } from '@/lib/validation/admin-blog';
+import { saveUploadedImage } from '@/lib/upload-image';
 import { Role } from '@/generated/prisma/client';
 
 export interface BlogPostFormState {
@@ -39,6 +40,12 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
     return { errors: { slug: ['A post with this slug already exists.'] } };
   }
 
+  const imageFile = formData.get('image');
+  const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'blog');
+  if (upload.error) {
+    return { errors: { image: [upload.error] } };
+  }
+
   await prisma.blogPost.create({
     data: {
       slug: data.slug,
@@ -46,6 +53,7 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
       category: data.category,
       excerpt: data.excerpt,
       content: data.content,
+      coverImage: upload.url,
       isPublished: data.isPublished,
       publishedAt: data.isPublished ? new Date() : null,
       seoTitle: data.seoTitle || null,
@@ -78,6 +86,12 @@ export async function updateBlogPost(id: string, _prevState: BlogPostFormState |
     return { errors: { slug: ['A post with this slug already exists.'] } };
   }
 
+  const imageFile = formData.get('image');
+  const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'blog');
+  if (upload.error) {
+    return { errors: { image: [upload.error] } };
+  }
+
   await prisma.blogPost.update({
     where: { id },
     data: {
@@ -86,6 +100,7 @@ export async function updateBlogPost(id: string, _prevState: BlogPostFormState |
       category: data.category,
       excerpt: data.excerpt,
       content: data.content,
+      coverImage: upload.url ?? existing.coverImage,
       isPublished: data.isPublished,
       publishedAt: data.isPublished ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
       seoTitle: data.seoTitle || null,

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
 import { productFormSchema } from '@/lib/validation/admin-products';
+import { saveUploadedImage } from '@/lib/upload-image';
 import { Role } from '@/generated/prisma/client';
 
 export interface ProductFormState {
@@ -56,6 +57,12 @@ export async function createProduct(_prevState: ProductFormState | undefined, fo
     return { errors: { slug: ['A product with this slug already exists.'] } };
   }
 
+  const imageFile = formData.get('image');
+  const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'products');
+  if (upload.error) {
+    return { errors: { image: [upload.error] } };
+  }
+
   await prisma.product.create({
     data: {
       sku: data.sku,
@@ -68,7 +75,7 @@ export async function createProduct(_prevState: ProductFormState | undefined, fo
         ? data.compatibleBrands.split(',').map((b) => b.trim()).filter(Boolean)
         : [],
       description: data.description,
-      images: [],
+      images: upload.url ? [upload.url] : [],
       priceMinor: parsePriceMinor(data.priceRupees),
       stockStatus: data.stockStatus,
       stockQuantity: data.stockQuantity,
@@ -100,6 +107,12 @@ export async function updateProduct(id: string, _prevState: ProductFormState | u
     return { errors: { slug: ['A product with this slug already exists.'] } };
   }
 
+  const imageFile = formData.get('image');
+  const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'products');
+  if (upload.error) {
+    return { errors: { image: [upload.error] } };
+  }
+
   await prisma.product.update({
     where: { id },
     data: {
@@ -113,6 +126,7 @@ export async function updateProduct(id: string, _prevState: ProductFormState | u
         ? data.compatibleBrands.split(',').map((b) => b.trim()).filter(Boolean)
         : [],
       description: data.description,
+      ...(upload.url ? { images: [upload.url] } : {}),
       priceMinor: parsePriceMinor(data.priceRupees),
       stockStatus: data.stockStatus,
       stockQuantity: data.stockQuantity,

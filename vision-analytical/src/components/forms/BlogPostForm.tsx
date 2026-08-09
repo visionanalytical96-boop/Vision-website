@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
+import { ImageInput } from '@/components/ui/ImageInput';
 
 const initialState: BlogPostFormState = {};
 
@@ -18,6 +19,10 @@ export function BlogPostForm({ post }: { post?: BlogPost }) {
 
   return (
     <form action={formAction} className="grid max-w-3xl gap-4 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <ImageInput name="image" label="Cover image" defaultImageUrl={post?.coverImage} error={state.errors?.image} hint="JPEG, PNG or WebP, up to 8MB" />
+      </div>
+
       <FormField label="Title" htmlFor="title" error={state.errors?.title} required className="sm:col-span-2">
         <Input id="title" name="title" defaultValue={post?.title} required />
       </FormField>

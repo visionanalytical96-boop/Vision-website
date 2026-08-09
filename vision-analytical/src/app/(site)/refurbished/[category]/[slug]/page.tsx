@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { MessageCircle, PlayCircle, ShieldCheck } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
-import { ProductImagePlaceholder } from '@/components/product/ProductImagePlaceholder';
+import { ProductImage } from '@/components/product/ProductImage';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import { getRefurbishedInstrumentBySlug } from '@/lib/data/refurbished';
 import { refurbishedConditionMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
 import { whatsappLink } from '@/lib/contact-links';
+import { toImageList } from '@/lib/image-list';
 
 export async function generateMetadata(props: PageProps<'/refurbished/[category]/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
@@ -30,7 +31,7 @@ export default async function RefurbishedDetailPage(props: PageProps<'/refurbish
   return (
     <Container className="py-12 sm:py-16">
       <div className="grid gap-10 lg:grid-cols-2">
-        <ProductImagePlaceholder className="aspect-square w-full rounded-2xl" />
+        <ProductImage images={toImageList(instrument.images)} alt={instrument.name} className="aspect-square w-full rounded-2xl" />
 
         <div>
           <p className="text-sm text-muted">

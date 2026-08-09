@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
+import { ImageInput } from '@/components/ui/ImageInput';
+import { toImageList } from '@/lib/image-list';
 
 const initialState: RefurbishedFormState = {};
 
@@ -23,6 +25,16 @@ export function RefurbishedForm({ categories, instrument }: RefurbishedFormProps
 
   return (
     <form action={formAction} className="grid max-w-3xl gap-4 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <ImageInput
+          name="image"
+          label="Instrument photo"
+          defaultImageUrl={toImageList(instrument?.images)[0]}
+          error={state.errors?.image}
+          hint="JPEG, PNG or WebP, up to 8MB"
+        />
+      </div>
+
       <FormField label="Name" htmlFor="name" error={state.errors?.name} required className="sm:col-span-2">
         <Input id="name" name="name" defaultValue={instrument?.name} required />
       </FormField>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -34,6 +35,12 @@ export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
           {post.author.name}
           {post.publishedAt && ` · ${formatDate(post.publishedAt)}`}
         </p>
+
+        {post.coverImage && (
+          <div className="relative mt-6 aspect-video w-full overflow-hidden rounded-2xl bg-surface-muted">
+            <Image src={post.coverImage} alt={post.title} fill sizes="(min-width: 1024px) 768px, 100vw" className="object-cover" />
+          </div>
+        )}
 
         <div className="prose prose-slate dark:prose-invert mt-8 max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>

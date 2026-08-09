@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
 import { refurbishedFormSchema } from '@/lib/validation/admin-refurbished';
+import { saveUploadedImage } from '@/lib/upload-image';
 import { Role } from '@/generated/prisma/client';
 
 export interface RefurbishedFormState {
@@ -51,6 +52,12 @@ export async function createRefurbished(_prevState: RefurbishedFormState | undef
     return { errors: { slug: ['An instrument with this slug already exists.'] } };
   }
 
+  const imageFile = formData.get('image');
+  const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'refurbished');
+  if (upload.error) {
+    return { errors: { image: [upload.error] } };
+  }
+
   await prisma.refurbishedInstrument.create({
     data: {
       slug: data.slug,
@@ -65,7 +72,7 @@ export async function createRefurbished(_prevState: RefurbishedFormState | undef
       warrantyMonths: data.warrantyMonths,
       demoVideoUrl: data.demoVideoUrl || null,
       description: data.description,
-      images: [],
+      images: upload.url ? [upload.url] : [],
       priceMinor: parsePriceMinor(data.priceRupees),
       stockStatus: data.stockStatus,
       isPublished: data.isPublished,
@@ -90,6 +97,12 @@ export async function updateRefurbished(id: string, _prevState: RefurbishedFormS
     return { errors: { slug: ['An instrument with this slug already exists.'] } };
   }
 
+  const imageFile = formData.get('image');
+  const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'refurbished');
+  if (upload.error) {
+    return { errors: { image: [upload.error] } };
+  }
+
   await prisma.refurbishedInstrument.update({
     where: { id },
     data: {
@@ -105,6 +118,7 @@ export async function updateRefurbished(id: string, _prevState: RefurbishedFormS
       warrantyMonths: data.warrantyMonths,
       demoVideoUrl: data.demoVideoUrl || null,
       description: data.description,
+      ...(upload.url ? { images: [upload.url] } : {}),
       priceMinor: parsePriceMinor(data.priceRupees),
       stockStatus: data.stockStatus,
       isPublished: data.isPublished,

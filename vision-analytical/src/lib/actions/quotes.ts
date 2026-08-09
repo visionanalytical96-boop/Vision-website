@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/dal';
 import { generateReferenceNumber } from '@/lib/reference-number';
 import { quoteContactSchema, cartItemsSchema } from '@/lib/validation/quotes';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export interface QuoteRequestState {
   errors?: Record<string, string[] | undefined>;
@@ -24,6 +25,11 @@ export async function submitQuoteRequest(
 
   if (!contactValidated.success) {
     return { errors: contactValidated.error.flatten().fieldErrors };
+  }
+
+  const ip = await getClientIp();
+  if (!checkRateLimit(`quote-request:ip:${ip}`, 10, 10 * 60 * 1000)) {
+    return { formError: 'Too many quote requests sent. Please wait a few minutes and try again.' };
   }
 
   let rawItems: unknown;

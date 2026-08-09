@@ -7,6 +7,7 @@ import { createSession, deleteSession } from '@/lib/session';
 import { roleHomePath } from '@/lib/roles';
 import { safeRedirectPath } from '@/lib/safe-redirect';
 import { loginSchema, registerSchema } from '@/lib/validation/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { Role } from '@/generated/prisma/client';
 
 export interface AuthFormState {
@@ -15,6 +16,8 @@ export interface AuthFormState {
 }
 
 const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
+const RATE_LIMIT_ERROR = 'Too many attempts. Please wait a few minutes and try again.';
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 
 export async function login(_prevState: AuthFormState | undefined, formData: FormData): Promise<AuthFormState> {
   const validated = loginSchema.safeParse({
@@ -27,6 +30,16 @@ export async function login(_prevState: AuthFormState | undefined, formData: For
   }
 
   const { email, password } = validated.data;
+
+  const ip = await getClientIp();
+  // Per-account limit blocks brute-forcing one target regardless of how many
+  // IPs the attacker rotates through; per-IP limit blocks spraying many
+  // different accounts from one source.
+  const withinAccountLimit = checkRateLimit(`login:account:${email}`, 10, LOGIN_WINDOW_MS);
+  const withinIpLimit = checkRateLimit(`login:ip:${ip}`, 30, LOGIN_WINDOW_MS);
+  if (!withinAccountLimit || !withinIpLimit) {
+    return { formError: RATE_LIMIT_ERROR };
+  }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.isActive) {
@@ -57,6 +70,11 @@ export async function registerCustomer(
 
   if (!validated.success) {
     return { errors: validated.error.flatten().fieldErrors };
+  }
+
+  const ip = await getClientIp();
+  if (!checkRateLimit(`register:ip:${ip}`, 10, LOGIN_WINDOW_MS)) {
+    return { formError: RATE_LIMIT_ERROR };
   }
 
   const { name, email, phone, companyName, password } = validated.data;

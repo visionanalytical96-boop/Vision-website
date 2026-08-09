@@ -41,6 +41,8 @@ export function ContactForm({ defaultSubject }: { defaultSubject?: string }) {
         <Textarea id="message" name="message" rows={5} required />
       </FormField>
 
+      {state.formError && <p className="text-sm text-danger">{state.formError}</p>}
+
       <Button type="submit" disabled={pending} className="mt-2">
         {pending ? 'Sending…' : 'Send Message'}
       </Button>

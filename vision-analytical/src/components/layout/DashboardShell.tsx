@@ -3,11 +3,14 @@ import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 import { DashboardMobileNav } from './DashboardMobileNav';
+import { cn } from '@/lib/utils';
 
 export interface DashboardNavItem {
   href: string;
   label: string;
   icon: ReactNode;
+  /** Renders a small uppercase heading above this item when it differs from the previous item's section. */
+  section?: string;
 }
 
 interface DashboardShellProps {
@@ -28,15 +31,21 @@ export function DashboardShell({ title, navItems, userName, userRoleLabel, child
           </Link>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
-            >
-              {item.icon}
-              {item.label}
-            </Link>
+          {navItems.map((item, index) => (
+            <div key={item.href}>
+              {item.section && item.section !== navItems[index - 1]?.section && (
+                <p className={cn('px-3 pb-1 text-xs font-semibold tracking-wide text-muted uppercase', index > 0 && 'pt-4')}>
+                  {item.section}
+                </p>
+              )}
+              <Link
+                href={item.href}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            </div>
           ))}
         </nav>
         <div className="border-t border-border p-4">

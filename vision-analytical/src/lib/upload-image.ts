@@ -10,7 +10,7 @@ const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const MAX_DIMENSION = 2000;
 const ALLOWED_FORMATS = new Set(['jpeg', 'png', 'webp']);
 
-export type UploadCategory = 'products' | 'refurbished' | 'blog';
+export type UploadCategory = 'products' | 'refurbished' | 'blog' | 'site';
 
 export interface UploadImageResult {
   url: string | null;

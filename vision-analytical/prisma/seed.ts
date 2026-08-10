@@ -14,12 +14,26 @@ import {
   ServiceRequestType,
   ServiceRequestStatus,
   Priority,
+  HomeSectionKey,
+  ContentPageKey,
 } from '../src/generated/prisma/client';
 import { generateReferenceNumber } from '../src/lib/reference-number';
 import { INSTRUMENT_CATEGORIES } from './seed-data';
 import { SPARE_PART_CATEGORIES } from './seed-data-spare-parts';
 import { REFURBISHED_CATEGORIES } from './seed-data-refurbished';
 import { BLOG_POSTS } from './seed-data-blog';
+import {
+  DEFAULT_HERO_CONTENT,
+  DEFAULT_CATEGORIES_CONTENT,
+  DEFAULT_LIFECYCLE_CONTENT,
+  DEFAULT_WHY_US_CONTENT,
+  DEFAULT_CTA_CONTENT,
+  DEFAULT_ABOUT_CONTENT,
+  DEFAULT_SERVICES_CONTENT,
+  DEFAULT_CONTACT_CONTENT,
+  DEFAULT_HEADER_CONTENT,
+  DEFAULT_FOOTER_CONTENT,
+} from '../src/lib/cms/defaults';
 
 // Bootstraps the first Admin account. Safe to re-run: does nothing unless
 // SEED_ADMIN_PASSWORD is set, and skips if the account already exists - so
@@ -380,6 +394,62 @@ async function seedDemoData(prisma: PrismaClient) {
   console.log('Seeded demo customer (demo.customer@example.com) and demo engineer (demo.engineer@example.com).');
 }
 
+// Site CMS: homepage sections, other page content, site settings and theme.
+// Upserts so it's safe to re-run - existing admin edits are never
+// overwritten, only missing rows get the launch-day defaults.
+async function seedCms(prisma: PrismaClient) {
+  const homeSections: Array<{ key: HomeSectionKey; sortOrder: number; content: object }> = [
+    { key: HomeSectionKey.HERO, sortOrder: 0, content: DEFAULT_HERO_CONTENT },
+    { key: HomeSectionKey.CATEGORIES, sortOrder: 1, content: DEFAULT_CATEGORIES_CONTENT },
+    { key: HomeSectionKey.LIFECYCLE, sortOrder: 2, content: DEFAULT_LIFECYCLE_CONTENT },
+    { key: HomeSectionKey.WHY_US, sortOrder: 3, content: DEFAULT_WHY_US_CONTENT },
+    { key: HomeSectionKey.CTA, sortOrder: 4, content: DEFAULT_CTA_CONTENT },
+  ];
+  for (const section of homeSections) {
+    await prisma.homeSection.upsert({
+      where: { key: section.key },
+      update: {},
+      create: { key: section.key, sortOrder: section.sortOrder, content: section.content },
+    });
+  }
+
+  const pageContents: Array<{ page: ContentPageKey; content: object }> = [
+    { page: ContentPageKey.ABOUT, content: DEFAULT_ABOUT_CONTENT },
+    { page: ContentPageKey.SERVICES, content: DEFAULT_SERVICES_CONTENT },
+    { page: ContentPageKey.CONTACT, content: DEFAULT_CONTACT_CONTENT },
+    { page: ContentPageKey.HEADER, content: DEFAULT_HEADER_CONTENT },
+    { page: ContentPageKey.FOOTER, content: DEFAULT_FOOTER_CONTENT },
+  ];
+  for (const pageContent of pageContents) {
+    await prisma.pageContent.upsert({
+      where: { page: pageContent.page },
+      update: {},
+      create: { page: pageContent.page, content: pageContent.content },
+    });
+  }
+
+  await prisma.siteSettings.upsert({
+    where: { id: 'singleton' },
+    update: {},
+    create: {
+      id: 'singleton',
+      companyName: 'Vision Analytical',
+      addressLine: 'Ambarnath',
+      city: 'Ambarnath',
+      state: 'Maharashtra',
+      country: 'India',
+    },
+  });
+
+  await prisma.themeSettings.upsert({
+    where: { id: 'singleton' },
+    update: {},
+    create: { id: 'singleton' },
+  });
+
+  console.log('Seeded site CMS defaults (homepage sections, page content, site & theme settings).');
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -400,6 +470,7 @@ async function main() {
   }
 
   await seedDemoData(prisma);
+  await seedCms(prisma);
 
   await prisma.$disconnect();
 }

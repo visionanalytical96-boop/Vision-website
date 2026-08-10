@@ -505,6 +505,81 @@ model BlogPost {
 }
 
 // ---------------------------------------------------------------------------
+// Site CMS - homepage sections, other page content, and site-wide settings
+// editable from the admin panel without a code change. `content` fields are
+// Json validated with Zod on read (see src/lib/cms/*) since Prisma can't
+// express their shape at the schema level.
+// ---------------------------------------------------------------------------
+
+enum HomeSectionKey {
+  HERO
+  CATEGORIES
+  LIFECYCLE
+  WHY_US
+  CTA
+}
+
+model HomeSection {
+  id        String         @id @default(cuid())
+  key       HomeSectionKey @unique
+  isVisible Boolean        @default(true)
+  sortOrder Int            @default(0)
+  content   Json
+  updatedAt DateTime       @updatedAt
+
+  @@index([sortOrder])
+}
+
+enum ContentPageKey {
+  ABOUT
+  SERVICES
+  CONTACT
+  HEADER
+  FOOTER
+}
+
+model PageContent {
+  id        String         @id @default(cuid())
+  page      ContentPageKey @unique
+  content   Json
+  updatedAt DateTime       @updatedAt
+}
+
+// Singleton row (id is always the literal string "singleton").
+model SiteSettings {
+  id                    String   @id @default("singleton")
+  companyName           String   @default("Vision Analytical")
+  addressLine           String?
+  city                  String?
+  state                 String?
+  country               String   @default("India")
+  phone                 String?
+  whatsappNumber        String?
+  email                 String?
+  facebookUrl           String?
+  instagramUrl          String?
+  linkedinUrl           String?
+  youtubeUrl            String?
+  seoDefaultTitle       String?
+  seoDefaultDescription String?
+  logoUrl               String?
+  faviconUrl            String?
+  updatedAt             DateTime @updatedAt
+}
+
+// Singleton row (id is always the literal string "singleton").
+model ThemeSettings {
+  id                String   @id @default("singleton")
+  primaryColor      String   @default("#2563eb")
+  secondaryColor    String   @default("#0891b2")
+  fontHeading       String   @default("space-grotesk")
+  fontBody          String   @default("inter")
+  buttonStyle       String   @default("rounded")
+  animationsEnabled Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
 // Inventory
 // ---------------------------------------------------------------------------
 

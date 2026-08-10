@@ -24,7 +24,7 @@ Three roles, each with their own section and its own home page:
 | Guest / Customer | `/` (public site) | Instrument catalog, spare parts store, refurbished instruments, blog/knowledge center, quote requests, contact |
 | Customer | `/portal` | Dashboard, orders, quotes (accept/decline), service requests, AMC/CMC contracts, invoices, profile |
 | Engineer | `/engineer` | Assigned jobs, job history, visit reports, job status updates, profile |
-| Admin | `/admin` | Dashboard, products & categories, inventory & suppliers, customers, orders, quotes (price & convert to order), CRM (leads & activities), engineers, service requests (assign & track), AMC/CMC contracts, reports, blog CMS |
+| Admin | `/admin` | Dashboard, products & categories, inventory & suppliers, customers, orders, quotes (price & convert to order), CRM (leads & activities), engineers, service requests (assign & track), AMC/CMC contracts, reports, blog CMS, website builder (homepage sections, page content, header/footer nav, theme, media library, business settings) |
 
 Core workflows tie the three roles together end-to-end:
 
@@ -115,7 +115,7 @@ See `.env.example` for local development (full comments inline) and
 | `DATABASE_URL` | Postgres connection string |
 | `SESSION_SECRET` | Signs session JWTs — generate with `openssl rand -base64 32`; any authenticated request throws immediately if it's unset |
 | `NEXT_PUBLIC_SITE_URL` | Canonical URL used for metadata, sitemap, OG/Twitter tags, JSON-LD |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER`, `NEXT_PUBLIC_CONTACT_PHONE`, `CONTACT_EMAIL` | Contact channels shown across the site |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER`, `NEXT_PUBLIC_CONTACT_PHONE`, `CONTACT_EMAIL` | Contact channels shown across the site — fallback used only until an admin sets the phone/WhatsApp number in Business Settings (`/admin/website/settings`), which then takes priority |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Bootstraps the first admin account (skipped once it exists — no default admin password ships in source control) |
 | `SEED_DEMO_DATA` / `SEED_DEMO_PASSWORD` | Optional demo customer/engineer + sample records, for local dev only |
 
@@ -148,13 +148,17 @@ vars above.
 
 ## Image uploads
 
-Product photos, refurbished-instrument photos and blog cover images are
-uploaded from their respective admin forms. Every upload is decoded and
-re-encoded through `sharp` (rejecting anything that isn't a genuine
-JPEG/PNG/WebP regardless of its claimed content type), capped at 8MB,
-resized to a sane max dimension, and written to a server-generated filename
-under `public/uploads/` — never trusting the original filename or bytes.
+Product photos, refurbished-instrument photos, blog cover images, and
+website content (homepage hero background, logo, favicon) are uploaded
+from their respective admin forms. Every upload is decoded and re-encoded
+through `sharp` (rejecting anything that isn't a genuine JPEG/PNG/WebP
+regardless of its claimed content type), capped at 8MB, resized to a sane
+max dimension, and written to a server-generated filename under
+`public/uploads/` — never trusting the original filename or bytes.
 In Docker, that directory is a named volume so uploads survive redeploys.
+The Media Library (`/admin/website/media`) lists every uploaded file with
+its size, upload date and whether it's still referenced anywhere on the
+site, and lets an admin delete ones that aren't needed.
 
 ## Security
 

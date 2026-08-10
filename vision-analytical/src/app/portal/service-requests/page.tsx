@@ -57,7 +57,7 @@ export default async function PortalServiceRequestsPage() {
                 <TableCell>{request.assignedEngineer?.name ?? 'Unassigned'}</TableCell>
                 <TableCell>{formatDate(request.createdAt)}</TableCell>
                 <TableCell>
-                  <Link href={`/portal/service-requests/${request.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+                  <Link href={`/portal/service-requests/${request.id}`} className="text-primary hover:underline dark:text-secondary">
                     View
                   </Link>
                 </TableCell>

@@ -13,6 +13,7 @@ import {
   contactContentSchema,
   headerContentSchema,
   footerContentSchema,
+  themeSettingsSchema,
 } from '@/lib/cms/schemas';
 import { homeSectionKeyToSlug, pageContentKeyToSlug } from '@/lib/cms/routing';
 import { saveUploadedImage } from '@/lib/upload-image';
@@ -128,5 +129,31 @@ export async function updatePageContent(
   // Header/Footer render on every page via the site layout, so revalidate the whole tree.
   revalidatePath('/', 'layout');
   revalidatePath(`/admin/website/pages/${pageContentKeyToSlug(page)}`);
+  return { success: true };
+}
+
+export async function updateThemeSettings(_prevState: CmsFormState | undefined, formData: FormData): Promise<CmsFormState> {
+  await requireRole(Role.ADMIN);
+
+  const validated = themeSettingsSchema.safeParse({
+    primaryColor: formData.get('primaryColor'),
+    secondaryColor: formData.get('secondaryColor'),
+    fontHeading: formData.get('fontHeading'),
+    fontBody: formData.get('fontBody'),
+    buttonStyle: formData.get('buttonStyle'),
+    animationsEnabled: formData.get('animationsEnabled') === 'true',
+  });
+  if (!validated.success) {
+    return { formError: `Some fields are invalid: ${validated.error.issues.map((issue) => issue.message).join(', ')}` };
+  }
+
+  await prisma.themeSettings.upsert({
+    where: { id: 'singleton' },
+    create: { id: 'singleton', ...validated.data },
+    update: validated.data,
+  });
+
+  // Theme affects every page via the root layout, so revalidate the whole tree.
+  revalidatePath('/', 'layout');
   return { success: true };
 }

@@ -17,6 +17,14 @@
   --danger-bg: #fee2e2;
   --info: #2563eb;
   --info-bg: #dbeafe;
+
+  /* Brand accent - primary/secondary are admin-configurable via Theme Settings;
+     hover/light shades are derived so a single saved hex stays in sync everywhere. */
+  --primary: #2563eb;
+  --secondary: #22d3ee;
+  --primary-hover: color-mix(in srgb, var(--primary) 85%, black);
+  --primary-light: color-mix(in srgb, var(--primary) 8%, white);
+  --btn-radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -36,6 +44,8 @@
     --danger-bg: rgba(248, 113, 113, 0.15);
     --info: #60a5fa;
     --info-bg: rgba(96, 165, 250, 0.15);
+
+    --primary-light: color-mix(in srgb, var(--primary) 16%, black);
   }
 }
 
@@ -56,6 +66,11 @@
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
 
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+
   --font-sans: var(--font-space-grotesk);
   --font-display: var(--font-syne);
   --font-mono: var(--font-jetbrains-mono);
@@ -73,4 +88,12 @@ body {
 ::selection {
   background: var(--info);
   color: white;
+}
+
+/* Theme Settings > animations toggle - disables transitions/animations site-wide. */
+.no-animations,
+.no-animations * {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+  scroll-behavior: auto !important;
 }

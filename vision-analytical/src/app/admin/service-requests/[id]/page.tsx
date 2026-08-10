@@ -152,7 +152,7 @@ export default async function AdminServiceRequestDetailPage(props: PageProps<'/a
       {request.amcContract && (
         <p className="text-sm text-muted">
           Linked to AMC/CMC contract{' '}
-          <Link href={`/admin/amc/${request.amcContract.id}`} className="font-mono text-blue-600 hover:underline dark:text-cyan-400">
+          <Link href={`/admin/amc/${request.amcContract.id}`} className="font-mono text-primary hover:underline dark:text-secondary">
             {request.amcContract.contractNumber}
           </Link>
         </p>

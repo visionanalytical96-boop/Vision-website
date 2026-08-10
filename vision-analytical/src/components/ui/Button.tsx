@@ -5,7 +5,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'dan
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 shadow-sm',
+  primary: 'bg-primary text-white hover:bg-primary-hover shadow-sm',
   secondary:
     'bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200',
   outline: 'border border-border bg-transparent text-foreground hover:bg-surface-muted',
@@ -24,9 +24,9 @@ export function buttonVariants(
 ): string {
   const { variant = 'primary', size = 'md', className } = options;
   return cn(
-    'inline-flex items-center justify-center rounded-lg font-medium transition-colors',
+    'inline-flex items-center justify-center rounded-[var(--btn-radius)] font-medium transition-colors',
     'disabled:pointer-events-none disabled:opacity-50',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
     VARIANT_CLASSES[variant],
     SIZE_CLASSES[size],
     className,

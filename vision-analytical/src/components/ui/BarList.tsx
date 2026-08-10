@@ -16,7 +16,7 @@ export function BarList({ items }: { items: BarListItem[] }) {
           </div>
           <div className="mt-1 h-2 rounded-full bg-surface-muted">
             <div
-              className="h-2 rounded-full bg-blue-600 dark:bg-cyan-400"
+              className="h-2 rounded-full bg-primary dark:bg-secondary"
               style={{ width: `${(item.count / max) * 100}%` }}
             />
           </div>

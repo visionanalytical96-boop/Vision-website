@@ -63,7 +63,7 @@ export default async function AdminBlogPage() {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <Link href={`/admin/blog/${post.id}`} className="text-blue-600 hover:underline dark:text-cyan-400" aria-label={`Edit ${post.title}`}>
+                  <Link href={`/admin/blog/${post.id}`} className="text-primary hover:underline dark:text-secondary" aria-label={`Edit ${post.title}`}>
                     <Pencil className="h-4 w-4" />
                   </Link>
                   <form action={deleteBlogPost}>

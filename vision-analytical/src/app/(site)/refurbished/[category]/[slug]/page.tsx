@@ -68,7 +68,7 @@ export default async function RefurbishedDetailPage(props: PageProps<'/refurbish
           </div>
 
           <div className="mt-4 flex items-center gap-2 text-sm text-muted">
-            <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-cyan-400" />
+            <ShieldCheck className="h-4 w-4 text-primary dark:text-secondary" />
             {instrument.warrantyMonths}-month warranty included
           </div>
 
@@ -88,7 +88,7 @@ export default async function RefurbishedDetailPage(props: PageProps<'/refurbish
           <div className="mt-6 flex items-center gap-2 text-sm text-muted">
             <PlayCircle className="h-4 w-4" />
             {instrument.demoVideoUrl ? (
-              <a href={instrument.demoVideoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-cyan-400">
+              <a href={instrument.demoVideoUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline dark:text-secondary">
                 Watch demo video
               </a>
             ) : (

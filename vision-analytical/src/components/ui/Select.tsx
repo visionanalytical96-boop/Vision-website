@@ -15,7 +15,7 @@ export function Select({ className, invalid, ref, children, ...props }: SelectPr
         aria-invalid={invalid || undefined}
         className={cn(
           'h-10 w-full appearance-none rounded-lg border border-border bg-surface px-3 pr-9 text-sm text-foreground transition-colors',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+          'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
           'disabled:cursor-not-allowed disabled:opacity-50',
           'aria-invalid:border-danger aria-invalid:focus:ring-danger',
           className,

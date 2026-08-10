@@ -77,7 +77,7 @@ export default async function AdminProductsPage(props: PageProps<'/admin/product
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <Link href={`/admin/products/${product.id}`} className="text-blue-600 hover:underline dark:text-cyan-400" aria-label={`Edit ${product.name}`}>
+                  <Link href={`/admin/products/${product.id}`} className="text-primary hover:underline dark:text-secondary" aria-label={`Edit ${product.name}`}>
                     <Pencil className="h-4 w-4" />
                   </Link>
                   <form action={deleteProduct}>

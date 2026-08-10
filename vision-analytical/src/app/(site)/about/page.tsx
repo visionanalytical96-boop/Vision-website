@@ -20,7 +20,7 @@ export default async function AboutPage() {
     <>
       <section className="border-b border-border bg-surface-muted py-16 sm:py-20">
         <Container>
-          <p className="font-mono text-sm tracking-wide text-blue-600 dark:text-cyan-400">{content.eyebrow}</p>
+          <p className="font-mono text-sm tracking-wide text-primary dark:text-secondary">{content.eyebrow}</p>
           <h1 className="mt-3 max-w-3xl font-display text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl">
             {content.heading}
           </h1>
@@ -31,7 +31,7 @@ export default async function AboutPage() {
               const Icon = resolveIcon(fact.iconKey);
               return (
                 <div key={fact.label} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4">
-                  <Icon className="h-5 w-5 shrink-0 text-blue-600 dark:text-cyan-400" />
+                  <Icon className="h-5 w-5 shrink-0 text-primary dark:text-secondary" />
                   <div>
                     <p className="text-xs text-muted">{fact.label}</p>
                     <p className="font-medium text-foreground">{fact.value}</p>
@@ -66,7 +66,7 @@ export default async function AboutPage() {
               const Icon = resolveIcon(industry.iconKey);
               return (
                 <div key={industry.name} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4">
-                  <Icon className="h-5 w-5 shrink-0 text-blue-600 dark:text-cyan-400" />
+                  <Icon className="h-5 w-5 shrink-0 text-primary dark:text-secondary" />
                   <span className="text-sm font-medium text-foreground">{industry.name}</span>
                 </div>
               );
@@ -83,8 +83,8 @@ export default async function AboutPage() {
               const Icon = resolveIcon(item.iconKey);
               return (
                 <div key={item.title} className="flex gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-white/5">
-                    <Icon className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-light dark:bg-white/5">
+                    <Icon className="h-5 w-5 text-primary dark:text-secondary" />
                   </div>
                   <div>
                     <p className="font-display text-lg font-semibold text-foreground">{item.title}</p>

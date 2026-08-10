@@ -49,7 +49,7 @@ export default async function AdminRefurbishedPage() {
               <TableCell>{instrument.isPublished ? <span className="text-success">Published</span> : <span className="text-muted">Draft</span>}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <Link href={`/admin/products/refurbished/${instrument.id}`} className="text-blue-600 hover:underline dark:text-cyan-400" aria-label={`Edit ${instrument.name}`}>
+                  <Link href={`/admin/products/refurbished/${instrument.id}`} className="text-primary hover:underline dark:text-secondary" aria-label={`Edit ${instrument.name}`}>
                     <Pencil className="h-4 w-4" />
                   </Link>
                   <form action={deleteRefurbished}>

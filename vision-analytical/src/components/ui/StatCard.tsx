@@ -5,7 +5,7 @@ export function StatCard({ label, value, icon }: { label: string; value: ReactNo
   return (
     <Card>
       <CardContent className="flex items-center gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-white/5 dark:text-cyan-400">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary dark:bg-white/5 dark:text-secondary">
           {icon}
         </div>
         <div>

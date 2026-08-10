@@ -62,7 +62,7 @@ export default async function AdminAmcPage() {
                 <StatusBadge meta={amcStatusMeta[contract.status]} />
               </TableCell>
               <TableCell>
-                <Link href={`/admin/amc/${contract.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+                <Link href={`/admin/amc/${contract.id}`} className="text-primary hover:underline dark:text-secondary">
                   View
                 </Link>
               </TableCell>

@@ -127,7 +127,7 @@ export default async function AdminQuoteDetailPage(props: PageProps<'/admin/quot
             <CardTitle>Order</CardTitle>
           </CardHeader>
           <CardContent>
-            <Link href={`/admin/orders/${quote.order.id}`} className="font-mono text-blue-600 hover:underline dark:text-cyan-400">
+            <Link href={`/admin/orders/${quote.order.id}`} className="font-mono text-primary hover:underline dark:text-secondary">
               {quote.order.orderNumber}
             </Link>
           </CardContent>

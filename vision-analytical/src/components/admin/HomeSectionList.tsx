@@ -77,7 +77,7 @@ export function HomeSectionList({ sections: initialSections }: { sections: Secti
           </button>
           <Link
             href={`/admin/website/homepage/${homeSectionKeyToSlug(section.key)}`}
-            className="text-sm font-medium text-blue-600 hover:underline dark:text-cyan-400"
+            className="text-sm font-medium text-primary hover:underline dark:text-secondary"
           >
             Edit
           </Link>

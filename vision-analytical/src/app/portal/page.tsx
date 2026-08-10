@@ -39,7 +39,7 @@ export default async function PortalDashboardPage() {
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Recent orders</CardTitle>
-            <Link href="/portal/orders" className="text-sm text-blue-600 hover:underline dark:text-cyan-400">
+            <Link href="/portal/orders" className="text-sm text-primary hover:underline dark:text-secondary">
               View all
             </Link>
           </CardHeader>
@@ -70,7 +70,7 @@ export default async function PortalDashboardPage() {
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Recent quotes</CardTitle>
-            <Link href="/portal/quotes" className="text-sm text-blue-600 hover:underline dark:text-cyan-400">
+            <Link href="/portal/quotes" className="text-sm text-primary hover:underline dark:text-secondary">
               View all
             </Link>
           </CardHeader>

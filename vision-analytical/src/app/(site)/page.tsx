@@ -88,10 +88,10 @@ export default async function HomePage() {
                   />
                 )}
                 <Container className="relative py-20 sm:py-28">
-                  <p className="font-mono text-sm tracking-wide text-cyan-400">{hero.eyebrow}</p>
+                  <p className="font-mono text-sm tracking-wide text-secondary">{hero.eyebrow}</p>
                   <h1 className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.1] sm:text-5xl lg:text-6xl">
                     {hero.headingPrefix}{' '}
-                    <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
                       {hero.headingHighlight}
                     </span>{' '}
                     {hero.headingSuffix}
@@ -165,7 +165,7 @@ export default async function HomePage() {
                       <h2 className="font-display text-2xl font-bold text-foreground sm:text-3xl">{content.heading}</h2>
                       <p className="mt-2 text-muted">{content.subheading}</p>
                     </div>
-                    <Link href="/products" className="hidden text-sm font-medium text-blue-600 hover:underline sm:inline dark:text-cyan-400">
+                    <Link href="/products" className="hidden text-sm font-medium text-primary hover:underline sm:inline dark:text-secondary">
                       View all instruments →
                     </Link>
                   </div>
@@ -175,9 +175,9 @@ export default async function HomePage() {
                       <Link
                         key={category.slug}
                         href={`/products/${category.slug}`}
-                        className="group rounded-xl border border-border bg-surface p-5 shadow-sm transition-colors hover:border-blue-500"
+                        className="group rounded-xl border border-border bg-surface p-5 shadow-sm transition-colors hover:border-primary"
                       >
-                        <FlaskConical className="h-6 w-6 text-blue-600 dark:text-cyan-400" />
+                        <FlaskConical className="h-6 w-6 text-primary dark:text-secondary" />
                         <p className="mt-3 font-display text-lg font-semibold text-foreground">{category.name}</p>
                         {category.description && <p className="mt-1 text-sm text-muted">{category.description}</p>}
                       </Link>
@@ -203,9 +203,9 @@ export default async function HomePage() {
                         <Link
                           key={card.title}
                           href={card.href || '#'}
-                          className="rounded-xl border border-border bg-surface p-6 shadow-sm transition-colors hover:border-blue-500"
+                          className="rounded-xl border border-border bg-surface p-6 shadow-sm transition-colors hover:border-primary"
                         >
-                          <Icon className="h-7 w-7 text-blue-600 dark:text-cyan-400" />
+                          <Icon className="h-7 w-7 text-primary dark:text-secondary" />
                           <p className="mt-4 font-display text-lg font-semibold text-foreground">{card.title}</p>
                           <p className="mt-2 text-sm text-muted">{card.description}</p>
                         </Link>
@@ -230,8 +230,8 @@ export default async function HomePage() {
                       const Icon = resolveIcon(card.iconKey);
                       return (
                         <div key={card.title}>
-                          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 dark:bg-white/5">
-                            <Icon className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
+                          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-light dark:bg-white/5">
+                            <Icon className="h-5 w-5 text-primary dark:text-secondary" />
                           </div>
                           <p className="mt-4 font-display text-lg font-semibold text-foreground">{card.title}</p>
                           <p className="mt-2 text-sm text-muted">{card.description}</p>

@@ -25,9 +25,9 @@ export default async function RefurbishedIndexPage() {
           <Link
             key={category.id}
             href={`/refurbished/${category.slug}`}
-            className="group rounded-xl border border-border bg-surface p-6 shadow-sm transition-colors hover:border-blue-500"
+            className="group rounded-xl border border-border bg-surface p-6 shadow-sm transition-colors hover:border-primary"
           >
-            <RefreshCw className="h-7 w-7 text-blue-600 dark:text-cyan-400" />
+            <RefreshCw className="h-7 w-7 text-primary dark:text-secondary" />
             <p className="mt-4 font-display text-xl font-semibold text-foreground">{category.name}</p>
           </Link>
         ))}

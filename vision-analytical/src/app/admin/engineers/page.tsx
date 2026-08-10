@@ -54,7 +54,7 @@ export default async function AdminEngineersPage() {
               <TableCell>{formatDate(engineer.createdAt)}</TableCell>
               <TableCell>{engineer.isActive ? <span className="text-success">Active</span> : <span className="text-danger">Inactive</span>}</TableCell>
               <TableCell>
-                <Link href={`/admin/engineers/${engineer.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+                <Link href={`/admin/engineers/${engineer.id}`} className="text-primary hover:underline dark:text-secondary">
                   View
                 </Link>
               </TableCell>

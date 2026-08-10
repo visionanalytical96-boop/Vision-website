@@ -41,7 +41,7 @@ export default async function PortalInvoicesPage() {
             </TableCell>
             <TableCell>
               {invoice.pdfUrl ? (
-                <a href={invoice.pdfUrl} className="text-blue-600 hover:underline dark:text-cyan-400">
+                <a href={invoice.pdfUrl} className="text-primary hover:underline dark:text-secondary">
                   Download
                 </a>
               ) : (

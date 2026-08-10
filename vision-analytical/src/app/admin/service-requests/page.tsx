@@ -46,7 +46,7 @@ export default async function AdminServiceRequestsPage() {
               <StatusBadge meta={serviceRequestStatusMeta[request.status]} />
             </TableCell>
             <TableCell>
-              <Link href={`/admin/service-requests/${request.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+              <Link href={`/admin/service-requests/${request.id}`} className="text-primary hover:underline dark:text-secondary">
                 View
               </Link>
             </TableCell>

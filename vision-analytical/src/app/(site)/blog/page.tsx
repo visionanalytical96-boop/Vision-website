@@ -36,7 +36,7 @@ export default async function BlogIndexPage(props: PageProps<'/blog'>) {
           href="/blog"
           className={cn(
             'rounded-full border px-3 py-1.5 text-sm',
-            !category ? 'border-blue-600 bg-blue-600 text-white' : 'border-border text-muted hover:text-foreground',
+            !category ? 'border-primary bg-primary text-white' : 'border-border text-muted hover:text-foreground',
           )}
         >
           All
@@ -47,7 +47,7 @@ export default async function BlogIndexPage(props: PageProps<'/blog'>) {
             href={`/blog?category=${cat}`}
             className={cn(
               'rounded-full border px-3 py-1.5 text-sm',
-              category === cat ? 'border-blue-600 bg-blue-600 text-white' : 'border-border text-muted hover:text-foreground',
+              category === cat ? 'border-primary bg-primary text-white' : 'border-border text-muted hover:text-foreground',
             )}
           >
             {BLOG_CATEGORY_LABELS[cat]}
@@ -63,7 +63,7 @@ export default async function BlogIndexPage(props: PageProps<'/blog'>) {
             <Link
               key={post.id}
               href={`/blog/${post.slug}`}
-              className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-colors hover:border-blue-500"
+              className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-colors hover:border-primary"
             >
               {post.coverImage && (
                 <div className="relative h-40 w-full bg-surface-muted">
@@ -71,7 +71,7 @@ export default async function BlogIndexPage(props: PageProps<'/blog'>) {
                 </div>
               )}
               <div className="flex flex-1 flex-col p-6">
-                <span className="text-xs font-medium text-blue-600 dark:text-cyan-400">{BLOG_CATEGORY_LABELS[post.category]}</span>
+                <span className="text-xs font-medium text-primary dark:text-secondary">{BLOG_CATEGORY_LABELS[post.category]}</span>
                 <p className="mt-2 font-display text-lg font-semibold text-foreground">{post.title}</p>
                 <p className="mt-2 flex-1 text-sm text-muted">{post.excerpt}</p>
                 {post.publishedAt && <p className="mt-4 text-xs text-muted">{formatDate(post.publishedAt)}</p>}

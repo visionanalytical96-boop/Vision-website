@@ -31,7 +31,7 @@ export function FloatingContactButtons() {
         href={telLink()}
         aria-label="Call us"
         tabIndex={visible ? 0 : -1}
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-transform hover:scale-105"
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105"
       >
         <Phone className="h-5 w-5" />
       </a>

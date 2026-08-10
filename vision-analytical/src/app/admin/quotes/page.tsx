@@ -41,7 +41,7 @@ export default async function AdminQuotesPage() {
               <StatusBadge meta={quoteStatusMeta[quote.status]} />
             </TableCell>
             <TableCell>
-              <Link href={`/admin/quotes/${quote.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+              <Link href={`/admin/quotes/${quote.id}`} className="text-primary hover:underline dark:text-secondary">
                 View
               </Link>
             </TableCell>

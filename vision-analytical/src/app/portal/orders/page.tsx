@@ -43,7 +43,7 @@ export default async function PortalOrdersPage() {
               <StatusBadge meta={orderStatusMeta[order.status]} />
             </TableCell>
             <TableCell>
-              <Link href={`/portal/orders/${order.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+              <Link href={`/portal/orders/${order.id}`} className="text-primary hover:underline dark:text-secondary">
                 View
               </Link>
             </TableCell>

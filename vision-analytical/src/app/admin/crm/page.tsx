@@ -60,7 +60,7 @@ export default async function AdminCrmPage() {
                 <StatusBadge meta={crmLeadStatusMeta[lead.status]} />
               </TableCell>
               <TableCell>
-                <Link href={`/admin/crm/${lead.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+                <Link href={`/admin/crm/${lead.id}`} className="text-primary hover:underline dark:text-secondary">
                   View
                 </Link>
               </TableCell>

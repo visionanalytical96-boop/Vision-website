@@ -18,7 +18,7 @@ export async function SiteFooter() {
       <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-8 px-4 py-12 sm:px-6 md:grid-cols-4 lg:px-8">
         <div className="col-span-2 md:col-span-1">
           <p className="font-display text-lg font-bold text-foreground">
-            Vision <span className="text-blue-600 dark:text-cyan-400">Analytical</span>
+            Vision <span className="text-primary dark:text-secondary">Analytical</span>
           </p>
           <p className="mt-3 max-w-xs text-sm text-muted">{footer.tagline}</p>
         </div>

@@ -22,11 +22,11 @@ export default async function ServicesPage() {
     <>
       <section className="border-b border-border bg-surface-muted py-16 sm:py-20">
         <Container>
-          <p className="font-mono text-sm tracking-wide text-blue-600 dark:text-cyan-400">{content.eyebrow}</p>
+          <p className="font-mono text-sm tracking-wide text-primary dark:text-secondary">{content.eyebrow}</p>
           <h1 className="mt-3 max-w-2xl font-display text-3xl font-bold text-foreground sm:text-4xl">{content.heading}</h1>
           <p className="mt-4 max-w-2xl text-muted">
             {content.subheading} Already a customer with an urgent issue?{' '}
-            <Link href="/login?next=/portal/service-requests/new" className="text-blue-600 hover:underline dark:text-cyan-400">
+            <Link href="/login?next=/portal/service-requests/new" className="text-primary hover:underline dark:text-secondary">
               Log in to raise a service request
             </Link>
             .
@@ -43,7 +43,7 @@ export default async function ServicesPage() {
                 const Icon = resolveIcon(service.iconKey);
                 return (
                   <div key={service.name} className="rounded-xl border border-border bg-surface p-6 shadow-sm">
-                    <Icon className="h-6 w-6 text-blue-600 dark:text-cyan-400" />
+                    <Icon className="h-6 w-6 text-primary dark:text-secondary" />
                     <p className="mt-3 font-display text-lg font-semibold text-foreground">{service.name}</p>
                     <p className="mt-2 text-sm text-muted">{service.description}</p>
                   </div>

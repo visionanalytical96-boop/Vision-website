@@ -23,7 +23,7 @@ export default function AdminPagesListPage() {
             <span className="font-medium text-foreground">{pageContentKeyToLabel(key)}</span>
             <Link
               href={`/admin/website/pages/${pageContentKeyToSlug(key)}`}
-              className="text-sm font-medium text-blue-600 hover:underline dark:text-cyan-400"
+              className="text-sm font-medium text-primary hover:underline dark:text-secondary"
             >
               Edit
             </Link>

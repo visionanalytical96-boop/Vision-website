@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { HEADING_FONT_KEYS, BODY_FONT_KEYS, BUTTON_STYLE_KEYS } from './theme';
 
 const cardSchema = z.object({
   title: z.string(),
@@ -112,6 +113,18 @@ export const footerContentSchema = z.object({
   serviceLinks: z.array(linkSchema),
 });
 export type FooterContent = z.infer<typeof footerContentSchema>;
+
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+export const themeSettingsSchema = z.object({
+  primaryColor: z.string().regex(HEX_COLOR_RE, 'Must be a hex color like #2563eb'),
+  secondaryColor: z.string().regex(HEX_COLOR_RE, 'Must be a hex color like #22d3ee'),
+  fontHeading: z.enum(HEADING_FONT_KEYS),
+  fontBody: z.enum(BODY_FONT_KEYS),
+  buttonStyle: z.enum(BUTTON_STYLE_KEYS),
+  animationsEnabled: z.boolean(),
+});
+export type ThemeSettingsInput = z.infer<typeof themeSettingsSchema>;
 
 /** Parses Json content with a schema, falling back to a safe default rather than throwing - CMS data must never crash the public site. */
 export function parseContent<T>(schema: z.ZodType<T>, value: unknown, fallback: T): T {

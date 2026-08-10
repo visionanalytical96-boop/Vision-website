@@ -19,7 +19,7 @@ export default async function LoginPage(props: PageProps<'/login'>) {
         <LoginForm next={nextParam} />
         <p className="mt-6 text-center text-sm text-muted">
           New customer?{' '}
-          <Link href="/register" className="font-medium text-blue-600 hover:underline dark:text-cyan-400">
+          <Link href="/register" className="font-medium text-primary hover:underline dark:text-secondary">
             Create an account
           </Link>
         </p>

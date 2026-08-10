@@ -42,7 +42,7 @@ export default async function EngineerHistoryPage() {
               <StatusBadge meta={serviceRequestStatusMeta[job.status]} />
             </TableCell>
             <TableCell>
-              <Link href={`/engineer/jobs/${job.id}`} className="text-blue-600 hover:underline dark:text-cyan-400">
+              <Link href={`/engineer/jobs/${job.id}`} className="text-primary hover:underline dark:text-secondary">
                 View
               </Link>
             </TableCell>

@@ -43,7 +43,7 @@ export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
         <Link href="/blog" className="text-sm text-muted hover:text-foreground">
           ← Knowledge Center
         </Link>
-        <span className="mt-4 block text-xs font-medium text-blue-600 dark:text-cyan-400">
+        <span className="mt-4 block text-xs font-medium text-primary dark:text-secondary">
           {BLOG_CATEGORY_LABELS[post.category]}
         </span>
         <h1 className="mt-2 font-display text-3xl font-bold text-foreground sm:text-4xl">{post.title}</h1>

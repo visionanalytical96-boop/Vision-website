@@ -53,20 +53,20 @@ export default async function ContactPage(props: PageProps<'/contact'>) {
 
           <div className="rounded-xl border border-border bg-surface p-5">
             <div className="flex items-center gap-2 text-foreground">
-              <Headset className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
+              <Headset className="h-5 w-5 text-primary dark:text-secondary" />
               <p className="font-semibold">Already a customer?</p>
             </div>
             <p className="mt-2 text-sm text-muted">
               Log in to raise and track a formal service request, or check your AMC status.
             </p>
-            <Link href="/login?next=/portal/service-requests/new" className="mt-3 inline-block text-sm font-medium text-blue-600 hover:underline dark:text-cyan-400">
+            <Link href="/login?next=/portal/service-requests/new" className="mt-3 inline-block text-sm font-medium text-primary hover:underline dark:text-secondary">
               Log in to your account →
             </Link>
           </div>
 
           <div className="rounded-xl border border-border bg-surface p-5">
             <div className="flex items-center gap-2 text-foreground">
-              <MapPin className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
+              <MapPin className="h-5 w-5 text-primary dark:text-secondary" />
               <p className="font-semibold">{content.locationHeading}</p>
             </div>
             <p className="mt-2 text-sm text-muted">{content.locationText}</p>

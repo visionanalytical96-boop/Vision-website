@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 function activeLinkClass(active: boolean) {
-  return cn('text-sm', active ? 'font-medium text-blue-600 dark:text-cyan-400' : 'text-muted hover:text-foreground');
+  return cn('text-sm', active ? 'font-medium text-primary dark:text-secondary' : 'text-muted hover:text-foreground');
 }
 
 export default async function SparePartsPage(props: PageProps<'/spare-parts'>) {

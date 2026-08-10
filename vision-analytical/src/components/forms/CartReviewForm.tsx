@@ -34,7 +34,7 @@ export function CartReviewForm({ defaultName, defaultEmail, defaultPhone }: Cart
           Reference number <span className="font-mono font-medium text-foreground">{state.quoteNumber}</span>. Our
           team will follow up by email or phone with pricing and lead times.
         </p>
-        <Link href="/spare-parts" className="mt-6 inline-block text-blue-600 hover:underline dark:text-cyan-400">
+        <Link href="/spare-parts" className="mt-6 inline-block text-primary hover:underline dark:text-secondary">
           Continue browsing
         </Link>
       </div>
@@ -45,7 +45,7 @@ export function CartReviewForm({ defaultName, defaultEmail, defaultPhone }: Cart
     return (
       <div className="rounded-xl border border-dashed border-border p-12 text-center">
         <p className="text-muted">Your cart is empty.</p>
-        <Link href="/spare-parts" className="mt-4 inline-block text-blue-600 hover:underline dark:text-cyan-400">
+        <Link href="/spare-parts" className="mt-4 inline-block text-primary hover:underline dark:text-secondary">
           Browse spare parts
         </Link>
       </div>

@@ -444,7 +444,15 @@ async function seedCms(prisma: PrismaClient) {
   await prisma.themeSettings.upsert({
     where: { id: 'singleton' },
     update: {},
-    create: { id: 'singleton' },
+    create: {
+      id: 'singleton',
+      primaryColor: '#2563eb',
+      secondaryColor: '#22d3ee',
+      fontHeading: 'syne',
+      fontBody: 'space-grotesk',
+      buttonStyle: 'rounded',
+      animationsEnabled: true,
+    },
   });
 
   console.log('Seeded site CMS defaults (homepage sections, page content, site & theme settings).');

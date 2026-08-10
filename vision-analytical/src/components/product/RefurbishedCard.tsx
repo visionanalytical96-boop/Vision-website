@@ -10,7 +10,7 @@ export function RefurbishedCard({ instrument, basePath }: { instrument: Refurbis
   return (
     <Link
       href={`${basePath}/${instrument.slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-colors hover:border-blue-500"
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-colors hover:border-primary"
     >
       <ProductImage images={toImageList(instrument.images)} alt={instrument.name} className="h-40 w-full" sizes="(min-width: 1024px) 25vw, 50vw" />
       <div className="flex flex-1 flex-col gap-2 p-4">

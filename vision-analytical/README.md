@@ -121,10 +121,18 @@ See `.env.example` for local development (full comments inline) and
 
 ### Scripts
 
+`npm install` runs `prisma generate` automatically via a `postinstall` hook,
+so `src/generated/prisma` (gitignored, since it's generated code) always
+exists after installing — no separate step required, though `npx prisma
+generate` is safe to re-run any time the schema changes.
+
 ```bash
 npm run dev     # Turbopack dev server
 npm run build   # production build (standalone output)
-npm run start   # run the production build
+npm run start   # copies public/ and .next/static into the standalone
+                # output, then runs it directly with `node` - "next start"
+                # doesn't support standalone output, so this is the
+                # supported way to run the production build outside Docker
 npm run lint    # ESLint
 npx tsc --noEmit          # typecheck
 npx prisma studio         # browse the database
@@ -145,6 +153,14 @@ blog posts, inventory (suppliers, stock movements), and contact messages.
 `prisma/seed.ts` is idempotent — safe to re-run. It always seeds the catalog
 and blog content; the admin account and demo data are opt-in via the env
 vars above.
+
+`npm run build` never needs a reachable database — every route is rendered
+dynamically (`export const dynamic = 'force-dynamic'` in the root layout),
+and the handful of data-fetchers that could otherwise run during a build
+(site/theme settings, the sitemap) degrade to defaults instead of failing
+if the database isn't up yet. This matters for standard deploy pipelines
+(Docker build stages, CI) that build the app before the database container
+exists.
 
 ## Image uploads
 

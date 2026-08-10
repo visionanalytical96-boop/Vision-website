@@ -5,7 +5,7 @@ import { Container } from '@/components/ui/Container';
 import { ContactForm } from '@/components/forms/ContactForm';
 import { buttonVariants } from '@/components/ui/Button';
 import { whatsappLink, telLink } from '@/lib/contact-links';
-import { getPageContent } from '@/lib/data/cms';
+import { getPageContent, getSiteSettings } from '@/lib/data/cms';
 import { contactContentSchema, parseContent } from '@/lib/cms/schemas';
 import { DEFAULT_CONTACT_CONTENT } from '@/lib/cms/defaults';
 import { ContentPageKey } from '@/generated/prisma/enums';
@@ -16,7 +16,11 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage(props: PageProps<'/contact'>) {
-  const [searchParams, page] = await Promise.all([props.searchParams, getPageContent(ContentPageKey.CONTACT)]);
+  const [searchParams, page, settings] = await Promise.all([
+    props.searchParams,
+    getPageContent(ContentPageKey.CONTACT),
+    getSiteSettings(),
+  ]);
   const content = parseContent(contactContentSchema, page?.content, DEFAULT_CONTACT_CONTENT);
   const product = typeof searchParams.product === 'string' ? searchParams.product : undefined;
   const defaultSubject = product ? `Enquiry about: ${product}` : undefined;
@@ -35,12 +39,12 @@ export default async function ContactPage(props: PageProps<'/contact'>) {
             </div>
             <p className="mt-2 text-sm text-foreground">{content.emergencyText}</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <a href={telLink()} className={buttonVariants({ variant: 'danger', size: 'sm' })}>
+              <a href={telLink(settings?.phone)} className={buttonVariants({ variant: 'danger', size: 'sm' })}>
                 <Phone className="h-4 w-4" />
                 Call Now
               </a>
               <a
-                href={whatsappLink('Hi, our instrument is down and we need urgent support.')}
+                href={whatsappLink(settings?.whatsappNumber, 'Hi, our instrument is down and we need urgent support.')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={buttonVariants({ variant: 'outline', size: 'sm' })}

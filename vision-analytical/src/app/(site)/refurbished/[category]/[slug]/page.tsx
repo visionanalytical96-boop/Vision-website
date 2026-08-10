@@ -9,6 +9,7 @@ import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getRefurbishedInstrumentBySlug } from '@/lib/data/refurbished';
+import { getSiteSettings } from '@/lib/data/cms';
 import { refurbishedConditionMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
 import { whatsappLink } from '@/lib/contact-links';
@@ -25,7 +26,7 @@ export async function generateMetadata(props: PageProps<'/refurbished/[category]
 
 export default async function RefurbishedDetailPage(props: PageProps<'/refurbished/[category]/[slug]'>) {
   const { category: categorySlug, slug } = await props.params;
-  const instrument = await getRefurbishedInstrumentBySlug(slug);
+  const [instrument, settings] = await Promise.all([getRefurbishedInstrumentBySlug(slug), getSiteSettings()]);
   if (!instrument) notFound();
   if (instrument.category.slug !== categorySlug) {
     redirect(`/refurbished/${instrument.category.slug}/${instrument.slug}`);
@@ -102,7 +103,7 @@ export default async function RefurbishedDetailPage(props: PageProps<'/refurbish
               Request Quote
             </Link>
             <a
-              href={whatsappLink(`Hi, I'm interested in the refurbished ${instrument.name}.`)}
+              href={whatsappLink(settings?.whatsappNumber, `Hi, I'm interested in the refurbished ${instrument.name}.`)}
               target="_blank"
               rel="noopener noreferrer"
               className={buttonVariants({ variant: 'outline' })}

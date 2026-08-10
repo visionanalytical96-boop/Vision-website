@@ -14,6 +14,7 @@ import {
   headerContentSchema,
   footerContentSchema,
   themeSettingsSchema,
+  siteSettingsSchema,
 } from '@/lib/cms/schemas';
 import { homeSectionKeyToSlug, pageContentKeyToSlug } from '@/lib/cms/routing';
 import { saveUploadedImage } from '@/lib/upload-image';
@@ -129,6 +130,53 @@ export async function updatePageContent(
   // Header/Footer render on every page via the site layout, so revalidate the whole tree.
   revalidatePath('/', 'layout');
   revalidatePath(`/admin/website/pages/${pageContentKeyToSlug(page)}`);
+  return { success: true };
+}
+
+export async function updateSiteSettings(_prevState: CmsFormState | undefined, formData: FormData): Promise<CmsFormState> {
+  await requireRole(Role.ADMIN);
+
+  const logoFile = formData.get('logoImage');
+  const logoUpload = await saveUploadedImage(logoFile instanceof File ? logoFile : null, 'site');
+  if (logoUpload.error) return { formError: logoUpload.error };
+
+  const faviconFile = formData.get('faviconImage');
+  const faviconUpload = await saveUploadedImage(faviconFile instanceof File ? faviconFile : null, 'site');
+  if (faviconUpload.error) return { formError: faviconUpload.error };
+
+  const existingLogoUrl = String(formData.get('logoUrl') ?? '') || null;
+  const existingFaviconUrl = String(formData.get('faviconUrl') ?? '') || null;
+
+  const validated = siteSettingsSchema.safeParse({
+    companyName: formData.get('companyName'),
+    addressLine: formData.get('addressLine'),
+    city: formData.get('city'),
+    state: formData.get('state'),
+    country: formData.get('country'),
+    phone: formData.get('phone'),
+    whatsappNumber: formData.get('whatsappNumber'),
+    email: formData.get('email'),
+    facebookUrl: formData.get('facebookUrl'),
+    instagramUrl: formData.get('instagramUrl'),
+    linkedinUrl: formData.get('linkedinUrl'),
+    youtubeUrl: formData.get('youtubeUrl'),
+    seoDefaultTitle: formData.get('seoDefaultTitle'),
+    seoDefaultDescription: formData.get('seoDefaultDescription'),
+    logoUrl: logoUpload.url ?? existingLogoUrl,
+    faviconUrl: faviconUpload.url ?? existingFaviconUrl,
+  });
+  if (!validated.success) {
+    return { formError: `Some fields are invalid: ${validated.error.issues.map((issue) => issue.message).join(', ')}` };
+  }
+
+  await prisma.siteSettings.upsert({
+    where: { id: 'singleton' },
+    create: { id: 'singleton', ...validated.data },
+    update: validated.data,
+  });
+
+  // Business details render on every page (header, footer, metadata), so revalidate the whole tree.
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 

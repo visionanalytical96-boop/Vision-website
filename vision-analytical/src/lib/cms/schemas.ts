@@ -126,6 +126,39 @@ export const themeSettingsSchema = z.object({
 });
 export type ThemeSettingsInput = z.infer<typeof themeSettingsSchema>;
 
+const optionalString = z
+  .string()
+  .transform((value) => value.trim())
+  .transform((value) => (value.length === 0 ? null : value))
+  .nullable();
+
+const optionalUrl = z
+  .string()
+  .transform((value) => value.trim())
+  .refine((value) => value.length === 0 || z.string().url().safeParse(value).success, 'Must be a valid URL')
+  .transform((value) => (value.length === 0 ? null : value))
+  .nullable();
+
+export const siteSettingsSchema = z.object({
+  companyName: z.string().min(1, 'Company name is required'),
+  addressLine: optionalString,
+  city: optionalString,
+  state: optionalString,
+  country: z.string().min(1, 'Country is required'),
+  phone: optionalString,
+  whatsappNumber: optionalString,
+  email: optionalString,
+  facebookUrl: optionalUrl,
+  instagramUrl: optionalUrl,
+  linkedinUrl: optionalUrl,
+  youtubeUrl: optionalUrl,
+  seoDefaultTitle: optionalString,
+  seoDefaultDescription: optionalString,
+  logoUrl: z.string().nullable(),
+  faviconUrl: z.string().nullable(),
+});
+export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>;
+
 /** Parses Json content with a schema, falling back to a safe default rather than throwing - CMS data must never crash the public site. */
 export function parseContent<T>(schema: z.ZodType<T>, value: unknown, fallback: T): T {
   const result = schema.safeParse(value);

@@ -9,6 +9,7 @@ import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getSparePartBySlug } from '@/lib/data/spare-parts';
+import { getSiteSettings } from '@/lib/data/cms';
 import { stockStatusMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
 import { whatsappLink } from '@/lib/contact-links';
@@ -25,7 +26,7 @@ export async function generateMetadata(props: PageProps<'/spare-parts/[slug]'>):
 
 export default async function SparePartDetailPage(props: PageProps<'/spare-parts/[slug]'>) {
   const { slug } = await props.params;
-  const part = await getSparePartBySlug(slug);
+  const [part, settings] = await Promise.all([getSparePartBySlug(slug), getSiteSettings()]);
   if (!part) notFound();
 
   const schema = buildProductSchema({
@@ -75,7 +76,7 @@ export default async function SparePartDetailPage(props: PageProps<'/spare-parts
               Request Quote
             </Link>
             <a
-              href={whatsappLink(`Hi, I'm looking for: ${part.name} (SKU ${part.sku}).`)}
+              href={whatsappLink(settings?.whatsappNumber, `Hi, I'm looking for: ${part.name} (SKU ${part.sku}).`)}
               target="_blank"
               rel="noopener noreferrer"
               className={buttonVariants({ variant: 'outline' })}

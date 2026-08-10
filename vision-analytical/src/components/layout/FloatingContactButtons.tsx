@@ -5,9 +5,14 @@ import { MessageCircle, Phone } from 'lucide-react';
 import { whatsappLink, telLink } from '@/lib/contact-links';
 import { cn } from '@/lib/utils';
 
+interface FloatingContactButtonsProps {
+  phone?: string | null;
+  whatsappNumber?: string | null;
+}
+
 // Hidden until the user scrolls past the fold so it never sits on top of a
 // page's own hero CTAs (e.g. the homepage hero already has WhatsApp/Call buttons).
-export function FloatingContactButtons() {
+export function FloatingContactButtons({ phone, whatsappNumber }: FloatingContactButtonsProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -28,7 +33,7 @@ export function FloatingContactButtons() {
       aria-hidden={!visible}
     >
       <a
-        href={telLink()}
+        href={telLink(phone)}
         aria-label="Call us"
         tabIndex={visible ? 0 : -1}
         className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105"
@@ -36,7 +41,7 @@ export function FloatingContactButtons() {
         <Phone className="h-5 w-5" />
       </a>
       <a
-        href={whatsappLink('Hi, I need help with a laboratory instrument or spare part.')}
+        href={whatsappLink(whatsappNumber, 'Hi, I need help with a laboratory instrument or spare part.')}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"

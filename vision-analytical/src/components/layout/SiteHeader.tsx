@@ -1,16 +1,17 @@
 import Link from 'next/link';
 import { getSession } from '@/lib/dal';
 import { roleHomePath } from '@/lib/roles';
-import { getPageContent } from '@/lib/data/cms';
+import { getPageContent, getSiteSettings } from '@/lib/data/cms';
 import { headerContentSchema, parseContent } from '@/lib/cms/schemas';
 import { DEFAULT_HEADER_CONTENT } from '@/lib/cms/defaults';
 import { ContentPageKey } from '@/generated/prisma/enums';
 import { buttonVariants } from '@/components/ui/Button';
 import { MobileNav } from './MobileNav';
 import { CartIndicator } from './CartIndicator';
+import { SiteWordmark } from './SiteWordmark';
 
 export async function SiteHeader() {
-  const [session, headerPage] = await Promise.all([getSession(), getPageContent(ContentPageKey.HEADER)]);
+  const [session, headerPage, settings] = await Promise.all([getSession(), getPageContent(ContentPageKey.HEADER), getSiteSettings()]);
   const accountHref = session ? roleHomePath(session.role) : '/login';
   const { navLinks } = parseContent(headerContentSchema, headerPage?.content, DEFAULT_HEADER_CONTENT);
 
@@ -18,7 +19,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
       <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="font-display text-xl font-bold tracking-tight text-foreground">
-          Vision <span className="text-primary dark:text-secondary">Analytical</span>
+          <SiteWordmark companyName={settings?.companyName || 'Vision Analytical'} logoUrl={settings?.logoUrl} />
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">

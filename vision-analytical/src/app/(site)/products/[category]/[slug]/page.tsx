@@ -9,6 +9,7 @@ import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getPublishedProductBySlug } from '@/lib/data/products';
+import { getSiteSettings } from '@/lib/data/cms';
 import { stockStatusMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
 import { whatsappLink } from '@/lib/contact-links';
@@ -25,7 +26,7 @@ export async function generateMetadata(props: PageProps<'/products/[category]/[s
 
 export default async function ProductDetailPage(props: PageProps<'/products/[category]/[slug]'>) {
   const { category: categorySlug, slug } = await props.params;
-  const product = await getPublishedProductBySlug(slug);
+  const [product, settings] = await Promise.all([getPublishedProductBySlug(slug), getSiteSettings()]);
   if (!product) notFound();
   if (product.category.slug !== categorySlug) {
     redirect(`/products/${product.category.slug}/${product.slug}`);
@@ -79,7 +80,7 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
             </Link>
             <AddToCartButton kind="PRODUCT" id={product.id} slug={product.slug} name={product.name} sku={product.sku} />
             <a
-              href={whatsappLink(`Hi, I'm interested in the ${product.name}.`)}
+              href={whatsappLink(settings?.whatsappNumber, `Hi, I'm interested in the ${product.name}.`)}
               target="_blank"
               rel="noopener noreferrer"
               className={buttonVariants({ variant: 'outline' })}

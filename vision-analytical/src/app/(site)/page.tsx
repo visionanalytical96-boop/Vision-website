@@ -6,7 +6,7 @@ import { buttonVariants } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { whatsappLink, telLink } from '@/lib/contact-links';
-import { getHomeSections } from '@/lib/data/cms';
+import { getHomeSections, getSiteSettings } from '@/lib/data/cms';
 import { getInstrumentCategories } from '@/lib/data/products';
 import { resolveIcon } from '@/lib/cms/icons';
 import {
@@ -31,37 +31,39 @@ export const metadata: Metadata = {
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
-const organizationSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Vision Analytical',
-  url: siteUrl,
-  description:
-    'Analytical instrument sales, refurbished HPLC/GC/LC-MS/UV systems, spare parts, AMC/CMC service, calibration and IQ/OQ/PQ qualification.',
-  foundingDate: '2016',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Ambarnath',
-    addressRegion: 'Maharashtra',
-    addressCountry: 'IN',
-  },
-  ...(process.env.NEXT_PUBLIC_CONTACT_PHONE
-    ? {
-        contactPoint: {
-          '@type': 'ContactPoint',
-          telephone: process.env.NEXT_PUBLIC_CONTACT_PHONE,
-          contactType: 'sales',
-          areaServed: 'IN',
-        },
-      }
-    : {}),
-};
-
 export default async function HomePage() {
-  const [sections, categories] = await Promise.all([getHomeSections(), getInstrumentCategories()]);
+  const [sections, categories, settings] = await Promise.all([getHomeSections(), getInstrumentCategories(), getSiteSettings()]);
 
   const sectionByKey = new Map(sections.map((section) => [section.key, section]));
   const orderedKeys = sections.map((section) => section.key);
+
+  const phone = settings?.phone || process.env.NEXT_PUBLIC_CONTACT_PHONE || undefined;
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: settings?.companyName || 'Vision Analytical',
+    url: siteUrl,
+    description:
+      settings?.seoDefaultDescription ||
+      'Analytical instrument sales, refurbished HPLC/GC/LC-MS/UV systems, spare parts, AMC/CMC service, calibration and IQ/OQ/PQ qualification.',
+    foundingDate: '2016',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: settings?.city || 'Ambarnath',
+      addressRegion: settings?.state || 'Maharashtra',
+      addressCountry: 'IN',
+    },
+    ...(phone
+      ? {
+          contactPoint: {
+            '@type': 'ContactPoint',
+            telephone: phone,
+            contactType: 'sales',
+            areaServed: 'IN',
+          },
+        }
+      : {}),
+  };
 
   return (
     <>
@@ -120,7 +122,7 @@ export default async function HomePage() {
                       {hero.secondaryButtonLabel}
                     </Link>
                     <a
-                      href={whatsappLink('Hi, I need help with a laboratory instrument or spare part.')}
+                      href={whatsappLink(settings?.whatsappNumber, 'Hi, I need help with a laboratory instrument or spare part.')}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={buttonVariants({ variant: 'outline', size: 'lg', className: 'border-white/25 text-white hover:bg-white/10' })}
@@ -129,7 +131,7 @@ export default async function HomePage() {
                       WhatsApp
                     </a>
                     <a
-                      href={telLink()}
+                      href={telLink(settings?.phone)}
                       className={buttonVariants({ variant: 'outline', size: 'lg', className: 'border-white/25 text-white hover:bg-white/10' })}
                     >
                       <Phone className="h-4 w-4" />
@@ -258,7 +260,7 @@ export default async function HomePage() {
                       {content.buttonLabel}
                     </Link>
                     <a
-                      href={telLink()}
+                      href={telLink(settings?.phone)}
                       className={buttonVariants({ variant: 'outline', size: 'lg', className: 'border-white/25 text-white hover:bg-white/10' })}
                     >
                       <Phone className="h-4 w-4" />

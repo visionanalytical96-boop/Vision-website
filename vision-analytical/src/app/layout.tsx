@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
 import { Space_Grotesk, Syne, JetBrains_Mono, Poppins, Playfair_Display, Inter, Roboto, Work_Sans } from 'next/font/google';
-import { getThemeSettings } from '@/lib/data/cms';
+import { getThemeSettings, getSiteSettings } from '@/lib/data/cms';
 import { headingFontCssVar, bodyFontCssVar, buttonRadius } from '@/lib/cms/theme';
 import './globals.css';
 
@@ -61,28 +61,36 @@ const defaultTitle = 'Vision Analytical | Laboratory Instruments, Spares & Servi
 const defaultDescription =
   'Analytical instrument sales, refurbished HPLC/GC/LC-MS/UV systems, spare parts, AMC/CMC service, calibration and IQ/OQ/PQ qualification across Maharashtra & Gujarat.';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: defaultTitle,
-    template: '%s | Vision Analytical',
-  },
-  description: defaultDescription,
-  robots: { index: true, follow: true },
-  openGraph: {
-    type: 'website',
-    siteName: 'Vision Analytical',
-    title: defaultTitle,
-    description: defaultDescription,
-    url: siteUrl,
-    locale: 'en_IN',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: defaultTitle,
-    description: defaultDescription,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const companyName = settings?.companyName || 'Vision Analytical';
+  const title = settings?.seoDefaultTitle || defaultTitle;
+  const description = settings?.seoDefaultDescription || defaultDescription;
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: title,
+      template: `%s | ${companyName}`,
+    },
+    description,
+    robots: { index: true, follow: true },
+    icons: settings?.faviconUrl ? { icon: settings.faviconUrl } : undefined,
+    openGraph: {
+      type: 'website',
+      siteName: companyName,
+      title,
+      description,
+      url: siteUrl,
+      locale: 'en_IN',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<'/'>) {
   const theme = await getThemeSettings();

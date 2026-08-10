@@ -55,6 +55,14 @@ const workSans = Work_Sans({
   display: 'swap',
 });
 
+// Nearly every route reads live, admin-editable data (CMS content, theme,
+// stock/pricing) via Prisma rather than fetch(), which Next.js won't detect
+// as a reason to skip static generation on its own. Forcing dynamic
+// rendering here means the database is only ever needed at request time,
+// never during `next build` - required for standard deploy pipelines
+// (Docker build stages, CI) that don't have DB access at build time.
+export const dynamic = 'force-dynamic';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 const defaultTitle = 'Vision Analytical | Laboratory Instruments, Spares & Service';

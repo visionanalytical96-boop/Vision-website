@@ -5,6 +5,10 @@ import { Container } from '@/components/ui/Container';
 import { ContactForm } from '@/components/forms/ContactForm';
 import { buttonVariants } from '@/components/ui/Button';
 import { whatsappLink, telLink } from '@/lib/contact-links';
+import { getPageContent } from '@/lib/data/cms';
+import { contactContentSchema, parseContent } from '@/lib/cms/schemas';
+import { DEFAULT_CONTACT_CONTENT } from '@/lib/cms/defaults';
+import { ContentPageKey } from '@/generated/prisma/enums';
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -12,28 +16,24 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage(props: PageProps<'/contact'>) {
-  const searchParams = await props.searchParams;
+  const [searchParams, page] = await Promise.all([props.searchParams, getPageContent(ContentPageKey.CONTACT)]);
+  const content = parseContent(contactContentSchema, page?.content, DEFAULT_CONTACT_CONTENT);
   const product = typeof searchParams.product === 'string' ? searchParams.product : undefined;
   const defaultSubject = product ? `Enquiry about: ${product}` : undefined;
 
   return (
     <Container className="py-12 sm:py-16">
-      <h1 className="font-display text-3xl font-bold text-foreground sm:text-4xl">Contact Us</h1>
-      <p className="mt-3 max-w-2xl text-muted">
-        Reach us for quotes, spare parts, service requests or general questions - we typically respond the same
-        day.
-      </p>
+      <h1 className="font-display text-3xl font-bold text-foreground sm:text-4xl">{content.heading}</h1>
+      <p className="mt-3 max-w-2xl text-muted">{content.subheading}</p>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_1.1fr]">
         <div className="space-y-6">
           <div className="rounded-xl border border-danger/30 bg-danger-bg p-5">
             <div className="flex items-center gap-2 text-danger">
               <AlertTriangle className="h-5 w-5" />
-              <p className="font-semibold">Emergency breakdown support</p>
+              <p className="font-semibold">{content.emergencyHeading}</p>
             </div>
-            <p className="mt-2 text-sm text-foreground">
-              Instrument down? Call or WhatsApp us directly for the fastest response.
-            </p>
+            <p className="mt-2 text-sm text-foreground">{content.emergencyText}</p>
             <div className="mt-4 flex flex-wrap gap-3">
               <a href={telLink()} className={buttonVariants({ variant: 'danger', size: 'sm' })}>
                 <Phone className="h-4 w-4" />
@@ -67,9 +67,9 @@ export default async function ContactPage(props: PageProps<'/contact'>) {
           <div className="rounded-xl border border-border bg-surface p-5">
             <div className="flex items-center gap-2 text-foreground">
               <MapPin className="h-5 w-5 text-blue-600 dark:text-cyan-400" />
-              <p className="font-semibold">Location</p>
+              <p className="font-semibold">{content.locationHeading}</p>
             </div>
-            <p className="mt-2 text-sm text-muted">Ambarnath, Thane, Maharashtra - serving Maharashtra &amp; Gujarat.</p>
+            <p className="mt-2 text-sm text-muted">{content.locationText}</p>
             {/* Area-level map; pending an exact verified address from the business. */}
             <div className="mt-4 overflow-hidden rounded-lg border border-border">
               <iframe

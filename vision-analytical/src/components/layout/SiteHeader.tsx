@@ -1,14 +1,18 @@
 import Link from 'next/link';
 import { getSession } from '@/lib/dal';
 import { roleHomePath } from '@/lib/roles';
-import { MAIN_NAV_LINKS } from '@/lib/site-nav';
+import { getPageContent } from '@/lib/data/cms';
+import { headerContentSchema, parseContent } from '@/lib/cms/schemas';
+import { DEFAULT_HEADER_CONTENT } from '@/lib/cms/defaults';
+import { ContentPageKey } from '@/generated/prisma/enums';
 import { buttonVariants } from '@/components/ui/Button';
 import { MobileNav } from './MobileNav';
 import { CartIndicator } from './CartIndicator';
 
 export async function SiteHeader() {
-  const session = await getSession();
+  const [session, headerPage] = await Promise.all([getSession(), getPageContent(ContentPageKey.HEADER)]);
   const accountHref = session ? roleHomePath(session.role) : '/login';
+  const { navLinks } = parseContent(headerContentSchema, headerPage?.content, DEFAULT_HEADER_CONTENT);
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
@@ -18,7 +22,7 @@ export async function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
-          {MAIN_NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -41,7 +45,7 @@ export async function SiteHeader() {
 
         <div className="flex items-center gap-1 lg:hidden">
           <CartIndicator />
-          <MobileNav isAuthenticated={Boolean(session)} accountHref={accountHref} />
+          <MobileNav navLinks={navLinks} isAuthenticated={Boolean(session)} accountHref={accountHref} />
         </div>
       </div>
     </header>

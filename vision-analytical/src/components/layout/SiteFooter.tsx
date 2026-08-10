@@ -1,23 +1,16 @@
 import Link from 'next/link';
-import { MAIN_NAV_LINKS } from '@/lib/site-nav';
+import { getPageContent } from '@/lib/data/cms';
+import { headerContentSchema, footerContentSchema, parseContent } from '@/lib/cms/schemas';
+import { DEFAULT_HEADER_CONTENT, DEFAULT_FOOTER_CONTENT } from '@/lib/cms/defaults';
+import { ContentPageKey } from '@/generated/prisma/enums';
 
-const CATEGORY_LINKS = [
-  { href: '/products/hplc', label: 'HPLC' },
-  { href: '/products/gc', label: 'GC' },
-  { href: '/products/lc-ms', label: 'LC-MS' },
-  { href: '/products/gc-ms', label: 'GC-MS' },
-  { href: '/products/uv', label: 'UV-Vis' },
-  { href: '/products/ftir', label: 'FTIR' },
-];
-
-const SERVICE_LINKS = [
-  { href: '/services#amc', label: 'AMC / CMC' },
-  { href: '/services#calibration', label: 'Calibration' },
-  { href: '/services#iqoqpq', label: 'IQ / OQ / PQ' },
-  { href: '/services#installation', label: 'Installation' },
-];
-
-export function SiteFooter() {
+export async function SiteFooter() {
+  const [headerPage, footerPage] = await Promise.all([
+    getPageContent(ContentPageKey.HEADER),
+    getPageContent(ContentPageKey.FOOTER),
+  ]);
+  const { navLinks } = parseContent(headerContentSchema, headerPage?.content, DEFAULT_HEADER_CONTENT);
+  const footer = parseContent(footerContentSchema, footerPage?.content, DEFAULT_FOOTER_CONTENT);
   const year = new Date().getFullYear();
 
   return (
@@ -27,15 +20,13 @@ export function SiteFooter() {
           <p className="font-display text-lg font-bold text-foreground">
             Vision <span className="text-blue-600 dark:text-cyan-400">Analytical</span>
           </p>
-          <p className="mt-3 max-w-xs text-sm text-muted">
-            Laboratory instrument sales, refurbishment, spare parts and service across Maharashtra &amp; Gujarat.
-          </p>
+          <p className="mt-3 max-w-xs text-sm text-muted">{footer.tagline}</p>
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-foreground">Company</p>
+          <p className="text-sm font-semibold text-foreground">{footer.companyColumnHeading}</p>
           <ul className="mt-3 space-y-2">
-            {MAIN_NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="text-sm text-muted hover:text-foreground">
                   {link.label}
@@ -46,9 +37,9 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-foreground">Categories</p>
+          <p className="text-sm font-semibold text-foreground">{footer.categoryColumnHeading}</p>
           <ul className="mt-3 space-y-2">
-            {CATEGORY_LINKS.map((link) => (
+            {footer.categoryLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="text-sm text-muted hover:text-foreground">
                   {link.label}
@@ -59,9 +50,9 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-foreground">Services</p>
+          <p className="text-sm font-semibold text-foreground">{footer.serviceColumnHeading}</p>
           <ul className="mt-3 space-y-2">
-            {SERVICE_LINKS.map((link) => (
+            {footer.serviceLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="text-sm text-muted hover:text-foreground">
                   {link.label}

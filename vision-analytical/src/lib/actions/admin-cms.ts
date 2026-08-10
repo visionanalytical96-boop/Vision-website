@@ -3,10 +3,20 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
-import { heroContentSchema, categoriesContentSchema, cardsContentSchema, ctaContentSchema } from '@/lib/cms/schemas';
-import { homeSectionKeyToSlug } from '@/lib/cms/routing';
+import {
+  heroContentSchema,
+  categoriesContentSchema,
+  cardsContentSchema,
+  ctaContentSchema,
+  aboutContentSchema,
+  servicesContentSchema,
+  contactContentSchema,
+  headerContentSchema,
+  footerContentSchema,
+} from '@/lib/cms/schemas';
+import { homeSectionKeyToSlug, pageContentKeyToSlug } from '@/lib/cms/routing';
 import { saveUploadedImage } from '@/lib/upload-image';
-import { Role, HomeSectionKey } from '@/generated/prisma/client';
+import { Role, HomeSectionKey, ContentPageKey } from '@/generated/prisma/client';
 
 export interface CmsFormState {
   formError?: string;
@@ -79,4 +89,44 @@ export async function reorderHomeSections(orderedKeys: HomeSectionKey[]): Promis
 
   revalidatePath('/');
   revalidatePath('/admin/website/homepage');
+}
+
+const PAGE_CONTENT_SCHEMAS = {
+  [ContentPageKey.ABOUT]: aboutContentSchema,
+  [ContentPageKey.SERVICES]: servicesContentSchema,
+  [ContentPageKey.CONTACT]: contactContentSchema,
+  [ContentPageKey.HEADER]: headerContentSchema,
+  [ContentPageKey.FOOTER]: footerContentSchema,
+} as const;
+
+export async function updatePageContent(
+  page: ContentPageKey,
+  _prevState: CmsFormState | undefined,
+  formData: FormData,
+): Promise<CmsFormState> {
+  await requireRole(Role.ADMIN);
+
+  let rawContent: unknown;
+  try {
+    rawContent = JSON.parse(String(formData.get('contentJson') ?? '{}'));
+  } catch {
+    return { formError: 'Something went wrong reading the form. Please refresh and try again.' };
+  }
+
+  const schema = PAGE_CONTENT_SCHEMAS[page];
+  const validated = schema.safeParse(rawContent);
+  if (!validated.success) {
+    return { formError: `Some fields are invalid: ${validated.error.issues.map((issue) => issue.message).join(', ')}` };
+  }
+
+  await prisma.pageContent.upsert({
+    where: { page },
+    create: { page, content: validated.data },
+    update: { content: validated.data },
+  });
+
+  // Header/Footer render on every page via the site layout, so revalidate the whole tree.
+  revalidatePath('/', 'layout');
+  revalidatePath(`/admin/website/pages/${pageContentKeyToSlug(page)}`);
+  return { success: true };
 }

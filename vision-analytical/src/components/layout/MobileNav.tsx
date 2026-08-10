@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
-import { MAIN_NAV_LINKS } from '@/lib/site-nav';
 import { buttonVariants } from '@/components/ui/Button';
 
 interface MobileNavProps {
+  navLinks: { href: string; label: string }[];
   isAuthenticated: boolean;
   accountHref: string;
 }
 
-export function MobileNav({ isAuthenticated, accountHref }: MobileNavProps) {
+export function MobileNav({ navLinks, isAuthenticated, accountHref }: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -29,7 +29,7 @@ export function MobileNav({ isAuthenticated, accountHref }: MobileNavProps) {
       {open && (
         <div className="absolute inset-x-0 top-16 z-40 border-b border-border bg-background px-4 py-4 shadow-lg">
           <nav className="flex flex-col gap-1">
-            {MAIN_NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

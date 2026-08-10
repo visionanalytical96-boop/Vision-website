@@ -1,4 +1,4 @@
-import { HomeSectionKey } from '@/generated/prisma/enums';
+import { HomeSectionKey, ContentPageKey } from '@/generated/prisma/enums';
 
 // URL-friendly slugs for each homepage section, used in /admin/website/homepage/[slug].
 const SLUG_TO_KEY: Record<string, HomeSectionKey> = {
@@ -35,4 +35,41 @@ export function homeSectionKeyToSlug(key: HomeSectionKey): string {
 
 export function homeSectionKeyToLabel(key: HomeSectionKey): string {
   return KEY_TO_LABEL[key];
+}
+
+// URL-friendly slugs for each content page, used in /admin/website/pages/[slug].
+const PAGE_SLUG_TO_KEY: Record<string, ContentPageKey> = {
+  about: ContentPageKey.ABOUT,
+  services: ContentPageKey.SERVICES,
+  contact: ContentPageKey.CONTACT,
+  header: ContentPageKey.HEADER,
+  footer: ContentPageKey.FOOTER,
+};
+
+const PAGE_KEY_TO_SLUG: Record<ContentPageKey, string> = {
+  ABOUT: 'about',
+  SERVICES: 'services',
+  CONTACT: 'contact',
+  HEADER: 'header',
+  FOOTER: 'footer',
+};
+
+const PAGE_KEY_TO_LABEL: Record<ContentPageKey, string> = {
+  ABOUT: 'About Page',
+  SERVICES: 'Services Page',
+  CONTACT: 'Contact Page',
+  HEADER: 'Header & Navigation',
+  FOOTER: 'Footer',
+};
+
+export function pageContentSlugToKey(slug: string): ContentPageKey | null {
+  return PAGE_SLUG_TO_KEY[slug] ?? null;
+}
+
+export function pageContentKeyToSlug(key: ContentPageKey): string {
+  return PAGE_KEY_TO_SLUG[key];
+}
+
+export function pageContentKeyToLabel(key: ContentPageKey): string {
+  return PAGE_KEY_TO_LABEL[key];
 }

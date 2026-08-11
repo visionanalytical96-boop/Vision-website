@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "mkdir -p public .next/standalone/public .next/standalone/.next/static && cp -r public/. .next/standalone/public/ && cp -r .next/static/. .next/standalone/.next/static/ && node .next/standalone/server.js",
     "lint": "eslint",
     "postinstall": "prisma generate"

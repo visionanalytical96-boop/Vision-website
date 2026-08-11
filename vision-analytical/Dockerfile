@@ -4,7 +4,11 @@
 FROM node:22-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# --ignore-scripts: this stage doesn't have prisma/schema.prisma yet (only
+# copied into the builder stage below), so the postinstall hook would fail
+# looking for it. The builder stage's own `npx prisma generate` (after
+# `COPY . .`) is what actually generates the client.
+RUN npm ci --ignore-scripts
 
 # --- builder: generate the Prisma client and build the Next.js app -------
 FROM node:22-slim AS builder

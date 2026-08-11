@@ -1,7 +1,6 @@
 import 'server-only';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import sharp from 'sharp';
 import { customAlphabet } from 'nanoid';
 
 const generateId = customAlphabet('23456789abcdefghjkmnpqrstuvwxyz', 16);
@@ -29,6 +28,13 @@ export async function saveUploadedImage(file: File | null, category: UploadCateg
   if (file.size > MAX_UPLOAD_BYTES) {
     return { url: null, error: 'Image must be smaller than 8MB.' };
   }
+
+  // Lazy-loaded: sharp is a native module pulled in only by this function's
+  // callers. A top-level import drags its native binary loading into every
+  // route that imports from this file's callers (blog/products/CMS/media
+  // admin actions), including Next's build-time page-data collection for
+  // routes that never touch an upload.
+  const { default: sharp } = await import('sharp');
 
   const buffer = Buffer.from(await file.arrayBuffer());
 

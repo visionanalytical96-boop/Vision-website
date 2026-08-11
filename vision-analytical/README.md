@@ -176,6 +176,16 @@ The Media Library (`/admin/website/media`) lists every uploaded file with
 its size, upload date and whether it's still referenced anywhere on the
 site, and lets an admin delete ones that aren't needed.
 
+Uploaded files are served by `src/app/uploads/[...path]/route.ts`, not by
+Next's built-in `public/` static file handling. `output: standalone` only
+knows about files present in `public/` at build time (traced once into the
+server bundle); it never re-scans the directory, so a file written by
+`saveUploadedImage()` after the server has started would otherwise 404
+forever, in every deployment topology (Docker volume or bare metal alike -
+this isn't a symlink or volume-mounting problem, it's inherent to how
+standalone mode works). The route handler reads straight off disk on every
+request instead, so newly uploaded files are visible immediately.
+
 ## Security
 
 - Passwords hashed with bcrypt; sessions are `httpOnly`, `secure` (in

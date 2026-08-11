@@ -186,6 +186,16 @@ this isn't a symlink or volume-mounting problem, it's inherent to how
 standalone mode works). The route handler reads straight off disk on every
 request instead, so newly uploaded files are visible immediately.
 
+`sharp`'s prebuilt Linux x64 binary requires an x86-64-v2 CPU (SSE4.2 and
+similar - most hardware from the last ~15 years, but not every VPS/hypervisor
+exposes it to the guest). Sharp falls back to a WebAssembly build when that
+check fails, but that fallback package is only reachable in the dependency
+tree through two other optional, platform-gated packages that don't match a
+normal Linux server - whether it actually gets installed depends on
+resolution details that vary by npm version. `@img/sharp-wasm32` is listed
+as a direct dependency here specifically to guarantee it's always present as
+a working fallback, regardless of the host CPU.
+
 ## Security
 
 - Passwords hashed with bcrypt; sessions are `httpOnly`, `secure` (in

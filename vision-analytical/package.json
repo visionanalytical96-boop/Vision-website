@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "mkdir -p public/uploads .next/standalone/public .next/standalone/.next/static && cp -r public/. .next/standalone/public/ && cp -r .next/static/. .next/standalone/.next/static/ && rm -rf .next/standalone/public/uploads && ln -sfn ../../../public/uploads .next/standalone/public/uploads && node .next/standalone/server.js",
+    "start": "mkdir -p public/uploads .next/standalone/public .next/standalone/.next/static && rm -rf .next/standalone/public/uploads && cp -r public/. .next/standalone/public/ && cp -r .next/static/. .next/standalone/.next/static/ && rm -rf .next/standalone/public/uploads && ln -sfn ../../../public/uploads .next/standalone/public/uploads && node .next/standalone/server.js",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },

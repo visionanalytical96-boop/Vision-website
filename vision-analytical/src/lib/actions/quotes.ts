@@ -41,7 +41,7 @@ export async function submitQuoteRequest(
 
   const itemsValidated = cartItemsSchema.safeParse(rawItems);
   if (!itemsValidated.success) {
-    return { formError: 'Your cart is empty.' };
+    return { formError: 'Add at least one item describing what you need.' };
   }
 
   const { contactName, contactEmail, contactPhone, notes } = contactValidated.data;

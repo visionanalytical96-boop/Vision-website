@@ -74,7 +74,7 @@ export default async function BrandHubPage(props: PageProps<'/brands/[slug]'>) {
             {brand.description && <p className="mt-4 text-muted">{brand.description}</p>}
           </div>
           <div className="flex flex-none flex-col gap-2">
-            <Link href={`/contact?brand=${brand.slug}`} className={buttonVariants({ variant: 'primary' })}>
+            <Link href={`/request-quote?brand=${brand.slug}`} className={buttonVariants({ variant: 'primary' })}>
               Request a quote
             </Link>
             <Link href="/services" className={buttonVariants({ variant: 'outline' })}>

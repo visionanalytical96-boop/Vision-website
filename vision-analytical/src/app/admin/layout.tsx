@@ -16,6 +16,8 @@ import {
   FileEdit,
   Palette,
   Images,
+  FileDown,
+  Quote,
   Settings,
 } from 'lucide-react';
 import { requireUser } from '@/lib/dal';
@@ -38,6 +40,8 @@ const NAV_ITEMS: DashboardNavItem[] = [
   { href: '/admin/website/homepage', label: 'Homepage Builder', icon: <LayoutTemplate className="h-4 w-4" />, section: 'Website' },
   { href: '/admin/website/pages', label: 'Pages & Menus', icon: <FileEdit className="h-4 w-4" /> },
   { href: '/admin/website/theme', label: 'Theme', icon: <Palette className="h-4 w-4" /> },
+  { href: '/admin/website/downloads', label: 'Downloads', icon: <FileDown className="h-4 w-4" /> },
+  { href: '/admin/website/testimonials', label: 'Testimonials', icon: <Quote className="h-4 w-4" /> },
   { href: '/admin/website/media', label: 'Media Library', icon: <Images className="h-4 w-4" /> },
   { href: '/admin/website/settings', label: 'Business Settings', icon: <Settings className="h-4 w-4" /> },
 ];

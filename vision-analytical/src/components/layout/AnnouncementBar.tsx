@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { X, Megaphone } from 'lucide-react';
 
@@ -16,6 +16,22 @@ function storageKey(message: string): string {
   return `va-announcement-${hash}`;
 }
 
+// localStorage is an external store, so it is read through
+// useSyncExternalStore rather than mirrored into state in an effect: that way
+// the server renders "visible" and the client corrects during hydration,
+// without a second render pass.
+const listeners = new Set<() => void>();
+// Covers private browsing and blocked storage: dismissing still works, it just
+// doesn't survive a reload.
+const dismissedThisSession = new Set<string>();
+
+function subscribe(onStoreChange: () => void) {
+  listeners.add(onStoreChange);
+  return () => {
+    listeners.delete(onStoreChange);
+  };
+}
+
 export function AnnouncementBar({
   message,
   linkLabel,
@@ -25,27 +41,28 @@ export function AnnouncementBar({
   linkLabel: string;
   linkHref: string;
 }) {
-  // Rendered server-side by default: a returning visitor who dismissed it sees
-  // a brief flash, which beats every other visitor getting layout shift.
-  const [dismissed, setDismissed] = useState(false);
+  const key = storageKey(message);
 
-  useEffect(() => {
+  const getSnapshot = useCallback(() => {
+    if (dismissedThisSession.has(key)) return true;
     try {
-      if (window.localStorage.getItem(storageKey(message)) === '1') setDismissed(true);
+      return window.localStorage.getItem(key) === '1';
     } catch {
-      // Private browsing or blocked storage - just leave the bar visible.
+      return false;
     }
-  }, [message]);
+  }, [key]);
 
+  const dismissed = useSyncExternalStore(subscribe, getSnapshot, () => false);
   if (dismissed) return null;
 
   function dismiss() {
-    setDismissed(true);
+    dismissedThisSession.add(key);
     try {
-      window.localStorage.setItem(storageKey(message), '1');
+      window.localStorage.setItem(key, '1');
     } catch {
-      // Nothing to do - the bar is hidden for this page view either way.
+      // Storage is unavailable; the in-memory set still hides it until reload.
     }
+    for (const listener of listeners) listener();
   }
 
   return (

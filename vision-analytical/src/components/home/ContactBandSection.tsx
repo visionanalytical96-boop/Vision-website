@@ -1,6 +1,6 @@
 import { Phone, MessageCircle, Mail, MapPin, Clock, type LucideIcon } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
-import { whatsappLink, telLink } from '@/lib/contact-links';
+import { whatsappLink, telLink, resolvePhone, resolveWhatsappNumber } from '@/lib/contact-links';
 import type { SiteSettings } from '@/generated/prisma/client';
 import type { ContactBandContent } from '@/lib/cms/schemas';
 
@@ -27,17 +27,22 @@ export function ContactBandSection({
     external?: boolean;
   }
 
+  // Same resolution as every other contact link on the site: Business Settings
+  // first, then the env fallback a fresh deployment ships with.
+  const phone = resolvePhone(settings?.phone);
+  const whatsapp = resolveWhatsappNumber(settings?.whatsappNumber);
+
   const channels: Channel[] = [];
-  if (settings?.phone) {
-    channels.push({ key: 'phone', icon: Phone, label: 'Call us', value: settings.phone, href: telLink(settings.phone) });
+  if (phone) {
+    channels.push({ key: 'phone', icon: Phone, label: 'Call us', value: phone, href: telLink(phone) });
   }
-  if (settings?.whatsappNumber) {
+  if (whatsapp) {
     channels.push({
       key: 'whatsapp',
       icon: MessageCircle,
       label: 'WhatsApp',
-      value: settings.whatsappNumber,
-      href: whatsappLink(settings.whatsappNumber, 'Hi, I need help with a laboratory instrument or spare part.'),
+      value: whatsapp,
+      href: whatsappLink(whatsapp, 'Hi, I need help with a laboratory instrument or spare part.'),
       external: true,
     });
   }

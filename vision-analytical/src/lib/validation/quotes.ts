@@ -7,11 +7,21 @@ export const quoteContactSchema = z.object({
   notes: z.string().trim().optional().or(z.literal('')),
 });
 
-export const cartItemSchema = z.object({
-  kind: z.enum(['PRODUCT', 'REFURBISHED']),
-  id: z.string(),
-  name: z.string(),
-  quantity: z.coerce.number().int().positive(),
-});
+/**
+ * CUSTOM covers a line the visitor typed themselves on /request-quote - there
+ * is no catalogue row behind it, which QuoteItem already allows since both its
+ * product relations are optional.
+ */
+export const cartItemSchema = z
+  .object({
+    kind: z.enum(['PRODUCT', 'REFURBISHED', 'CUSTOM']),
+    id: z.string().optional(),
+    name: z.string().trim().min(1, { error: 'Describe what you need.' }),
+    quantity: z.coerce.number().int().positive(),
+  })
+  .refine((item) => item.kind === 'CUSTOM' || Boolean(item.id), {
+    error: 'Catalogue items must reference a product.',
+    path: ['id'],
+  });
 
 export const cartItemsSchema = z.array(cartItemSchema).min(1, { error: 'Your cart is empty.' });

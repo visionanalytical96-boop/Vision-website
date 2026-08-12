@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
+// upgrade-insecure-requests tells the browser to re-request every subresource
+// over https. That's right behind TLS, but fatal on a plain-http deployment
+// (LAN host, no certificate): every CSS/JS/font request is upgraded to a port
+// nothing serves, so the page loads and renders completely unstyled. Browsers
+// exempt localhost as a trustworthy origin, so the breakage only shows up when
+// the site is reached by IP or hostname - which makes it easy to miss locally.
+// Keyed off the configured site URL so it turns itself on for an https deploy
+// and off for http, with no separate flag to remember.
+const servedOverHttps = (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://");
+
 // Not nonce-based: that requires forcing every route to render dynamically
 // (no static/ISR pages), which is a bigger tradeoff than this pass takes on.
 // 'unsafe-inline' for scripts/styles is the documented fallback for apps
@@ -18,8 +28,7 @@ const cspHeader = `
   object-src 'none';
   base-uri 'self';
   form-action 'self';
-  frame-ancestors 'none';
-  upgrade-insecure-requests;
+  frame-ancestors 'none';${servedOverHttps ? "\n  upgrade-insecure-requests;" : ""}
 `
   .replace(/\s{2,}/g, " ")
   .trim();

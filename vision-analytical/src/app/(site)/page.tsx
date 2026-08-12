@@ -77,81 +77,83 @@ export default async function HomePage() {
           case HomeSectionKey.HERO: {
             const hero = parseContent(heroContentSchema, section.content, DEFAULT_HERO_CONTENT);
             return (
-              <section key={key} className="relative overflow-hidden bg-slate-950 text-white">
-                {hero.backgroundImage ? (
-                  <Image src={hero.backgroundImage} alt="" fill priority className="object-cover opacity-30" />
-                ) : (
-                  <div
-                    className="pointer-events-none absolute inset-0 opacity-40"
-                    style={{
-                      background:
-                        'radial-gradient(circle at 20% -10%, rgba(37,99,235,0.35), transparent 45%), radial-gradient(circle at 85% 10%, rgba(34,211,238,0.25), transparent 40%)',
-                    }}
-                  />
-                )}
-                <Container className="relative py-20 sm:py-28">
-                  <p className="font-mono text-sm tracking-wide text-secondary">{hero.eyebrow}</p>
-                  <h1 className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.1] sm:text-5xl lg:text-6xl">
-                    {hero.headingPrefix}{' '}
-                    <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
-                      {hero.headingHighlight}
-                    </span>{' '}
-                    {hero.headingSuffix}
-                  </h1>
-                  <p className="mt-6 max-w-2xl text-lg text-slate-300">{hero.subheading}</p>
+              // Light hero: white ground, accent reserved for the primary action.
+              // Product photography is mostly grey metal and reads poorly on a
+              // dark band; the dark footer still anchors the page.
+              <section key={key} className="relative overflow-hidden border-b border-border bg-surface">
+                <Container className="relative grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+                  <div>
+                    <p className="font-mono text-xs uppercase tracking-[0.14em] text-primary dark:text-secondary">
+                      {hero.eyebrow}
+                    </p>
+                    <h1 className="mt-4 max-w-[16ch] font-display text-4xl font-semibold leading-[1.06] tracking-tight text-foreground text-balance sm:text-5xl lg:text-6xl">
+                      {hero.headingPrefix} <span className="text-primary dark:text-secondary">{hero.headingHighlight}</span>{' '}
+                      {hero.headingSuffix}
+                    </h1>
+                    <p className="mt-6 max-w-[60ch] text-lg text-muted">{hero.subheading}</p>
 
-                  <div className="mt-8 flex flex-wrap gap-2">
-                    {hero.badges.map((badge) => (
-                      <span
-                        key={badge}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-slate-200"
+                    <div className="mt-8 flex flex-wrap gap-2">
+                      {hero.badges.map((badge) => (
+                        <span
+                          key={badge}
+                          className="inline-flex items-center rounded-full border border-border bg-surface-muted px-3 py-1.5 text-sm text-foreground"
+                        >
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-10 flex flex-wrap gap-3">
+                      <Link href={hero.primaryButtonHref} className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+                        {hero.primaryButtonLabel}
+                      </Link>
+                      <Link href={hero.secondaryButtonHref} className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+                        {hero.secondaryButtonLabel}
+                      </Link>
+                      <a
+                        href={whatsappLink(settings?.whatsappNumber, 'Hi, I need help with a laboratory instrument or spare part.')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={buttonVariants({ variant: 'outline', size: 'lg' })}
                       >
-                        {badge}
-                      </span>
-                    ))}
+                        <MessageCircle className="h-4 w-4" />
+                        WhatsApp
+                      </a>
+                      <a href={telLink(settings?.phone)} className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+                        <Phone className="h-4 w-4" />
+                        Call Now
+                      </a>
+                    </div>
                   </div>
 
-                  <div className="mt-10 flex flex-wrap gap-3">
-                    <Link href={hero.primaryButtonHref} className={buttonVariants({ variant: 'primary', size: 'lg' })}>
-                      {hero.primaryButtonLabel}
-                    </Link>
-                    <Link
-                      href={hero.secondaryButtonHref}
-                      className={buttonVariants({ variant: 'outline', size: 'lg', className: 'border-white/25 text-white hover:bg-white/10' })}
-                    >
-                      {hero.secondaryButtonLabel}
-                    </Link>
-                    <a
-                      href={whatsappLink(settings?.whatsappNumber, 'Hi, I need help with a laboratory instrument or spare part.')}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={buttonVariants({ variant: 'outline', size: 'lg', className: 'border-white/25 text-white hover:bg-white/10' })}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      WhatsApp
-                    </a>
-                    <a
-                      href={telLink(settings?.phone)}
-                      className={buttonVariants({ variant: 'outline', size: 'lg', className: 'border-white/25 text-white hover:bg-white/10' })}
-                    >
-                      <Phone className="h-4 w-4" />
-                      Call Now
-                    </a>
-                  </div>
+                  {hero.backgroundImage ? (
+                    <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-border bg-surface-muted lg:aspect-square">
+                      <Image
+                        src={hero.backgroundImage}
+                        alt=""
+                        fill
+                        priority
+                        sizes="(min-width: 1024px) 26rem, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : null}
+                </Container>
 
-                  {hero.brands.length > 0 && (
-                    <div className="mt-16 border-t border-white/10 pt-8">
-                      <p className="text-xs tracking-widest text-slate-400 uppercase">Brands we sell &amp; service</p>
-                      <div className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
+                {hero.brands.length > 0 && (
+                  <div className="border-t border-border bg-surface-muted">
+                    <Container className="py-8">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted">Brands we sell &amp; service</p>
+                      <div className="mt-4 flex flex-wrap gap-x-10 gap-y-3">
                         {hero.brands.map((brand) => (
-                          <span key={brand} className="font-display text-lg font-semibold text-slate-300">
+                          <span key={brand} className="font-display text-lg font-semibold text-muted">
                             {brand}
                           </span>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </Container>
+                    </Container>
+                  </div>
+                )}
               </section>
             );
           }

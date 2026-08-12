@@ -41,7 +41,12 @@ import {
 // Returns the admin's id (existing or newly created) so it can author seed
 // blog posts, or null if no admin exists yet to attribute them to.
 async function seedAdmin(prisma: PrismaClient): Promise<{ id: string } | null> {
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@visionanalytical.co.in';
+  // Normalised the same way loginSchema normalises the submitted email
+  // (trim + lowercase). Without this, a SEED_ADMIN_EMAIL containing any
+  // uppercase creates an account that login can never match - the lookup
+  // is case-sensitive, so a correct password still returns "Invalid email
+  // or password".
+  const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? 'admin@visionanalytical.co.in').trim().toLowerCase();
   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
 
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } });

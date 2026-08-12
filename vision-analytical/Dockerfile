@@ -22,6 +22,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
 ENV DATABASE_URL=${DATABASE_URL}
 
+# Needed at BUILD time, not just runtime: NEXT_PUBLIC_* vars are inlined into
+# the client bundle, and next.config.ts's headers() is evaluated during the
+# build and baked into routes-manifest.json - so the CSP is fixed here, and a
+# runtime-only value would arrive too late to affect it. Defaults to https so
+# an unspecified build keeps the stricter header.
+ARG NEXT_PUBLIC_SITE_URL="https://visionanalytical.co.in"
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+
 RUN npx prisma generate
 RUN npm run build
 

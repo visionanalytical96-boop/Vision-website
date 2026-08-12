@@ -10,7 +10,7 @@ const isDev = process.env.NODE_ENV === "development";
 // the site is reached by IP or hostname - which makes it easy to miss locally.
 // Keyed off the configured site URL so it turns itself on for an https deploy
 // and off for http, with no separate flag to remember.
-const servedOverHttps = (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("https://");
+const servedOverPlainHttp = (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("http://");
 
 // Not nonce-based: that requires forcing every route to render dynamically
 // (no static/ISR pages), which is a bigger tradeoff than this pass takes on.
@@ -28,7 +28,7 @@ const cspHeader = `
   object-src 'none';
   base-uri 'self';
   form-action 'self';
-  frame-ancestors 'none';${servedOverHttps ? "\n  upgrade-insecure-requests;" : ""}
+  frame-ancestors 'none';${!servedOverPlainHttp ? "\n  upgrade-insecure-requests;" : ""}
 `
   .replace(/\s{2,}/g, " ")
   .trim();

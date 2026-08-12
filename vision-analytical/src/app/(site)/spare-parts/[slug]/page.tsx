@@ -11,6 +11,8 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { getSparePartBySlug } from '@/lib/data/spare-parts';
 import { getRelatedSpareParts } from '@/lib/data/products';
 import { ProductCard } from '@/components/product/ProductCard';
+import { BlogPostCard } from '@/components/blog/BlogPostCard';
+import { getArticlesForProduct } from '@/lib/data/knowledge';
 import { SpecificationTable } from '@/components/product/SpecificationTable';
 import { CompatibilityList } from '@/components/product/CompatibilityList';
 import { DocumentList } from '@/components/product/DocumentList';
@@ -36,7 +38,10 @@ export default async function SparePartDetailPage(props: PageProps<'/spare-parts
   const [part, settings] = await Promise.all([getSparePartBySlug(slug), getSiteSettings()]);
   if (!part) notFound();
 
-  const relatedParts = await getRelatedSpareParts(part.id);
+  const [relatedParts, articles] = await Promise.all([
+    getRelatedSpareParts(part.id),
+    getArticlesForProduct(part.id),
+  ]);
 
   const schema = buildProductSchema({
     name: part.name,
@@ -124,6 +129,19 @@ export default async function SparePartDetailPage(props: PageProps<'/spare-parts
             {relatedParts.map((related) => (
               <li key={related.id}>
                 <ProductCard product={related} basePath="/spare-parts" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {articles.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">From the Knowledge Center</h2>
+          <p className="mt-1 text-sm text-muted">Guides and troubleshooting notes that cover this and related instruments.</p>
+          <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {articles.map((article) => (
+              <li key={article.id}>
+                <BlogPostCard post={article} />
               </li>
             ))}
           </ul>

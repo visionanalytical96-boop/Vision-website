@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import type { BlogPost } from '@/generated/prisma/client';
+import type { KnowledgeArticle } from '@/generated/prisma/client';
 import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
+import { ARTICLE_KIND_LABELS } from '@/lib/article-kinds';
+import { ArticleKind } from '@/generated/prisma/enums';
 import { formatDate } from '@/lib/format';
 
 /** Shared between the Knowledge Center index and the homepage preview. */
-export function BlogPostCard({ post }: { post: BlogPost }) {
+export function BlogPostCard({ post }: { post: KnowledgeArticle }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
@@ -17,7 +19,15 @@ export function BlogPostCard({ post }: { post: BlogPost }) {
         </div>
       )}
       <div className="flex flex-1 flex-col p-6">
-        <span className="text-xs font-medium text-primary dark:text-secondary">{BLOG_CATEGORY_LABELS[post.category]}</span>
+        <span className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-medium text-primary dark:text-secondary">{BLOG_CATEGORY_LABELS[post.category]}</span>
+          {post.kind !== ArticleKind.ARTICLE && (
+            <span className="rounded-full border border-border px-2 py-0.5 text-muted">
+              {ARTICLE_KIND_LABELS[post.kind]}
+            </span>
+          )}
+          {post.errorCode && <span className="font-mono text-muted">{post.errorCode}</span>}
+        </span>
         <p className="mt-2 font-display text-lg font-semibold text-foreground">{post.title}</p>
         <p className="mt-2 flex-1 text-sm text-muted">{post.excerpt}</p>
         {post.publishedAt && <p className="mt-4 text-xs text-muted">{formatDate(post.publishedAt)}</p>}

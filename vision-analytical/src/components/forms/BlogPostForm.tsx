@@ -3,15 +3,24 @@
 import { useActionState } from 'react';
 import { createBlogPost, updateBlogPost, type BlogPostFormState } from '@/lib/actions/admin-blog';
 import { BLOG_CATEGORY_LABELS, BLOG_CATEGORIES } from '@/lib/blog-categories';
+import { ARTICLE_KINDS, ARTICLE_KIND_LABELS } from '@/lib/article-kinds';
+import { ArticleKind } from '@/generated/prisma/enums';
+import {
+  ArticleLinkEditor,
+  type ArticleLinkValue,
+  type LinkOption,
+  type ModelOption,
+} from './ArticleLinkEditor';
 import { CONTENT_STATUSES, CONTENT_STATUS_LABELS } from '@/lib/content-status';
 import { ContentStatus } from '@/generated/prisma/enums';
-import type { BlogPost } from '@/generated/prisma/client';
+import type { KnowledgeArticle } from '@/generated/prisma/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
 import { ImageInput } from '@/components/ui/ImageInput';
+import { submittedOr } from '@/lib/form-values';
 
 const initialState: BlogPostFormState = {};
 
@@ -25,7 +34,19 @@ function toLocalInputValue(date: Date | null | undefined): string {
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
 }
 
-export function BlogPostForm({ post }: { post?: BlogPost }) {
+export function BlogPostForm({
+  post,
+  brands,
+  models,
+  products,
+  links = [],
+}: {
+  post?: KnowledgeArticle;
+  brands: LinkOption[];
+  models: ModelOption[];
+  products: LinkOption[];
+  links?: ArticleLinkValue[];
+}) {
   const action = post ? updateBlogPost.bind(null, post.id) : createBlogPost;
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -36,15 +57,25 @@ export function BlogPostForm({ post }: { post?: BlogPost }) {
       </div>
 
       <FormField label="Title" htmlFor="title" error={state.errors?.title} required className="sm:col-span-2">
-        <Input id="title" name="title" defaultValue={post?.title} required />
+        <Input id="title" name="title" defaultValue={submittedOr(state.values, 'title', post?.title)} required />
       </FormField>
 
       <FormField label="Slug" htmlFor="slug" error={state.errors?.slug} hint="lowercase-with-hyphens" required>
-        <Input id="slug" name="slug" defaultValue={post?.slug} required />
+        <Input id="slug" name="slug" defaultValue={submittedOr(state.values, 'slug', post?.slug)} required />
+      </FormField>
+
+      <FormField label="Type" htmlFor="kind" error={state.errors?.kind} required>
+        <Select id="kind" name="kind" defaultValue={submittedOr(state.values, 'kind', post?.kind ?? ArticleKind.ARTICLE)} required>
+          {ARTICLE_KINDS.map((kind) => (
+            <option key={kind} value={kind}>
+              {ARTICLE_KIND_LABELS[kind]}
+            </option>
+          ))}
+        </Select>
       </FormField>
 
       <FormField label="Category" htmlFor="category" error={state.errors?.category} required>
-        <Select id="category" name="category" defaultValue={post?.category} required>
+        <Select id="category" name="category" defaultValue={submittedOr(state.values, 'category', post?.category)} required>
           {BLOG_CATEGORIES.map((category) => (
             <option key={category} value={category}>
               {BLOG_CATEGORY_LABELS[category]}
@@ -54,7 +85,7 @@ export function BlogPostForm({ post }: { post?: BlogPost }) {
       </FormField>
 
       <FormField label="Excerpt" htmlFor="excerpt" error={state.errors?.excerpt} required className="sm:col-span-2" hint="Short summary shown on the blog index">
-        <Textarea id="excerpt" name="excerpt" rows={2} defaultValue={post?.excerpt} required />
+        <Textarea id="excerpt" name="excerpt" rows={2} defaultValue={submittedOr(state.values, 'excerpt', post?.excerpt)} required />
       </FormField>
 
       <FormField
@@ -65,18 +96,40 @@ export function BlogPostForm({ post }: { post?: BlogPost }) {
         className="sm:col-span-2"
         hint="Markdown supported - headings, lists, bold, tables, etc."
       >
-        <Textarea id="content" name="content" rows={16} defaultValue={post?.content} required />
+        <Textarea id="content" name="content" rows={16} defaultValue={submittedOr(state.values, 'content', post?.content)} required />
       </FormField>
 
+      <FormField
+        label="Error code"
+        htmlFor="errorCode"
+        error={state.errors?.errorCode}
+        hint="For Error code articles. Write it as the instrument shows it, e.g. E-1201."
+      >
+        <Input id="errorCode" name="errorCode" defaultValue={submittedOr(state.values, 'errorCode', post?.errorCode ?? '')} className="font-mono" />
+      </FormField>
+
+      <FormField
+        label="Video"
+        htmlFor="videoUrl"
+        error={state.errors?.videoUrl}
+        hint="A YouTube or Vimeo link. Watch or share links are converted automatically."
+      >
+        <Input id="videoUrl" name="videoUrl" defaultValue={submittedOr(state.values, 'videoUrl', post?.videoUrl ?? '')} />
+      </FormField>
+
+      <div className="sm:col-span-2">
+        <ArticleLinkEditor name="linksJson" brands={brands} models={models} products={products} initialRows={links} />
+      </div>
+
       <FormField label="SEO title" htmlFor="seoTitle" error={state.errors?.seoTitle}>
-        <Input id="seoTitle" name="seoTitle" defaultValue={post?.seoTitle ?? ''} />
+        <Input id="seoTitle" name="seoTitle" defaultValue={submittedOr(state.values, 'seoTitle', post?.seoTitle ?? '')} />
       </FormField>
       <FormField label="SEO description" htmlFor="seoDescription" error={state.errors?.seoDescription}>
-        <Input id="seoDescription" name="seoDescription" defaultValue={post?.seoDescription ?? ''} />
+        <Input id="seoDescription" name="seoDescription" defaultValue={submittedOr(state.values, 'seoDescription', post?.seoDescription ?? '')} />
       </FormField>
 
       <FormField label="Status" htmlFor="status" error={state.errors?.status} required>
-        <Select id="status" name="status" defaultValue={post?.status ?? ContentStatus.DRAFT} required>
+        <Select id="status" name="status" defaultValue={submittedOr(state.values, 'status', post?.status ?? ContentStatus.DRAFT)} required>
           {CONTENT_STATUSES.map((status) => (
             <option key={status} value={status}>
               {CONTENT_STATUS_LABELS[status]}
@@ -101,7 +154,7 @@ export function BlogPostForm({ post }: { post?: BlogPost }) {
         className="sm:col-span-2"
         hint="Internal only - what still needs checking before this goes live."
       >
-        <Input id="reviewNote" name="reviewNote" defaultValue={post?.reviewNote ?? ''} />
+        <Input id="reviewNote" name="reviewNote" defaultValue={submittedOr(state.values, 'reviewNote', post?.reviewNote ?? '')} />
       </FormField>
 
       {state.formError && <p className="text-sm text-danger sm:col-span-2">{state.formError}</p>}

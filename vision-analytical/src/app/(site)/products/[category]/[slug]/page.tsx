@@ -10,6 +10,8 @@ import { buttonVariants } from '@/components/ui/Button';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getPublishedProductBySlug, getRelatedSpareParts } from '@/lib/data/products';
 import { ProductCard } from '@/components/product/ProductCard';
+import { BlogPostCard } from '@/components/blog/BlogPostCard';
+import { getArticlesForProduct } from '@/lib/data/knowledge';
 import { SpecificationTable } from '@/components/product/SpecificationTable';
 import { CompatibilityList } from '@/components/product/CompatibilityList';
 import { DocumentList } from '@/components/product/DocumentList';
@@ -36,7 +38,10 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
     redirect(`/products/${product.category.slug}/${product.slug}`);
   }
 
-  const relatedParts = await getRelatedSpareParts(product.id);
+  const [relatedParts, articles] = await Promise.all([
+    getRelatedSpareParts(product.id),
+    getArticlesForProduct(product.id),
+  ]);
 
   const schema = buildProductSchema({
     name: product.name,
@@ -130,6 +135,19 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
             {relatedParts.map((part) => (
               <li key={part.id}>
                 <ProductCard product={part} basePath="/spare-parts" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {articles.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">From the Knowledge Center</h2>
+          <p className="mt-1 text-sm text-muted">Guides and troubleshooting notes that cover this and related instruments.</p>
+          <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {articles.map((article) => (
+              <li key={article.id}>
+                <BlogPostCard post={article} />
               </li>
             ))}
           </ul>

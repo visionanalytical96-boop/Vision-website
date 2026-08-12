@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
+import { submittedOr, submittedChecked } from '@/lib/form-values';
 
 const initialState: AdminFormState = {};
 
@@ -34,15 +35,15 @@ export function DownloadForm({
   return (
     <form action={formAction} className="grid max-w-3xl gap-4 sm:grid-cols-2">
       <FormField label="Title" htmlFor="title" error={state.errors?.title} required className="sm:col-span-2">
-        <Input id="title" name="title" defaultValue={download?.title} required />
+        <Input id="title" name="title" defaultValue={submittedOr(state.values, 'title', download?.title)} required />
       </FormField>
 
       <FormField label="Slug" htmlFor="slug" error={state.errors?.slug} hint="lowercase-with-hyphens" required>
-        <Input id="slug" name="slug" defaultValue={download?.slug} required />
+        <Input id="slug" name="slug" defaultValue={submittedOr(state.values, 'slug', download?.slug)} required />
       </FormField>
 
       <FormField label="Document type" htmlFor="kind" error={state.errors?.kind} required>
-        <Select id="kind" name="kind" defaultValue={download?.kind} required>
+        <Select id="kind" name="kind" defaultValue={submittedOr(state.values, 'kind', download?.kind)} required>
           {DOWNLOAD_KINDS.map((kind) => (
             <option key={kind} value={kind}>
               {DOWNLOAD_KIND_LABELS[kind]}
@@ -52,7 +53,7 @@ export function DownloadForm({
       </FormField>
 
       <FormField label="Description" htmlFor="description" error={state.errors?.description} className="sm:col-span-2">
-        <Textarea id="description" name="description" rows={2} defaultValue={download?.description ?? ''} />
+        <Textarea id="description" name="description" rows={2} defaultValue={submittedOr(state.values, 'description', download?.description ?? '')} />
       </FormField>
 
       <FormField
@@ -63,11 +64,11 @@ export function DownloadForm({
         className="sm:col-span-2"
         hint="Upload the file in the Media Library and paste its path (/uploads/…), or link the manufacturer's copy."
       >
-        <Input id="fileUrl" name="fileUrl" defaultValue={download?.fileUrl} required />
+        <Input id="fileUrl" name="fileUrl" defaultValue={submittedOr(state.values, 'fileUrl', download?.fileUrl)} required />
       </FormField>
 
       <FormField label="File type" htmlFor="fileType" error={state.errors?.fileType} hint="e.g. PDF">
-        <Input id="fileType" name="fileType" defaultValue={download?.fileType ?? ''} />
+        <Input id="fileType" name="fileType" defaultValue={submittedOr(state.values, 'fileType', download?.fileType ?? '')} />
       </FormField>
 
       <FormField label="File size" htmlFor="fileSizeBytes" error={state.errors?.fileSizeBytes} hint="In bytes. Optional.">
@@ -76,12 +77,12 @@ export function DownloadForm({
           name="fileSizeBytes"
           type="number"
           min={0}
-          defaultValue={download?.fileSizeBytes ?? ''}
+          defaultValue={submittedOr(state.values, 'fileSizeBytes', download?.fileSizeBytes ?? '')}
         />
       </FormField>
 
       <FormField label="Brand" htmlFor="brandId" error={state.errors?.brandId}>
-        <Select id="brandId" name="brandId" defaultValue={download?.brandId ?? ''}>
+        <Select id="brandId" name="brandId" defaultValue={submittedOr(state.values, 'brandId', download?.brandId ?? '')}>
           <option value="">No specific brand</option>
           {brands.map((brand) => (
             <option key={brand.id} value={brand.id}>
@@ -92,7 +93,7 @@ export function DownloadForm({
       </FormField>
 
       <FormField label="Category" htmlFor="categoryId" error={state.errors?.categoryId}>
-        <Select id="categoryId" name="categoryId" defaultValue={download?.categoryId ?? ''}>
+        <Select id="categoryId" name="categoryId" defaultValue={submittedOr(state.values, 'categoryId', download?.categoryId ?? '')}>
           <option value="">No specific category</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
@@ -108,7 +109,7 @@ export function DownloadForm({
         error={state.errors?.productId}
         hint="Also shows this document on that product's page."
       >
-        <Select id="productId" name="productId" defaultValue={download?.productId ?? ''}>
+        <Select id="productId" name="productId" defaultValue={submittedOr(state.values, 'productId', download?.productId ?? '')}>
           <option value="">Not tied to a product</option>
           {products.map((product) => (
             <option key={product.id} value={product.id}>
@@ -119,7 +120,7 @@ export function DownloadForm({
       </FormField>
 
       <FormField label="Sort order" htmlFor="sortOrder" error={state.errors?.sortOrder} hint="Lower numbers appear first.">
-        <Input id="sortOrder" name="sortOrder" type="number" defaultValue={download?.sortOrder ?? 0} />
+        <Input id="sortOrder" name="sortOrder" type="number" defaultValue={submittedOr(state.values, 'sortOrder', download?.sortOrder ?? 0)} />
       </FormField>
 
       <div className="flex flex-col justify-center gap-2 sm:col-span-2">
@@ -128,7 +129,7 @@ export function DownloadForm({
             type="checkbox"
             name="requiresLogin"
             value="true"
-            defaultChecked={download?.requiresLogin ?? false}
+            defaultChecked={submittedChecked(state.values, 'requiresLogin', download?.requiresLogin ?? false)}
             className="h-4 w-4 rounded border-border"
           />
           Require the visitor to be logged in
@@ -138,7 +139,7 @@ export function DownloadForm({
             type="checkbox"
             name="isPublished"
             value="true"
-            defaultChecked={download?.isPublished ?? true}
+            defaultChecked={submittedChecked(state.values, 'isPublished', download?.isPublished ?? true)}
             className="h-4 w-4 rounded border-border"
           />
           Published (visible on the public site)

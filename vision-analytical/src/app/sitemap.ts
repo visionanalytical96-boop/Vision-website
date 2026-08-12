@@ -30,7 +30,7 @@ async function getDynamicEntries(): Promise<MetadataRoute.Sitemap> {
         where: { isPublished: true },
         select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
       }),
-      prisma.blogPost.findMany({
+      prisma.knowledgeArticle.findMany({
         where: publiclyVisibleWhere(),
         select: { slug: true, updatedAt: true },
       }),

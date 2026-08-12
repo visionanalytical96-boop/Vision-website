@@ -103,14 +103,14 @@ export async function getQualityReport(): Promise<QualityReport> {
 /** Content sitting in the workflow, so nothing quietly stalls in review. */
 export async function getContentQueue() {
   const [inReview, approved, drafts, scheduled] = await Promise.all([
-    prisma.blogPost.findMany({
+    prisma.knowledgeArticle.findMany({
       where: { status: ContentStatus.IN_REVIEW },
       select: { id: true, title: true, reviewNote: true, updatedAt: true },
       orderBy: { updatedAt: 'asc' },
     }),
-    prisma.blogPost.count({ where: { status: ContentStatus.APPROVED } }),
-    prisma.blogPost.count({ where: { status: ContentStatus.DRAFT } }),
-    prisma.blogPost.findMany({
+    prisma.knowledgeArticle.count({ where: { status: ContentStatus.APPROVED } }),
+    prisma.knowledgeArticle.count({ where: { status: ContentStatus.DRAFT } }),
+    prisma.knowledgeArticle.findMany({
       where: { status: ContentStatus.PUBLISHED, publishAt: { gt: new Date() } },
       select: { id: true, title: true, publishAt: true },
       orderBy: { publishAt: 'asc' },
@@ -142,7 +142,7 @@ export async function getBrokenImages(): Promise<BrokenImage[]> {
 
   const [products, posts] = await Promise.all([
     prisma.product.findMany({ where: { isPublished: true }, select: { id: true, name: true, images: true } }),
-    prisma.blogPost.findMany({ where: { coverImage: { not: null } }, select: { id: true, title: true, coverImage: true } }),
+    prisma.knowledgeArticle.findMany({ where: { coverImage: { not: null } }, select: { id: true, title: true, coverImage: true } }),
   ]);
 
   const candidates: BrokenImage[] = [];

@@ -3,15 +3,56 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+import { formValues } from '@/lib/form-values';
 import { requireRole } from '@/lib/dal';
-import { blogPostFormSchema } from '@/lib/validation/admin-blog';
+import { blogPostFormSchema, articleLinkListSchema } from '@/lib/validation/admin-blog';
 import { saveUploadedImage } from '@/lib/upload-image';
 import { Role, ContentStatus } from '@/generated/prisma/client';
 import { isContentStatus } from '@/lib/content-status';
 
+/**
+ * "What this article is about" - replace-in-place, like the product editor's
+ * repeaters: the form always posts the full intended set.
+ */
+async function writeArticleLinks(articleId: string, formData: FormData): Promise<string | null> {
+  let parsed;
+  try {
+    parsed = articleLinkListSchema.safeParse(JSON.parse(String(formData.get('linksJson') ?? '[]')));
+  } catch {
+    return 'Something went wrong reading the form. Please refresh and try again.';
+  }
+  if (!parsed.success) {
+    return parsed.error.issues.map((issue) => issue.message).join(', ');
+  }
+
+  // A row with no target is the editor's blank placeholder, not data - and the
+  // database rejects it outright.
+  const rows = parsed.data.filter((row) => row.brandId || row.instrumentModelId || row.productId);
+
+  await prisma.$transaction([
+    prisma.knowledgeArticleLink.deleteMany({ where: { articleId } }),
+    ...(rows.length > 0
+      ? [
+          prisma.knowledgeArticleLink.createMany({
+            data: rows.map((row) => ({
+              articleId,
+              brandId: row.brandId || null,
+              instrumentModelId: row.instrumentModelId || null,
+              productId: row.productId || null,
+            })),
+          }),
+        ]
+      : []),
+  ]);
+
+  return null;
+}
+
 export interface BlogPostFormState {
   errors?: Record<string, string[] | undefined>;
   formError?: string;
+  /** Echoed back so a validation error doesn't wipe the form - see formValues. */
+  values?: Record<string, string>;
 }
 
 function parseBlogPostForm(formData: FormData) {
@@ -19,6 +60,9 @@ function parseBlogPostForm(formData: FormData) {
     slug: formData.get('slug'),
     title: formData.get('title'),
     category: formData.get('category'),
+    kind: formData.get('kind'),
+    errorCode: String(formData.get('errorCode') ?? ''),
+    videoUrl: String(formData.get('videoUrl') ?? ''),
     excerpt: formData.get('excerpt'),
     content: formData.get('content'),
     status: formData.get('status'),
@@ -34,26 +78,29 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
 
   const validated = parseBlogPostForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
 
   const data = validated.data;
-  const existingSlug = await prisma.blogPost.findUnique({ where: { slug: data.slug } });
+  const existingSlug = await prisma.knowledgeArticle.findUnique({ where: { slug: data.slug } });
   if (existingSlug) {
-    return { errors: { slug: ['A post with this slug already exists.'] } };
+    return { errors: { slug: ['A post with this slug already exists.'] }, values: formValues(formData) };
   }
 
   const imageFile = formData.get('image');
   const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'blog');
   if (upload.error) {
-    return { errors: { image: [upload.error] } };
+    return { errors: { image: [upload.error] }, values: formValues(formData) };
   }
 
-  await prisma.blogPost.create({
+  const created = await prisma.knowledgeArticle.create({
     data: {
       slug: data.slug,
       title: data.title,
       category: data.category,
+      kind: data.kind,
+      errorCode: data.errorCode || null,
+      videoUrl: data.videoUrl,
       excerpt: data.excerpt,
       content: data.content,
       coverImage: upload.url,
@@ -69,6 +116,9 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
     },
   });
 
+  const linkError = await writeArticleLinks(created.id, formData);
+  if (linkError) return { formError: linkError, values: formValues(formData) };
+
   revalidatePath('/admin/blog');
   revalidatePath('/blog');
   redirect('/admin/blog');
@@ -79,32 +129,35 @@ export async function updateBlogPost(id: string, _prevState: BlogPostFormState |
 
   const validated = parseBlogPostForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
 
   const data = validated.data;
-  const existing = await prisma.blogPost.findUnique({ where: { id } });
+  const existing = await prisma.knowledgeArticle.findUnique({ where: { id } });
   if (!existing) {
-    return { formError: 'Post not found.' };
+    return { formError: 'Post not found.', values: formValues(formData) };
   }
 
-  const slugOwner = await prisma.blogPost.findUnique({ where: { slug: data.slug } });
+  const slugOwner = await prisma.knowledgeArticle.findUnique({ where: { slug: data.slug } });
   if (slugOwner && slugOwner.id !== id) {
-    return { errors: { slug: ['A post with this slug already exists.'] } };
+    return { errors: { slug: ['A post with this slug already exists.'] }, values: formValues(formData) };
   }
 
   const imageFile = formData.get('image');
   const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'blog');
   if (upload.error) {
-    return { errors: { image: [upload.error] } };
+    return { errors: { image: [upload.error] }, values: formValues(formData) };
   }
 
-  await prisma.blogPost.update({
+  await prisma.knowledgeArticle.update({
     where: { id },
     data: {
       slug: data.slug,
       title: data.title,
       category: data.category,
+      kind: data.kind,
+      errorCode: data.errorCode || null,
+      videoUrl: data.videoUrl,
       excerpt: data.excerpt,
       content: data.content,
       coverImage: upload.url ?? existing.coverImage,
@@ -120,6 +173,9 @@ export async function updateBlogPost(id: string, _prevState: BlogPostFormState |
     },
   });
 
+  const linkError = await writeArticleLinks(id, formData);
+  if (linkError) return { formError: linkError, values: formValues(formData) };
+
   revalidatePath('/admin/blog');
   revalidatePath('/blog');
   revalidatePath(`/blog/${data.slug}`);
@@ -132,7 +188,7 @@ export async function deleteBlogPost(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   if (!id) return;
 
-  const post = await prisma.blogPost.delete({ where: { id } }).catch(() => null);
+  const post = await prisma.knowledgeArticle.delete({ where: { id } }).catch(() => null);
   if (!post) return;
 
   revalidatePath('/admin/blog');
@@ -150,13 +206,13 @@ export async function setBlogPostStatus(formData: FormData): Promise<void> {
   const rawStatus = String(formData.get('status') ?? '');
   if (!id || !isContentStatus(rawStatus)) return;
 
-  const post = await prisma.blogPost.findUnique({
+  const post = await prisma.knowledgeArticle.findUnique({
     where: { id },
     select: { publishedAt: true, publishAt: true, slug: true },
   });
   if (!post) return;
 
-  await prisma.blogPost.update({
+  await prisma.knowledgeArticle.update({
     where: { id },
     data: {
       status: rawStatus,

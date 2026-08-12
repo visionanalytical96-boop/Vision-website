@@ -13,6 +13,7 @@ import { ImageInput } from '@/components/ui/ImageInput';
 import { CompatibilityEditor, type CompatibilityOptionModel, type CompatibilityRowValue } from './CompatibilityEditor';
 import { SpecificationEditor, type SpecificationRowValue } from './SpecificationEditor';
 import { toImageList } from '@/lib/image-list';
+import { submittedOr, submittedChecked } from '@/lib/form-values';
 
 const initialState: ProductFormState = {};
 
@@ -43,25 +44,25 @@ export function ProductForm({
       </div>
 
       <FormField label="SKU" htmlFor="sku" error={state.errors?.sku} required>
-        <Input id="sku" name="sku" defaultValue={product?.sku} required />
+        <Input id="sku" name="sku" defaultValue={submittedOr(state.values, 'sku', product?.sku)} required />
       </FormField>
       <FormField label="Slug" htmlFor="slug" error={state.errors?.slug} hint="lowercase-with-hyphens" required>
-        <Input id="slug" name="slug" defaultValue={product?.slug} required />
+        <Input id="slug" name="slug" defaultValue={submittedOr(state.values, 'slug', product?.slug)} required />
       </FormField>
 
       <FormField label="Name" htmlFor="name" error={state.errors?.name} required className="sm:col-span-2">
-        <Input id="name" name="name" defaultValue={product?.name} required />
+        <Input id="name" name="name" defaultValue={submittedOr(state.values, 'name', product?.name)} required />
       </FormField>
 
       <FormField label="Type" htmlFor="kind" error={state.errors?.kind} required>
-        <Select id="kind" name="kind" defaultValue={product?.kind ?? ProductKind.INSTRUMENT} required>
+        <Select id="kind" name="kind" defaultValue={submittedOr(state.values, 'kind', product?.kind ?? ProductKind.INSTRUMENT)} required>
           <option value={ProductKind.INSTRUMENT}>Instrument</option>
           <option value={ProductKind.SPARE_PART}>Spare Part</option>
         </Select>
       </FormField>
 
       <FormField label="Category" htmlFor="categoryId" error={state.errors?.categoryId} required>
-        <Select id="categoryId" name="categoryId" defaultValue={product?.categoryId} required>
+        <Select id="categoryId" name="categoryId" defaultValue={submittedOr(state.values, 'categoryId', product?.categoryId)} required>
           <option value="">Select a category…</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
@@ -72,7 +73,7 @@ export function ProductForm({
       </FormField>
 
       <FormField label="Brand" htmlFor="brandId" error={state.errors?.brandId}>
-        <Select id="brandId" name="brandId" defaultValue={product?.brandId ?? ''}>
+        <Select id="brandId" name="brandId" defaultValue={submittedOr(state.values, 'brandId', product?.brandId ?? '')}>
           <option value="">No brand</option>
           {brands.map((brand) => (
             <option key={brand.id} value={brand.id}>
@@ -82,7 +83,7 @@ export function ProductForm({
         </Select>
       </FormField>
       <FormField label="Description" htmlFor="description" error={state.errors?.description} required className="sm:col-span-2">
-        <Textarea id="description" name="description" rows={4} defaultValue={product?.description} required />
+        <Textarea id="description" name="description" rows={4} defaultValue={submittedOr(state.values, 'description', product?.description)} required />
       </FormField>
 
       <FormField label="Price (₹)" htmlFor="priceRupees" error={state.errors?.priceRupees} hint="Leave blank for 'Contact for pricing'">
@@ -90,7 +91,7 @@ export function ProductForm({
       </FormField>
 
       <FormField label="Stock status" htmlFor="stockStatus" error={state.errors?.stockStatus} required>
-        <Select id="stockStatus" name="stockStatus" defaultValue={product?.stockStatus ?? StockStatus.IN_STOCK} required>
+        <Select id="stockStatus" name="stockStatus" defaultValue={submittedOr(state.values, 'stockStatus', product?.stockStatus ?? StockStatus.IN_STOCK)} required>
           <option value={StockStatus.IN_STOCK}>In stock</option>
           <option value={StockStatus.LOW_STOCK}>Low stock</option>
           <option value={StockStatus.OUT_OF_STOCK}>Out of stock</option>
@@ -99,18 +100,18 @@ export function ProductForm({
       </FormField>
 
       <FormField label="Stock quantity" htmlFor="stockQuantity" error={state.errors?.stockQuantity}>
-        <Input id="stockQuantity" name="stockQuantity" type="number" min="0" step="1" defaultValue={product?.stockQuantity ?? 0} />
+        <Input id="stockQuantity" name="stockQuantity" type="number" min="0" step="1" defaultValue={submittedOr(state.values, 'stockQuantity', product?.stockQuantity ?? 0)} />
       </FormField>
 
       <FormField label="SEO title" htmlFor="seoTitle" error={state.errors?.seoTitle}>
-        <Input id="seoTitle" name="seoTitle" defaultValue={product?.seoTitle ?? ''} />
+        <Input id="seoTitle" name="seoTitle" defaultValue={submittedOr(state.values, 'seoTitle', product?.seoTitle ?? '')} />
       </FormField>
       <FormField label="SEO description" htmlFor="seoDescription" error={state.errors?.seoDescription}>
-        <Input id="seoDescription" name="seoDescription" defaultValue={product?.seoDescription ?? ''} />
+        <Input id="seoDescription" name="seoDescription" defaultValue={submittedOr(state.values, 'seoDescription', product?.seoDescription ?? '')} />
       </FormField>
 
       <label className="flex items-center gap-2 text-sm text-foreground sm:col-span-2">
-        <input type="checkbox" name="isPublished" value="true" defaultChecked={product?.isPublished ?? true} className="h-4 w-4 rounded border-border" />
+        <input type="checkbox" name="isPublished" value="true" defaultChecked={submittedChecked(state.values, 'isPublished', product?.isPublished ?? true)} className="h-4 w-4 rounded border-border" />
         Published (visible on the public site)
       </label>
 

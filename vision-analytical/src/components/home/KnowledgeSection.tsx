@@ -1,10 +1,10 @@
 import { Container } from '@/components/ui/Container';
 import { BlogPostCard } from '@/components/blog/BlogPostCard';
 import { SectionHeading } from './SectionHeading';
-import type { BlogPost } from '@/generated/prisma/client';
+import type { KnowledgeArticle } from '@/generated/prisma/client';
 import type { ListSectionContent } from '@/lib/cms/schemas';
 
-export function KnowledgeSection({ content, posts }: { content: ListSectionContent; posts: BlogPost[] }) {
+export function KnowledgeSection({ content, posts }: { content: ListSectionContent; posts: KnowledgeArticle[] }) {
   if (posts.length === 0) return null;
 
   return (

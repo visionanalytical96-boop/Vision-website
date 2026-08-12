@@ -128,11 +128,27 @@ enum CrmActivityType {
   NOTE
 }
 
+/// The topic a knowledge article sits under. Separate from ArticleKind: kind
+/// is the *shape* of the content (a FAQ, an error code, a video), category is
+/// what it is about.
 enum BlogCategory {
   TROUBLESHOOTING
   FAQ
   TECHNICAL_ARTICLE
   INSTRUMENT_GUIDE
+}
+
+/// What kind of thing an article is. Drives how it's presented and where it
+/// surfaces - an ERROR_CODE article is reachable from the error-code lookup, a
+/// VIDEO renders its player, a FAQ is short-form.
+enum ArticleKind {
+  ARTICLE
+  GUIDE
+  FAQ
+  TROUBLESHOOTING
+  ERROR_CODE
+  CASE_STUDY
+  VIDEO
 }
 
 enum StockMovementType {
@@ -168,7 +184,7 @@ model User {
   invoices            Invoice[]        @relation("CustomerInvoices")
   assignedLeads       CrmLead[]        @relation("AssignedLeads")
   crmActivities       CrmActivity[]    @relation("CreatedActivities")
-  blogPosts           BlogPost[]       @relation("AuthoredPosts")
+  articles            KnowledgeArticle[] @relation("AuthoredArticles")
   stockMovements      StockMovement[]  @relation("RecordedMovements")
 
   @@index([role])
@@ -218,6 +234,7 @@ model Brand {
   downloads              Download[]
   instrumentModels       InstrumentModel[]
   compatibility          ProductCompatibility[]
+  articleLinks           KnowledgeArticleLink[]
 
   @@index([sortOrder])
 }
@@ -271,6 +288,7 @@ model Product {
   specifications  ProductSpecification[]
   compatibility   ProductCompatibility[]
   documents       Download[]
+  articleLinks    KnowledgeArticleLink[]
 
   @@index([kind])
   @@index([categoryId])
@@ -301,6 +319,7 @@ model InstrumentModel {
   updatedAt   DateTime  @updatedAt
 
   compatibility ProductCompatibility[]
+  articleLinks  KnowledgeArticleLink[]
 
   @@unique([brandId, slug])
   @@index([brandId])
@@ -592,18 +611,27 @@ enum ContentStatus {
   ARCHIVED
 }
 
-model BlogPost {
+/// A piece of knowledge: article, guide, FAQ, troubleshooting note, error code,
+/// case study or video. Mapped to the original `BlogPost` table - the name was
+/// outgrown, not the data, so this is a code-level rename with no migration.
+model KnowledgeArticle {
   id             String        @id @default(cuid())
   slug           String        @unique
   title          String
   excerpt        String
   content        String
+  kind           ArticleKind   @default(ARTICLE)
   category       BlogCategory
   coverImage     String?
+  /// VIDEO articles embed this; any article may also link one.
+  videoUrl       String?
+  /// The manufacturer's code this article explains, e.g. "E-1201". Unique per
+  /// brand rather than globally: two manufacturers reuse the same numbers.
+  errorCode      String?
   authorId       String
-  author         User          @relation("AuthoredPosts", fields: [authorId], references: [id])
+  author         User          @relation("AuthoredArticles", fields: [authorId], references: [id])
   status         ContentStatus @default(DRAFT)
-  /// When set in the future, the post stays hidden until that moment even at
+  /// When set in the future, the article stays hidden until that moment even at
   /// status PUBLISHED - which is what makes scheduling possible without a job
   /// runner: visibility is a query condition, not a timer.
   publishAt      DateTime?
@@ -611,12 +639,39 @@ model BlogPost {
   reviewNote     String?
   seoTitle       String?
   seoDescription String?
+  /// Feeds "popular articles". Incremented best-effort on read.
+  viewCount      Int           @default(0)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
+  links KnowledgeArticleLink[]
+
   @@index([category])
+  @@index([kind])
   @@index([status])
   @@index([publishAt])
+  @@index([errorCode])
+  @@map("BlogPost")
+}
+
+/// What an article is about. One row per target so an article can cover a
+/// brand, one of its models and a specific part at once - the same shape as
+/// ProductCompatibility, for the same reason.
+model KnowledgeArticleLink {
+  id                String           @id @default(cuid())
+  articleId         String
+  article           KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: Cascade)
+  productId         String?
+  product           Product?         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([productId])
 }
 
 // ---------------------------------------------------------------------------

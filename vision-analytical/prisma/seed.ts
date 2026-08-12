@@ -317,7 +317,7 @@ async function seedRefurbishedInstruments(prisma: PrismaClient, brandIds: Map<st
 // Knowledge Center content, attributed to the admin account.
 async function seedBlogPosts(prisma: PrismaClient, authorId: string) {
   for (const post of BLOG_POSTS) {
-    await prisma.blogPost.upsert({
+    await prisma.knowledgeArticle.upsert({
       where: { slug: post.slug },
       update: {
         title: post.title,

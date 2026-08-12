@@ -6,8 +6,11 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Container } from '@/components/ui/Container';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { getPublishedBlogPostBySlug } from '@/lib/data/blog';
+import { getKnowledgeArticleBySlug, recordArticleView } from '@/lib/data/knowledge';
+import { ArticleLinks } from '@/components/blog/ArticleLinks';
 import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
+import { ARTICLE_KIND_LABELS } from '@/lib/article-kinds';
+import { ArticleKind } from '@/generated/prisma/enums';
 import { formatDate } from '@/lib/format';
 import { requireFeature } from '@/lib/data/features';
 
@@ -15,7 +18,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 export async function generateMetadata(props: PageProps<'/blog/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
-  const post = await getPublishedBlogPostBySlug(slug);
+  const post = await getKnowledgeArticleBySlug(slug);
   if (!post) return {};
   return { title: post.seoTitle ?? post.title, description: post.seoDescription ?? post.excerpt };
 }
@@ -23,12 +26,15 @@ export async function generateMetadata(props: PageProps<'/blog/[slug]'>): Promis
 export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
   await requireFeature('knowledge_center');
   const { slug } = await props.params;
-  const post = await getPublishedBlogPostBySlug(slug);
+  const post = await getKnowledgeArticleBySlug(slug);
   if (!post) notFound();
+
+  // Fire-and-forget: a reader should never wait on analytics.
+  void recordArticleView(post.id);
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    '@type': post.kind === ArticleKind.FAQ ? 'FAQPage' : 'TechArticle',
     headline: post.title,
     description: post.excerpt,
     url: `${SITE_URL}/blog/${post.slug}`,
@@ -45,9 +51,19 @@ export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
         <Link href="/blog" className="text-sm text-muted hover:text-foreground">
           ← Knowledge Center
         </Link>
-        <span className="mt-4 block text-xs font-medium text-primary dark:text-secondary">
-          {BLOG_CATEGORY_LABELS[post.category]}
-        </span>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-medium text-primary dark:text-secondary">{BLOG_CATEGORY_LABELS[post.category]}</span>
+          {post.kind !== ArticleKind.ARTICLE && (
+            <span className="rounded-full border border-border px-2 py-0.5 text-muted">
+              {ARTICLE_KIND_LABELS[post.kind]}
+            </span>
+          )}
+        </div>
+        {post.errorCode && (
+          <p className="mt-3 inline-flex rounded-lg border border-border bg-surface-muted px-3 py-1.5 font-mono text-sm text-foreground">
+            {post.errorCode}
+          </p>
+        )}
         <h1 className="mt-2 font-display text-3xl font-bold text-foreground sm:text-4xl">{post.title}</h1>
         <p className="mt-3 text-sm text-muted">
           {post.author.name}
@@ -60,9 +76,23 @@ export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
           </div>
         )}
 
+        {post.videoUrl && (
+          <div className="relative mt-6 aspect-video w-full overflow-hidden rounded-2xl border border-border bg-surface-muted">
+            <iframe
+              src={post.videoUrl}
+              title={post.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 h-full w-full"
+            />
+          </div>
+        )}
+
         <div className="prose prose-slate dark:prose-invert mt-8 max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
         </div>
+
+        <ArticleLinks links={post.links} />
       </div>
     </Container>
   );

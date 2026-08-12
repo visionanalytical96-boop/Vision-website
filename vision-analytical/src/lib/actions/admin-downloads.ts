@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+import { formValues } from '@/lib/form-values';
 import { requireRole } from '@/lib/dal';
 import { downloadFormSchema, testimonialFormSchema } from '@/lib/validation/admin-downloads';
 import { saveUploadedImage } from '@/lib/upload-image';
@@ -11,6 +12,8 @@ import { Role } from '@/generated/prisma/client';
 export interface AdminFormState {
   errors?: Record<string, string[] | undefined>;
   formError?: string;
+  /** Echoed back so a validation error doesn't wipe the form - see formValues. */
+  values?: Record<string, string>;
 }
 
 function parseDownloadForm(formData: FormData) {
@@ -41,12 +44,12 @@ export async function createDownload(_prevState: AdminFormState | undefined, for
 
   const validated = parseDownloadForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
   const data = validated.data;
 
   if (await prisma.download.findUnique({ where: { slug: data.slug } })) {
-    return { errors: { slug: ['A download with this slug already exists.'] } };
+    return { errors: { slug: ['A download with this slug already exists.'] }, values: formValues(formData) };
   }
 
   await prisma.download.create({
@@ -80,13 +83,13 @@ export async function updateDownload(
 
   const validated = parseDownloadForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
   const data = validated.data;
 
   const clash = await prisma.download.findUnique({ where: { slug: data.slug } });
   if (clash && clash.id !== id) {
-    return { errors: { slug: ['A download with this slug already exists.'] } };
+    return { errors: { slug: ['A download with this slug already exists.'] }, values: formValues(formData) };
   }
 
   await prisma.download.update({
@@ -151,13 +154,13 @@ export async function createTestimonial(
 
   const validated = parseTestimonialForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
 
   const logoFile = formData.get('logo');
   const upload = await saveUploadedImage(logoFile instanceof File ? logoFile : null, 'site');
   if (upload.error) {
-    return { errors: { logo: [upload.error] } };
+    return { errors: { logo: [upload.error] }, values: formValues(formData) };
   }
 
   const data = validated.data;
@@ -186,13 +189,13 @@ export async function updateTestimonial(
 
   const validated = parseTestimonialForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
 
   const logoFile = formData.get('logo');
   const upload = await saveUploadedImage(logoFile instanceof File ? logoFile : null, 'site');
   if (upload.error) {
-    return { errors: { logo: [upload.error] } };
+    return { errors: { logo: [upload.error] }, values: formValues(formData) };
   }
 
   const data = validated.data;

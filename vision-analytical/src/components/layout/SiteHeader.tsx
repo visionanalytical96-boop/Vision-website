@@ -26,6 +26,7 @@ const LIFECYCLE_ITEMS: (MegaMenuColumn['items'][number] & { feature?: FeatureFla
   { label: 'Spare parts', href: '/spare-parts', description: 'Lamps, columns, seals and service parts', iconKey: 'cog', feature: 'spare_parts' },
   { label: 'Service & AMC', href: '/services', description: 'Maintenance, calibration and qualification', iconKey: 'shield-check' },
   { label: 'Downloads', href: '/downloads', description: 'Datasheets, manuals and certificates', iconKey: 'file-check', feature: 'downloads' },
+  { label: 'Error codes', href: '/error-codes', description: 'Look up what a code on your instrument means', iconKey: 'alert-triangle', feature: 'knowledge_center' },
 ];
 
 /** Nav links whose destination is a module that can be switched off. */

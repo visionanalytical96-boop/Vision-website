@@ -68,8 +68,11 @@ export async function search(rawQuery: string, perGroupLimit = 8): Promise<Searc
       orderBy: { name: 'asc' },
       take: perGroupLimit,
     }),
-    prisma.blogPost.findMany({
-      where: { ...publiclyVisibleWhere(), OR: [{ title: contains }, { excerpt: contains }, { content: contains }] },
+    prisma.knowledgeArticle.findMany({
+      where: {
+        ...publiclyVisibleWhere(),
+        OR: [{ title: contains }, { excerpt: contains }, { content: contains }, { errorCode: contains }],
+      },
       orderBy: { publishedAt: 'desc' },
       take: perGroupLimit,
     }),
@@ -106,7 +109,15 @@ export async function search(rawQuery: string, perGroupLimit = 8): Promise<Searc
     });
   }
   for (const post of posts) {
-    hits.push({ id: post.id, title: post.title, subtitle: post.excerpt, href: `/blog/${post.slug}`, group: 'Knowledge Center' });
+    hits.push({
+      id: post.id,
+      // An error code is what someone typed; leading with it beats a title
+      // they have never seen.
+      title: post.errorCode ? `${post.errorCode} — ${post.title}` : post.title,
+      subtitle: post.excerpt,
+      href: `/blog/${post.slug}`,
+      group: 'Knowledge Center',
+    });
   }
 
   const countsByGroup = { ...EMPTY_COUNTS };

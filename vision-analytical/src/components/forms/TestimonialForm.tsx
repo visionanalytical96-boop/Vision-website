@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { FormField } from '@/components/ui/FormField';
 import { ImageInput } from '@/components/ui/ImageInput';
+import { submittedOr, submittedChecked } from '@/lib/form-values';
 
 const initialState: AdminFormState = {};
 
@@ -25,23 +26,23 @@ export function TestimonialForm({ testimonial }: { testimonial?: Testimonial }) 
         className="sm:col-span-2"
         hint="The customer's own words. Get their permission before publishing."
       >
-        <Textarea id="quote" name="quote" rows={4} defaultValue={testimonial?.quote} required />
+        <Textarea id="quote" name="quote" rows={4} defaultValue={submittedOr(state.values, 'quote', testimonial?.quote)} required />
       </FormField>
 
       <FormField label="Name" htmlFor="authorName" error={state.errors?.authorName} required>
-        <Input id="authorName" name="authorName" defaultValue={testimonial?.authorName} required />
+        <Input id="authorName" name="authorName" defaultValue={submittedOr(state.values, 'authorName', testimonial?.authorName)} required />
       </FormField>
 
       <FormField label="Job title" htmlFor="authorTitle" error={state.errors?.authorTitle} hint="e.g. QC Manager">
-        <Input id="authorTitle" name="authorTitle" defaultValue={testimonial?.authorTitle ?? ''} />
+        <Input id="authorTitle" name="authorTitle" defaultValue={submittedOr(state.values, 'authorTitle', testimonial?.authorTitle ?? '')} />
       </FormField>
 
       <FormField label="Company" htmlFor="company" error={state.errors?.company}>
-        <Input id="company" name="company" defaultValue={testimonial?.company ?? ''} />
+        <Input id="company" name="company" defaultValue={submittedOr(state.values, 'company', testimonial?.company ?? '')} />
       </FormField>
 
       <FormField label="Sort order" htmlFor="sortOrder" error={state.errors?.sortOrder} hint="Lower numbers appear first.">
-        <Input id="sortOrder" name="sortOrder" type="number" defaultValue={testimonial?.sortOrder ?? 0} />
+        <Input id="sortOrder" name="sortOrder" type="number" defaultValue={submittedOr(state.values, 'sortOrder', testimonial?.sortOrder ?? 0)} />
       </FormField>
 
       <div className="sm:col-span-2">
@@ -59,7 +60,7 @@ export function TestimonialForm({ testimonial }: { testimonial?: Testimonial }) 
           type="checkbox"
           name="isPublished"
           value="true"
-          defaultChecked={testimonial?.isPublished ?? true}
+          defaultChecked={submittedChecked(state.values, 'isPublished', testimonial?.isPublished ?? true)}
           className="h-4 w-4 rounded border-border"
         />
         Published (visible on the public site)

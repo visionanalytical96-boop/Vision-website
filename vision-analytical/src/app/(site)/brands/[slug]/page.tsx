@@ -11,6 +11,8 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { stockStatusMeta } from '@/lib/status';
 import { toImageList } from '@/lib/image-list';
 import { getBrandHubBySlug } from '@/lib/data/brands';
+import { getArticlesForBrand } from '@/lib/data/knowledge';
+import { BlogPostCard } from '@/components/blog/BlogPostCard';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
@@ -32,6 +34,7 @@ export default async function BrandHubPage(props: PageProps<'/brands/[slug]'>) {
   if (!hub) notFound();
 
   const { brand, instruments, spareParts, refurbished } = hub;
+  const articles = await getArticlesForBrand(brand.id);
 
   const schema = {
     '@context': 'https://schema.org',
@@ -151,6 +154,20 @@ export default async function BrandHubPage(props: PageProps<'/brands/[slug]'>) {
             </ul>
           )}
         </section>
+        {articles.length > 0 && (
+          <section className="mt-12">
+            <h2 className="font-display text-xl font-semibold text-foreground">
+              {brand.name} guides &amp; troubleshooting
+            </h2>
+            <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {articles.map((article) => (
+                <li key={article.id}>
+                  <BlogPostCard post={article} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </Container>
     </>
   );

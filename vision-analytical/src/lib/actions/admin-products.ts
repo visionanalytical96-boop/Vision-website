@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+import { formValues } from '@/lib/form-values';
 import { requireRole } from '@/lib/dal';
 import {
   productFormSchema,
@@ -15,6 +16,8 @@ import { Role } from '@/generated/prisma/client';
 export interface ProductFormState {
   errors?: Record<string, string[] | undefined>;
   formError?: string;
+  /** Echoed back so a validation error doesn't wipe the form - see formValues. */
+  values?: Record<string, string>;
 }
 
 function parsePriceMinor(priceRupees: string | undefined): number | null {
@@ -111,28 +114,28 @@ export async function createProduct(_prevState: ProductFormState | undefined, fo
 
   const validated = parseProductForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
 
   const data = validated.data;
   const existingSku = await prisma.product.findUnique({ where: { sku: data.sku } });
   if (existingSku) {
-    return { errors: { sku: ['A product with this SKU already exists.'] } };
+    return { errors: { sku: ['A product with this SKU already exists.'] }, values: formValues(formData) };
   }
   const existingSlug = await prisma.product.findUnique({ where: { slug: data.slug } });
   if (existingSlug) {
-    return { errors: { slug: ['A product with this slug already exists.'] } };
+    return { errors: { slug: ['A product with this slug already exists.'] }, values: formValues(formData) };
   }
 
   const imageFile = formData.get('image');
   const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'products');
   if (upload.error) {
-    return { errors: { image: [upload.error] } };
+    return { errors: { image: [upload.error] }, values: formValues(formData) };
   }
 
   const repeaters = parseRepeaters(formData);
   if ('error' in repeaters) {
-    return { formError: repeaters.error };
+    return { formError: repeaters.error, values: formValues(formData) };
   }
 
   const created = await prisma.product.create({
@@ -167,28 +170,28 @@ export async function updateProduct(id: string, _prevState: ProductFormState | u
 
   const validated = parseProductForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
 
   const data = validated.data;
   const skuOwner = await prisma.product.findUnique({ where: { sku: data.sku } });
   if (skuOwner && skuOwner.id !== id) {
-    return { errors: { sku: ['A product with this SKU already exists.'] } };
+    return { errors: { sku: ['A product with this SKU already exists.'] }, values: formValues(formData) };
   }
   const slugOwner = await prisma.product.findUnique({ where: { slug: data.slug } });
   if (slugOwner && slugOwner.id !== id) {
-    return { errors: { slug: ['A product with this slug already exists.'] } };
+    return { errors: { slug: ['A product with this slug already exists.'] }, values: formValues(formData) };
   }
 
   const imageFile = formData.get('image');
   const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'products');
   if (upload.error) {
-    return { errors: { image: [upload.error] } };
+    return { errors: { image: [upload.error] }, values: formValues(formData) };
   }
 
   const repeaters = parseRepeaters(formData);
   if ('error' in repeaters) {
-    return { formError: repeaters.error };
+    return { formError: repeaters.error, values: formValues(formData) };
   }
 
   await prisma.product.update({

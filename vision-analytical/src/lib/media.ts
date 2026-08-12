@@ -52,7 +52,7 @@ async function collectUsedImageUrls(): Promise<Set<string>> {
   const [products, refurbished, posts, heroSection, siteSettings] = await Promise.all([
     prisma.product.findMany({ select: { images: true } }),
     prisma.refurbishedInstrument.findMany({ select: { images: true } }),
-    prisma.blogPost.findMany({ select: { coverImage: true } }),
+    prisma.knowledgeArticle.findMany({ select: { coverImage: true } }),
     prisma.homeSection.findUnique({ where: { key: HomeSectionKey.HERO }, select: { content: true } }),
     prisma.siteSettings.findUnique({ where: { id: 'singleton' } }),
   ]);

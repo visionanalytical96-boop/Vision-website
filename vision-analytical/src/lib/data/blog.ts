@@ -4,7 +4,7 @@ import { publiclyVisibleWhere } from '@/lib/content-status';
 import type { BlogCategory } from '@/generated/prisma/client';
 
 export function getPublishedBlogPosts(category?: BlogCategory) {
-  return prisma.blogPost.findMany({
+  return prisma.knowledgeArticle.findMany({
     where: { ...publiclyVisibleWhere(), ...(category ? { category } : {}) },
     orderBy: { publishedAt: 'desc' },
   });
@@ -12,7 +12,7 @@ export function getPublishedBlogPosts(category?: BlogCategory) {
 
 /** Newest articles, for the homepage Knowledge Center preview. */
 export function getLatestBlogPosts(limit = 3) {
-  return prisma.blogPost.findMany({
+  return prisma.knowledgeArticle.findMany({
     where: publiclyVisibleWhere(),
     orderBy: { publishedAt: 'desc' },
     take: limit,
@@ -20,7 +20,7 @@ export function getLatestBlogPosts(limit = 3) {
 }
 
 export function getPublishedBlogPostBySlug(slug: string) {
-  return prisma.blogPost.findFirst({
+  return prisma.knowledgeArticle.findFirst({
     where: { slug, ...publiclyVisibleWhere() },
     include: { author: { select: { name: true } } },
   });

@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
+import { formValues } from '@/lib/form-values';
 import { requireRole } from '@/lib/dal';
 import { instrumentModelFormSchema } from '@/lib/validation/admin-products';
 import { Role } from '@/generated/prisma/client';
@@ -10,6 +11,8 @@ import { Role } from '@/generated/prisma/client';
 export interface InstrumentModelFormState {
   errors?: Record<string, string[] | undefined>;
   formError?: string;
+  /** Echoed back so a validation error doesn't wipe the form - see formValues. */
+  values?: Record<string, string>;
 }
 
 function parseForm(formData: FormData) {
@@ -37,7 +40,7 @@ export async function createInstrumentModel(
 
   const validated = parseForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
   const data = validated.data;
 
@@ -45,7 +48,7 @@ export async function createInstrumentModel(
     where: { brandId_slug: { brandId: data.brandId, slug: data.slug } },
   });
   if (clash) {
-    return { errors: { slug: ['This brand already has a model with that slug.'] } };
+    return { errors: { slug: ['This brand already has a model with that slug.'] }, values: formValues(formData) };
   }
 
   await prisma.instrumentModel.create({
@@ -73,7 +76,7 @@ export async function updateInstrumentModel(
 
   const validated = parseForm(formData);
   if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
+    return { errors: validated.error.flatten().fieldErrors, values: formValues(formData) };
   }
   const data = validated.data;
 
@@ -81,7 +84,7 @@ export async function updateInstrumentModel(
     where: { brandId_slug: { brandId: data.brandId, slug: data.slug } },
   });
   if (clash && clash.id !== id) {
-    return { errors: { slug: ['This brand already has a model with that slug.'] } };
+    return { errors: { slug: ['This brand already has a model with that slug.'] }, values: formValues(formData) };
   }
 
   await prisma.instrumentModel.update({

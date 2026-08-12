@@ -315,5 +315,6 @@ export const DEFAULT_FOOTER_CONTENT: FooterContent = {
     { href: '/services#iqoqpq', label: 'IQ / OQ / PQ' },
     { href: '/services#installation', label: 'Installation' },
     { href: '/downloads', label: 'Downloads' },
+    { href: '/error-codes', label: 'Error Code Lookup' },
   ],
 };

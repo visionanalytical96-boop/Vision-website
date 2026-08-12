@@ -24,7 +24,7 @@ const cspHeader = `
   img-src 'self' blob: data:;
   font-src 'self';
   connect-src 'self';
-  frame-src https://maps.google.com https://www.google.com;
+  frame-src https://maps.google.com https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

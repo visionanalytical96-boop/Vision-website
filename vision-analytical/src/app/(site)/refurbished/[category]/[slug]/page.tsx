@@ -39,7 +39,7 @@ export default async function RefurbishedDetailPage(props: PageProps<'/refurbish
     images: toImageList(instrument.images),
     priceMinor: instrument.priceMinor,
     inStock: instrument.stockStatus !== StockStatus.OUT_OF_STOCK,
-    brand: instrument.brand,
+    brand: instrument.brand.name,
     refurbished: true,
   });
 
@@ -57,7 +57,7 @@ export default async function RefurbishedDetailPage(props: PageProps<'/refurbish
           </p>
           <h1 className="mt-1 font-display text-3xl font-bold text-foreground">{instrument.name}</h1>
           <p className="mt-1 text-muted">
-            {instrument.brand}
+            {instrument.brand.name}
             {instrument.model ? ` · ${instrument.model}` : ''}
           </p>
 

@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { createRefurbished, updateRefurbished, type RefurbishedFormState } from '@/lib/actions/admin-refurbished';
 import { RefurbishedCondition, StockStatus } from '@/generated/prisma/enums';
-import type { RefurbishedInstrument, Category } from '@/generated/prisma/client';
+import type { RefurbishedInstrument, Category, Brand } from '@/generated/prisma/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -16,10 +16,11 @@ const initialState: RefurbishedFormState = {};
 
 interface RefurbishedFormProps {
   categories: Category[];
+  brands: Brand[];
   instrument?: RefurbishedInstrument;
 }
 
-export function RefurbishedForm({ categories, instrument }: RefurbishedFormProps) {
+export function RefurbishedForm({ categories, brands, instrument }: RefurbishedFormProps) {
   const action = instrument ? updateRefurbished.bind(null, instrument.id) : createRefurbished;
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -55,8 +56,15 @@ export function RefurbishedForm({ categories, instrument }: RefurbishedFormProps
         </Select>
       </FormField>
 
-      <FormField label="Brand" htmlFor="brand" error={state.errors?.brand} required>
-        <Input id="brand" name="brand" defaultValue={instrument?.brand} required />
+      <FormField label="Brand" htmlFor="brandId" error={state.errors?.brandId} required>
+        <Select id="brandId" name="brandId" defaultValue={instrument?.brandId ?? ''} required>
+          <option value="">Choose a brand</option>
+          {brands.map((brand) => (
+            <option key={brand.id} value={brand.id}>
+              {brand.name}
+            </option>
+          ))}
+        </Select>
       </FormField>
       <FormField label="Model" htmlFor="model" error={state.errors?.model}>
         <Input id="model" name="model" defaultValue={instrument?.model ?? ''} />

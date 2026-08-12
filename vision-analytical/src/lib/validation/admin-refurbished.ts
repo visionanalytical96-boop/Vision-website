@@ -9,7 +9,7 @@ export const refurbishedFormSchema = z.object({
     .regex(/^[a-z0-9-]+$/, { error: 'Use lowercase letters, numbers and hyphens only.' }),
   name: z.string().trim().min(2, { error: 'Name is required.' }),
   categoryId: z.string().trim().min(1, { error: 'Choose a category.' }),
-  brand: z.string().trim().min(1, { error: 'Brand is required.' }),
+  brandId: z.string().trim().min(1, { error: 'Choose a brand.' }),
   model: z.string().trim().optional().or(z.literal('')),
   condition: z.enum(RefurbishedCondition, { error: 'Choose a condition.' }),
   includedAccessories: z.string().trim().optional().or(z.literal('')),

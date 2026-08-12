@@ -208,6 +208,7 @@ export const DEFAULT_HEADER_CONTENT: HeaderContent = {
     { href: '/products', label: 'Instruments' },
     { href: '/spare-parts', label: 'Spare Parts' },
     { href: '/refurbished', label: 'Refurbished' },
+    { href: '/brands', label: 'Brands' },
     { href: '/services', label: 'Services' },
     { href: '/blog', label: 'Knowledge Center' },
     { href: '/about', label: 'About' },

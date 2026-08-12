@@ -195,6 +195,30 @@ model Address {
 // Catalog
 // ---------------------------------------------------------------------------
 
+/// Manufacturers whose instruments Vision Analytical sells and services.
+/// A real entity rather than a free-text field so brands can carry logos, copy
+/// and SEO, own a hub page, and be filtered on across the catalogue.
+model Brand {
+  id             String  @id @default(cuid())
+  name           String  @unique
+  slug           String  @unique
+  logoUrl        String?
+  description    String?
+  website        String?
+  sortOrder      Int     @default(0)
+  isPublished    Boolean @default(true)
+  seoTitle       String?
+  seoDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products               Product[]
+  refurbishedInstruments RefurbishedInstrument[]
+
+  @@index([sortOrder])
+}
+
 model Category {
   id          String       @id @default(cuid())
   name        String
@@ -223,7 +247,8 @@ model Product {
   kind             ProductKind
   categoryId       String
   category         Category    @relation(fields: [categoryId], references: [id])
-  brand            String?
+  brandId          String?
+  brand            Brand?      @relation(fields: [brandId], references: [id])
   compatibleBrands String[]
   description      String
   images           Json
@@ -242,6 +267,7 @@ model Product {
 
   @@index([kind])
   @@index([categoryId])
+  @@index([brandId])
   @@index([stockStatus])
 }
 
@@ -251,7 +277,8 @@ model RefurbishedInstrument {
   name                String
   categoryId          String
   category            Category             @relation(fields: [categoryId], references: [id])
-  brand               String
+  brandId             String
+  brand               Brand                @relation(fields: [brandId], references: [id])
   model               String?
   condition           RefurbishedCondition
   includedAccessories String[]
@@ -269,6 +296,7 @@ model RefurbishedInstrument {
   quoteItems QuoteItem[]
 
   @@index([categoryId])
+  @@index([brandId])
 }
 
 // ---------------------------------------------------------------------------

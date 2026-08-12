@@ -25,7 +25,7 @@ function parseForm(formData: FormData) {
     slug: formData.get('slug'),
     name: formData.get('name'),
     categoryId: formData.get('categoryId'),
-    brand: formData.get('brand'),
+    brandId: formData.get('brandId'),
     model: String(formData.get('model') ?? ''),
     condition: formData.get('condition'),
     includedAccessories: String(formData.get('includedAccessories') ?? ''),
@@ -63,7 +63,7 @@ export async function createRefurbished(_prevState: RefurbishedFormState | undef
       slug: data.slug,
       name: data.name,
       categoryId: data.categoryId,
-      brand: data.brand,
+      brandId: data.brandId,
       model: data.model || null,
       condition: data.condition,
       includedAccessories: data.includedAccessories
@@ -109,7 +109,7 @@ export async function updateRefurbished(id: string, _prevState: RefurbishedFormS
       slug: data.slug,
       name: data.name,
       categoryId: data.categoryId,
-      brand: data.brand,
+      brandId: data.brandId,
       model: data.model || null,
       condition: data.condition,
       includedAccessories: data.includedAccessories

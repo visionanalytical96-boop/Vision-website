@@ -16,6 +16,7 @@ export function getCategoryBySlug(slug: string, kind: CategoryKind) {
 export function getPublishedProductsByCategory(categoryId: string) {
   return prisma.product.findMany({
     where: { categoryId, isPublished: true },
+    include: { brand: true },
     orderBy: { name: 'asc' },
   });
 }
@@ -23,6 +24,6 @@ export function getPublishedProductsByCategory(categoryId: string) {
 export function getPublishedProductBySlug(slug: string) {
   return prisma.product.findFirst({
     where: { slug, isPublished: true },
-    include: { category: true },
+    include: { category: true, brand: true },
   });
 }

@@ -36,12 +36,12 @@ export function getSpareParts(filters: SparePartFilters) {
     ];
   }
 
-  return prisma.product.findMany({ where, orderBy: { name: 'asc' } });
+  return prisma.product.findMany({ where, include: { brand: true }, orderBy: { name: 'asc' } });
 }
 
 export function getSparePartBySlug(slug: string) {
   return prisma.product.findFirst({
     where: { slug, kind: ProductKind.SPARE_PART, isPublished: true },
-    include: { category: true },
+    include: { category: true, brand: true },
   });
 }

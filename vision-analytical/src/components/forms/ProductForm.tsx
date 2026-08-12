@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { createProduct, updateProduct, type ProductFormState } from '@/lib/actions/admin-products';
 import { ProductKind, StockStatus } from '@/generated/prisma/enums';
-import type { Product, Category } from '@/generated/prisma/client';
+import type { Product, Category, Brand } from '@/generated/prisma/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -16,10 +16,11 @@ const initialState: ProductFormState = {};
 
 interface ProductFormProps {
   categories: Category[];
+  brands: Brand[];
   product?: Product;
 }
 
-export function ProductForm({ categories, product }: ProductFormProps) {
+export function ProductForm({ categories, brands, product }: ProductFormProps) {
   const action = product ? updateProduct.bind(null, product.id) : createProduct;
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -58,8 +59,15 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         </Select>
       </FormField>
 
-      <FormField label="Brand" htmlFor="brand" error={state.errors?.brand}>
-        <Input id="brand" name="brand" defaultValue={product?.brand ?? ''} />
+      <FormField label="Brand" htmlFor="brandId" error={state.errors?.brandId}>
+        <Select id="brandId" name="brandId" defaultValue={product?.brandId ?? ''}>
+          <option value="">No brand</option>
+          {brands.map((brand) => (
+            <option key={brand.id} value={brand.id}>
+              {brand.name}
+            </option>
+          ))}
+        </Select>
       </FormField>
       <FormField label="Compatible brands" htmlFor="compatibleBrands" error={state.errors?.compatibleBrands} hint="Comma-separated">
         <Input id="compatibleBrands" name="compatibleBrands" defaultValue={product?.compatibleBrands.join(', ') ?? ''} />

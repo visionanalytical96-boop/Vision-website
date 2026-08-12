@@ -40,7 +40,7 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
     priceMinor: product.priceMinor,
     inStock: product.stockStatus !== StockStatus.OUT_OF_STOCK,
     sku: product.sku,
-    brand: product.brand ?? undefined,
+    brand: product.brand?.name ?? undefined,
   });
 
   return (
@@ -56,7 +56,11 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
             </Link>
           </p>
           <h1 className="mt-1 font-display text-3xl font-bold text-foreground">{product.name}</h1>
-          {product.brand && <p className="mt-1 text-muted">{product.brand}</p>}
+          {product.brand && (
+            <Link href={`/brands/${product.brand.slug}`} className="mt-1 inline-block text-muted hover:text-primary hover:underline">
+              {product.brand.name}
+            </Link>
+          )}
 
           <div className="mt-4 flex items-center gap-3">
             <StatusBadge meta={stockStatusMeta[product.stockStatus]} />

@@ -16,6 +16,7 @@ export function getRefurbishedCategoryBySlug(slug: string) {
 export function getRefurbishedInstrumentsByCategory(categoryId: string) {
   return prisma.refurbishedInstrument.findMany({
     where: { categoryId, isPublished: true },
+    include: { brand: true },
     orderBy: { name: 'asc' },
   });
 }
@@ -23,6 +24,6 @@ export function getRefurbishedInstrumentsByCategory(categoryId: string) {
 export function getRefurbishedInstrumentBySlug(slug: string) {
   return prisma.refurbishedInstrument.findFirst({
     where: { slug, isPublished: true },
-    include: { category: true },
+    include: { category: true, brand: true },
   });
 }

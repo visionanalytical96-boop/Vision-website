@@ -74,7 +74,37 @@ async function seedAdmin(prisma: PrismaClient): Promise<{ id: string } | null> {
 
 // Reference catalog data (categories + a couple of instruments per category).
 // Idempotent: upserts by slug/sku so it's safe to re-run alongside migrations.
-async function seedInstrumentCatalog(prisma: PrismaClient) {
+/// The manufacturers Vision Analytical sells, services or stocks parts for.
+/// Idempotent by slug so re-running the seed never duplicates or overwrites
+/// admin-edited copy - only name and sort order are kept in sync.
+const BRANDS = [
+  { slug: 'waters', name: 'Waters', sortOrder: 10 },
+  { slug: 'shimadzu', name: 'Shimadzu', sortOrder: 20 },
+  { slug: 'agilent-technologies', name: 'Agilent Technologies', sortOrder: 30 },
+  { slug: 'thermo-scientific', name: 'Thermo Scientific', sortOrder: 40 },
+  { slug: 'perkinelmer', name: 'PerkinElmer', sortOrder: 50 },
+  { slug: 'sciex', name: 'SCIEX', sortOrder: 60 },
+  { slug: 'restek', name: 'Restek', sortOrder: 70 },
+  { slug: 'hitachi', name: 'Hitachi', sortOrder: 80 },
+  { slug: 'younglin', name: 'Younglin', sortOrder: 90 },
+  { slug: 'jasco', name: 'Jasco', sortOrder: 100 },
+];
+
+async function seedBrands(prisma: PrismaClient): Promise<Map<string, string>> {
+  const bySlug = new Map<string, string>();
+  for (const brand of BRANDS) {
+    const saved = await prisma.brand.upsert({
+      where: { slug: brand.slug },
+      update: { name: brand.name, sortOrder: brand.sortOrder },
+      create: { slug: brand.slug, name: brand.name, sortOrder: brand.sortOrder },
+    });
+    bySlug.set(saved.name, saved.id);
+  }
+  console.log(`Seeded ${BRANDS.length} brands.`);
+  return bySlug;
+}
+
+async function seedInstrumentCatalog(prisma: PrismaClient, brandIds: Map<string, string>) {
   for (const category of INSTRUMENT_CATEGORIES) {
     const savedCategory = await prisma.category.upsert({
       where: { slug_kind: { slug: category.slug, kind: CategoryKind.INSTRUMENT } },
@@ -97,7 +127,7 @@ async function seedInstrumentCatalog(prisma: PrismaClient) {
         where: { sku: product.sku },
         update: {
           name: product.name,
-          brand: product.brand,
+          brandId: product.brand ? (brandIds.get(product.brand) ?? null) : null,
           description: product.description,
           categoryId: savedCategory.id,
         },
@@ -105,7 +135,7 @@ async function seedInstrumentCatalog(prisma: PrismaClient) {
           sku: product.sku,
           slug: product.slug,
           name: product.name,
-          brand: product.brand,
+          brandId: product.brand ? (brandIds.get(product.brand) ?? null) : null,
           description: product.description,
           kind: ProductKind.INSTRUMENT,
           categoryId: savedCategory.id,
@@ -169,7 +199,17 @@ async function seedSparePartsCatalog(prisma: PrismaClient) {
 }
 
 // Refurbished instruments: one validated, warranty-backed unit per category.
-async function seedRefurbishedInstruments(prisma: PrismaClient) {
+function requireBrandId(brandIds: Map<string, string>, name: string): string {
+  const id = brandIds.get(name);
+  if (!id) {
+    throw new Error(
+      `Seed data references brand "${name}", which is not in the BRANDS list. Add it there first.`,
+    );
+  }
+  return id;
+}
+
+async function seedRefurbishedInstruments(prisma: PrismaClient, brandIds: Map<string, string>) {
   for (const category of REFURBISHED_CATEGORIES) {
     const savedCategory = await prisma.category.upsert({
       where: { slug_kind: { slug: category.slug, kind: CategoryKind.REFURBISHED } },
@@ -187,7 +227,7 @@ async function seedRefurbishedInstruments(prisma: PrismaClient) {
       where: { slug: instrument.slug },
       update: {
         name: instrument.name,
-        brand: instrument.brand,
+        brandId: requireBrandId(brandIds, instrument.brand),
         model: instrument.model,
         condition: instrument.condition,
         includedAccessories: instrument.includedAccessories,
@@ -198,7 +238,7 @@ async function seedRefurbishedInstruments(prisma: PrismaClient) {
       create: {
         slug: instrument.slug,
         name: instrument.name,
-        brand: instrument.brand,
+        brandId: requireBrandId(brandIds, instrument.brand),
         model: instrument.model,
         condition: instrument.condition,
         includedAccessories: instrument.includedAccessories,
@@ -472,9 +512,10 @@ async function main() {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
 
   const admin = await seedAdmin(prisma);
-  await seedInstrumentCatalog(prisma);
+  const brandIds = await seedBrands(prisma);
+  await seedInstrumentCatalog(prisma, brandIds);
   await seedSparePartsCatalog(prisma);
-  await seedRefurbishedInstruments(prisma);
+  await seedRefurbishedInstruments(prisma, brandIds);
 
   if (admin) {
     await seedBlogPosts(prisma, admin.id);

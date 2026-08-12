@@ -34,7 +34,7 @@ export function getAllCategories() {
 
 export function getAdminRefurbishedInstruments() {
   return prisma.refurbishedInstrument.findMany({
-    include: { category: true },
+    include: { category: true, brand: true },
     orderBy: { updatedAt: 'desc' },
   });
 }

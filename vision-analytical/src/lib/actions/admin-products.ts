@@ -27,7 +27,7 @@ function parseProductForm(formData: FormData) {
     name: formData.get('name'),
     kind: formData.get('kind'),
     categoryId: formData.get('categoryId'),
-    brand: String(formData.get('brand') ?? ''),
+    brandId: String(formData.get('brandId') ?? ''),
     compatibleBrands: String(formData.get('compatibleBrands') ?? ''),
     description: formData.get('description'),
     priceRupees: String(formData.get('priceRupees') ?? ''),
@@ -70,7 +70,7 @@ export async function createProduct(_prevState: ProductFormState | undefined, fo
       name: data.name,
       kind: data.kind,
       categoryId: data.categoryId,
-      brand: data.brand || null,
+      brandId: data.brandId || null,
       compatibleBrands: data.compatibleBrands
         ? data.compatibleBrands.split(',').map((b) => b.trim()).filter(Boolean)
         : [],
@@ -121,7 +121,7 @@ export async function updateProduct(id: string, _prevState: ProductFormState | u
       name: data.name,
       kind: data.kind,
       categoryId: data.categoryId,
-      brand: data.brand || null,
+      brandId: data.brandId || null,
       compatibleBrands: data.compatibleBrands
         ? data.compatibleBrands.split(',').map((b) => b.trim()).filter(Boolean)
         : [],

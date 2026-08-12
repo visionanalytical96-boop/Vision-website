@@ -1,6 +1,6 @@
 import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { z } from 'zod';
 import { Role } from '@/generated/prisma/client';
 
@@ -25,20 +25,22 @@ const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 // login looks like it worked (the redirect happens) and then every following
 // request arrives unauthenticated and bounces back to /login.
 //
-// Deliberately fails closed: stays secure in production unless NEXT_PUBLIC_SITE_URL
-// explicitly says the site is served over plain http. An unset or https URL
-// keeps the flag on.
-const servedOverPlainHttp = (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('http://');
-const useSecureCookie = process.env.NODE_ENV === 'production' && !servedOverPlainHttp;
-
-// One line at startup, because the failure it guards against is otherwise
-// invisible: with Secure on, a browser on a plain-http origin silently drops
-// the cookie, so login "succeeds" and every later request is anonymous.
-console.info(
-  `[session] cookie Secure=${useSecureCookie} (NODE_ENV=${process.env.NODE_ENV ?? 'unset'}, ` +
-    `NEXT_PUBLIC_SITE_URL=${process.env.NEXT_PUBLIC_SITE_URL ?? 'unset'})` +
-    (useSecureCookie ? ' - browsers will only store this over https or on localhost' : ''),
-);
+// Decided per request from X-Forwarded-Proto, which the reverse proxy sets, so
+// one image works on http and https alike. Deliberately NOT keyed off
+// NEXT_PUBLIC_SITE_URL: Next inlines NEXT_PUBLIC_* at build time, so that value
+// freezes into the image and editing it at runtime silently does nothing.
+//
+// Fallback when no proxy header is present: secure in production. That fails
+// closed - a direct-to-node deployment over https keeps the flag, and the only
+// way to lose it is an explicit http X-Forwarded-Proto from your own proxy.
+async function shouldUseSecureCookie(): Promise<boolean> {
+  const forwardedProto = (await headers()).get('x-forwarded-proto');
+  if (forwardedProto) {
+    // May be a comma-separated chain ("https,http") - the client-facing hop is first.
+    return forwardedProto.split(',')[0].trim().toLowerCase() === 'https';
+  }
+  return process.env.NODE_ENV === 'production';
+}
 
 function getSecretKey(): Uint8Array {
   const secret = process.env.SESSION_SECRET;
@@ -70,10 +72,11 @@ export async function verifySessionToken(token: string | undefined): Promise<Ses
 
 export async function createSession(payload: SessionPayload): Promise<void> {
   const token = await encryptSession(payload);
+  const secure = await shouldUseSecureCookie();
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: useSecureCookie,
+    secure,
     sameSite: 'lax',
     maxAge: SESSION_MAX_AGE_SECONDS,
     path: '/',

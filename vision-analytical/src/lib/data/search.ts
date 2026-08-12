@@ -1,6 +1,7 @@
 import 'server-only';
 import { prisma } from '@/lib/db';
 import { ProductKind } from '@/generated/prisma/client';
+import { publiclyVisibleWhere } from '@/lib/content-status';
 
 export interface SearchHit {
   id: string;
@@ -68,7 +69,7 @@ export async function search(rawQuery: string, perGroupLimit = 8): Promise<Searc
       take: perGroupLimit,
     }),
     prisma.blogPost.findMany({
-      where: { isPublished: true, OR: [{ title: contains }, { excerpt: contains }, { content: contains }] },
+      where: { ...publiclyVisibleWhere(), OR: [{ title: contains }, { excerpt: contains }, { content: contains }] },
       orderBy: { publishedAt: 'desc' },
       take: perGroupLimit,
     }),

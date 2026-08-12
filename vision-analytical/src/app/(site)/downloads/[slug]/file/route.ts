@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getPublishedDownloadBySlug, recordDownload } from '@/lib/data/downloads';
 import { getSession } from '@/lib/dal';
+import { isFeatureEnabled } from '@/lib/data/features';
 
 /**
  * Counts the download, then hands off to the file itself. Going through a
@@ -9,6 +10,12 @@ import { getSession } from '@/lib/dal';
  */
 export async function GET(_request: Request, ctx: RouteContext<'/downloads/[slug]/file'>) {
   const { slug } = await ctx.params;
+
+  // Gated the same way as the downloads page - otherwise the module is "off"
+  // but every direct file link still works.
+  if (!(await isFeatureEnabled('downloads'))) {
+    return new Response('Not found', { status: 404 });
+  }
 
   const download = await getPublishedDownloadBySlug(slug);
   if (!download) {

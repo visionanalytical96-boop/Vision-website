@@ -6,6 +6,7 @@ import { getPublishedBlogPosts } from '@/lib/data/blog';
 import { BLOG_CATEGORY_LABELS, BLOG_CATEGORIES } from '@/lib/blog-categories';
 import { cn } from '@/lib/utils';
 import type { BlogCategory } from '@/generated/prisma/client';
+import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = {
   title: 'Knowledge Center',
@@ -17,6 +18,7 @@ function isBlogCategory(value: string | undefined): value is BlogCategory {
 }
 
 export default async function BlogIndexPage(props: PageProps<'/blog'>) {
+  await requireFeature('knowledge_center');
   const searchParams = await props.searchParams;
   const rawCategory = typeof searchParams.category === 'string' ? searchParams.category : undefined;
   const category = isBlogCategory(rawCategory) ? rawCategory : undefined;

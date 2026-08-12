@@ -16,6 +16,7 @@ import {
   Priority,
   HomeSectionKey,
   ContentPageKey,
+  ContentStatus,
 } from '../src/generated/prisma/client';
 import { generateReferenceNumber } from '../src/lib/reference-number';
 import { INSTRUMENT_CATEGORIES } from './seed-data';
@@ -23,6 +24,7 @@ import { SPARE_PART_CATEGORIES } from './seed-data-spare-parts';
 import { REFURBISHED_CATEGORIES } from './seed-data-refurbished';
 import { BLOG_POSTS } from './seed-data-blog';
 import { INSTRUMENT_MODELS } from './seed-data-instrument-models';
+import { FEATURE_FLAGS, FEATURE_FLAG_KEYS } from '../src/lib/features';
 import {
   DEFAULT_HERO_CONTENT,
   DEFAULT_CATEGORIES_CONTENT,
@@ -330,7 +332,7 @@ async function seedBlogPosts(prisma: PrismaClient, authorId: string) {
         content: post.content,
         category: post.category,
         authorId,
-        isPublished: true,
+        status: ContentStatus.PUBLISHED,
         publishedAt: new Date(),
       },
     });
@@ -544,6 +546,29 @@ async function seedHomeSectionOrder(
   }
 }
 
+// Feature flags: the registry holds the defaults, so a row only exists once
+// someone has changed one. Seeding them up front gives the admin page real
+// rows to show and makes the current state visible in the database.
+async function seedFeatureFlags(prisma: PrismaClient) {
+  for (const key of FEATURE_FLAG_KEYS) {
+    const meta = FEATURE_FLAGS[key];
+    await prisma.featureFlag.upsert({
+      where: { key },
+      // Never overwrite an admin's choice - only keep the copy in sync.
+      update: { label: meta.label, description: meta.description, group: meta.group, sortOrder: meta.sortOrder },
+      create: {
+        key,
+        label: meta.label,
+        description: meta.description,
+        group: meta.group,
+        sortOrder: meta.sortOrder,
+        isEnabled: meta.defaultEnabled,
+      },
+    });
+  }
+  console.log(`Seeded ${FEATURE_FLAG_KEYS.length} feature flags.`);
+}
+
 // Site CMS: homepage sections, other page content, site settings and theme.
 // Upserts so it's safe to re-run - existing admin edits are never
 // overwritten, only missing rows get the launch-day defaults.
@@ -634,6 +659,7 @@ async function main() {
 
   await seedDemoData(prisma);
   await seedCms(prisma);
+  await seedFeatureFlags(prisma);
 
   await prisma.$disconnect();
 }

@@ -4,10 +4,12 @@ import { roleHomePath } from '@/lib/roles';
 import { getPageContent, getSiteSettings } from '@/lib/data/cms';
 import { getInstrumentCategories } from '@/lib/data/products';
 import { getPublishedBrands } from '@/lib/data/brands';
+import { getFeatureFlags } from '@/lib/data/features';
 import { headerContentSchema, parseContent } from '@/lib/cms/schemas';
 import { DEFAULT_HEADER_CONTENT } from '@/lib/cms/defaults';
 import { ContentPageKey } from '@/generated/prisma/enums';
 import { buttonVariants } from '@/components/ui/Button';
+import type { FeatureFlagKey } from '@/lib/features';
 import { SearchForm } from '@/components/search/SearchForm';
 import { MobileNav } from './MobileNav';
 import { MegaMenu, type MegaMenuColumn } from './MegaMenu';
@@ -17,24 +19,41 @@ import { SiteWordmark } from './SiteWordmark';
 /** The nav entry that opens the catalogue panel instead of navigating alone. */
 const MEGA_MENU_HREF = '/products';
 
-const LIFECYCLE_ITEMS: MegaMenuColumn['items'] = [
+/** Each lifecycle entry names the flag that must be on for it to appear. */
+const LIFECYCLE_ITEMS: (MegaMenuColumn['items'][number] & { feature?: FeatureFlagKey })[] = [
   { label: 'New instruments', href: '/products', description: 'Current systems across every technique', iconKey: 'package' },
-  { label: 'Refurbished', href: '/refurbished', description: 'Tested, warranty-backed pre-owned systems', iconKey: 'refresh-cw' },
-  { label: 'Spare parts', href: '/spare-parts', description: 'Lamps, columns, seals and service parts', iconKey: 'cog' },
+  { label: 'Refurbished', href: '/refurbished', description: 'Tested, warranty-backed pre-owned systems', iconKey: 'refresh-cw', feature: 'refurbished' },
+  { label: 'Spare parts', href: '/spare-parts', description: 'Lamps, columns, seals and service parts', iconKey: 'cog', feature: 'spare_parts' },
   { label: 'Service & AMC', href: '/services', description: 'Maintenance, calibration and qualification', iconKey: 'shield-check' },
-  { label: 'Downloads', href: '/downloads', description: 'Datasheets, manuals and certificates', iconKey: 'file-check' },
+  { label: 'Downloads', href: '/downloads', description: 'Datasheets, manuals and certificates', iconKey: 'file-check', feature: 'downloads' },
 ];
 
+/** Nav links whose destination is a module that can be switched off. */
+const NAV_FEATURE_BY_HREF: Record<string, FeatureFlagKey> = {
+  '/spare-parts': 'spare_parts',
+  '/refurbished': 'refurbished',
+  '/blog': 'knowledge_center',
+  '/downloads': 'downloads',
+};
+
 export async function SiteHeader() {
-  const [session, headerPage, settings, categories, brands] = await Promise.all([
+  const [session, headerPage, settings, categories, brands, features] = await Promise.all([
     getSession(),
     getPageContent(ContentPageKey.HEADER),
     getSiteSettings(),
     getInstrumentCategories(),
     getPublishedBrands(),
+    getFeatureFlags(),
   ]);
   const accountHref = session ? roleHomePath(session.role) : '/login';
-  const { navLinks } = parseContent(headerContentSchema, headerPage?.content, DEFAULT_HEADER_CONTENT);
+  const { navLinks: allNavLinks } = parseContent(headerContentSchema, headerPage?.content, DEFAULT_HEADER_CONTENT);
+
+  // A link to a switched-off module would 404, so it comes out of the nav
+  // rather than being left as a dead end.
+  const navLinks = allNavLinks.filter((link) => {
+    const feature = NAV_FEATURE_BY_HREF[link.href];
+    return feature ? features[feature] : true;
+  });
 
   // Three axes, because that is how buyers arrive: by technique, by brand, or
   // by where their instrument is in its life.
@@ -53,7 +72,7 @@ export async function SiteHeader() {
       href: '/brands',
       items: brands.slice(0, 8).map((brand) => ({ label: brand.name, href: `/brands/${brand.slug}` })),
     },
-    { title: 'By need', items: LIFECYCLE_ITEMS },
+    { title: 'By need', items: LIFECYCLE_ITEMS.filter((item) => !item.feature || features[item.feature]) },
   ];
 
   return (
@@ -85,9 +104,11 @@ export async function SiteHeader() {
           <Link href={accountHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
             {session ? 'My Account' : 'Login'}
           </Link>
-          <Link href="/request-quote" className={buttonVariants({ variant: 'primary', size: 'sm' })}>
-            Request Quote
-          </Link>
+          {features.request_quote && (
+            <Link href="/request-quote" className={buttonVariants({ variant: 'primary', size: 'sm' })}>
+              Request Quote
+            </Link>
+          )}
         </div>
 
         <div className="ml-auto flex items-center gap-1 lg:hidden">
@@ -98,6 +119,7 @@ export async function SiteHeader() {
             accountHref={accountHref}
             megaColumns={megaColumns}
             megaMenuHref={MEGA_MENU_HREF}
+            showRequestQuote={features.request_quote}
           />
         </div>
       </div>

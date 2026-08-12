@@ -6,6 +6,7 @@ import { RequestQuoteForm } from '@/components/forms/RequestQuoteForm';
 import { getCurrentUser } from '@/lib/dal';
 import { getPublishedProductBySlug } from '@/lib/data/products';
 import { getBrandHubBySlug } from '@/lib/data/brands';
+import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = {
   title: 'Request a Quote',
@@ -20,6 +21,7 @@ const ASSURANCES = [
 ];
 
 export default async function RequestQuotePage(props: PageProps<'/request-quote'>) {
+  await requireFeature('request_quote');
   const searchParams = await props.searchParams;
   const productSlug = typeof searchParams.product === 'string' ? searchParams.product : undefined;
   const brandSlug = typeof searchParams.brand === 'string' ? searchParams.brand : undefined;

@@ -6,9 +6,12 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { buttonVariants } from '@/components/ui/Button';
 import { ConfirmSubmitButton } from '@/components/forms/ConfirmSubmitButton';
 import { getAdminBlogPosts } from '@/lib/data/admin-blog';
-import { deleteBlogPost, toggleBlogPostPublished } from '@/lib/actions/admin-blog';
+import { deleteBlogPost, setBlogPostStatus } from '@/lib/actions/admin-blog';
+import { Select } from '@/components/ui/Select';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { CONTENT_STATUSES, CONTENT_STATUS_LABELS, contentStatusMeta, isScheduled } from '@/lib/content-status';
 import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Blog' };
 
@@ -42,7 +45,8 @@ export default async function AdminBlogPage() {
             <TableHeaderCell>Category</TableHeaderCell>
             <TableHeaderCell>Author</TableHeaderCell>
             <TableHeaderCell>Created</TableHeaderCell>
-            <TableHeaderCell>Published</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
+            <TableHeaderCell>Move to</TableHeaderCell>
             <TableHeaderCell />
           </TableRow>
         </TableHead>
@@ -54,10 +58,33 @@ export default async function AdminBlogPage() {
               <TableCell>{post.author.name}</TableCell>
               <TableCell>{formatDate(post.createdAt)}</TableCell>
               <TableCell>
-                <form action={toggleBlogPostPublished}>
+                <div className="flex items-center gap-2">
+                  <StatusBadge meta={contentStatusMeta[post.status]} />
+                  {isScheduled(post.status, post.publishAt) && (
+                    <span className="text-xs text-warning">scheduled {formatDateTime(post.publishAt!)}</span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <form action={setBlogPostStatus} className="flex items-center gap-1">
                   <input type="hidden" name="id" value={post.id} />
-                  <button type="submit" className="text-xs">
-                    {post.isPublished ? <span className="text-success">Published</span> : <span className="text-muted">Draft</span>}
+                  <label className="sr-only" htmlFor={`status-${post.id}`}>
+                    Change status for {post.title}
+                  </label>
+                  <Select
+                    id={`status-${post.id}`}
+                    name="status"
+                    defaultValue={post.status}
+                    className="h-8 w-36 text-xs"
+                  >
+                    {CONTENT_STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {CONTENT_STATUS_LABELS[status]}
+                      </option>
+                    ))}
+                  </Select>
+                  <button type="submit" className="text-xs text-primary hover:underline dark:text-secondary">
+                    Set
                   </button>
                 </form>
               </TableCell>

@@ -6,7 +6,8 @@ import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
 import { blogPostFormSchema } from '@/lib/validation/admin-blog';
 import { saveUploadedImage } from '@/lib/upload-image';
-import { Role } from '@/generated/prisma/client';
+import { Role, ContentStatus } from '@/generated/prisma/client';
+import { isContentStatus } from '@/lib/content-status';
 
 export interface BlogPostFormState {
   errors?: Record<string, string[] | undefined>;
@@ -20,7 +21,9 @@ function parseBlogPostForm(formData: FormData) {
     category: formData.get('category'),
     excerpt: formData.get('excerpt'),
     content: formData.get('content'),
-    isPublished: formData.get('isPublished') === 'true',
+    status: formData.get('status'),
+    publishAt: String(formData.get('publishAt') ?? ''),
+    reviewNote: String(formData.get('reviewNote') ?? ''),
     seoTitle: String(formData.get('seoTitle') ?? ''),
     seoDescription: String(formData.get('seoDescription') ?? ''),
   });
@@ -54,8 +57,12 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
       excerpt: data.excerpt,
       content: data.content,
       coverImage: upload.url,
-      isPublished: data.isPublished,
-      publishedAt: data.isPublished ? new Date() : null,
+      status: data.status,
+      publishAt: data.publishAt,
+      // publishedAt records when it first went live, for display and ordering;
+      // publishAt is the scheduling gate. They are not the same thing.
+      publishedAt: data.status === ContentStatus.PUBLISHED ? (data.publishAt ?? new Date()) : null,
+      reviewNote: data.reviewNote || null,
       seoTitle: data.seoTitle || null,
       seoDescription: data.seoDescription || null,
       authorId: session.userId,
@@ -101,8 +108,13 @@ export async function updateBlogPost(id: string, _prevState: BlogPostFormState |
       excerpt: data.excerpt,
       content: data.content,
       coverImage: upload.url ?? existing.coverImage,
-      isPublished: data.isPublished,
-      publishedAt: data.isPublished ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
+      status: data.status,
+      publishAt: data.publishAt,
+      publishedAt:
+        data.status === ContentStatus.PUBLISHED
+          ? (existing.publishedAt ?? data.publishAt ?? new Date())
+          : existing.publishedAt,
+      reviewNote: data.reviewNote || null,
       seoTitle: data.seoTitle || null,
       seoDescription: data.seoDescription || null,
     },
@@ -128,20 +140,30 @@ export async function deleteBlogPost(formData: FormData): Promise<void> {
   revalidatePath(`/blog/${post.slug}`);
 }
 
-export async function toggleBlogPostPublished(formData: FormData): Promise<void> {
+/**
+ * Moves a post along the workflow. Called from the admin list so the common
+ * path (draft -> review -> approved -> published) doesn't need the full editor.
+ */
+export async function setBlogPostStatus(formData: FormData): Promise<void> {
   await requireRole(Role.ADMIN);
   const id = String(formData.get('id') ?? '');
-  if (!id) return;
+  const rawStatus = String(formData.get('status') ?? '');
+  if (!id || !isContentStatus(rawStatus)) return;
 
-  const post = await prisma.blogPost.findUnique({ where: { id }, select: { isPublished: true, publishedAt: true, slug: true } });
+  const post = await prisma.blogPost.findUnique({
+    where: { id },
+    select: { publishedAt: true, publishAt: true, slug: true },
+  });
   if (!post) return;
 
-  const nextIsPublished = !post.isPublished;
   await prisma.blogPost.update({
     where: { id },
     data: {
-      isPublished: nextIsPublished,
-      publishedAt: nextIsPublished ? (post.publishedAt ?? new Date()) : post.publishedAt,
+      status: rawStatus,
+      publishedAt:
+        rawStatus === ContentStatus.PUBLISHED
+          ? (post.publishedAt ?? post.publishAt ?? new Date())
+          : post.publishedAt,
     },
   });
 

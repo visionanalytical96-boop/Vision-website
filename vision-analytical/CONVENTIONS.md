@@ -126,6 +126,31 @@ Design for these from the start rather than retrofitting:
 Anything stateful must be in a named volume or the database — never only in a
 container's writable layer.
 
+## Platform control
+
+Nothing that an owner should be able to change belongs in code.
+
+- **Feature flags** (`src/lib/features.ts`) gate every module that can be
+  switched off. The registry holds the defaults and the database only stores
+  overrides, so an unseeded flag is never an outage. Add a flag alongside the
+  module it controls — a toggle that gates nothing is worse than no toggle,
+  because it tells the admin they turned something off when they didn't.
+  Switching a module off must take its routes (404), its nav links and its
+  homepage sections with it.
+- **Content workflow**: knowledge content moves Draft → In review → Approved →
+  Published → Archived, with scheduled publishing expressed as a query
+  condition (`publiclyVisibleWhere()`), not a timer. Nothing needs a cron for a
+  scheduled item to appear, and nothing can stick half-published.
+- **Data quality** is a first-class admin surface, not a spreadsheet: what is
+  missing an image, a document, compatibility, specifications or SEO; what is
+  waiting in review; which references point at files that no longer exist.
+
+## Phase discipline
+
+After each phase: review, refactor, reuse, document, test — then continue.
+Debt does not roll forward. A two-state boolean that has to express five states
+gets migrated, not worked around.
+
 ## Definition of done
 
 Typecheck and lint clean, mobile-first and responsive to desktop, accessible

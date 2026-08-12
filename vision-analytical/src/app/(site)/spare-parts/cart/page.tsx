@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import { Container } from '@/components/ui/Container';
 import { CartReviewForm } from '@/components/forms/CartReviewForm';
 import { getCurrentUser } from '@/lib/dal';
+import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = { title: 'Your Cart' };
 
 export default async function CartPage() {
+  await requireFeature('spare_parts');
   const user = await getCurrentUser();
 
   return (

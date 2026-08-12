@@ -16,6 +16,8 @@ import {
   FileEdit,
   Palette,
   Images,
+  ClipboardCheck,
+  ToggleLeft,
   FileDown,
   Quote,
   Settings,
@@ -37,6 +39,7 @@ const NAV_ITEMS: DashboardNavItem[] = [
   { href: '/admin/amc', label: 'AMC / CMC', icon: <ShieldCheck className="h-4 w-4" /> },
   { href: '/admin/blog', label: 'Blog', icon: <Newspaper className="h-4 w-4" /> },
   { href: '/admin/reports', label: 'Reports', icon: <BarChart3 className="h-4 w-4" /> },
+  { href: '/admin/quality', label: 'Data Quality', icon: <ClipboardCheck className="h-4 w-4" /> },
   { href: '/admin/website/homepage', label: 'Homepage Builder', icon: <LayoutTemplate className="h-4 w-4" />, section: 'Website' },
   { href: '/admin/website/pages', label: 'Pages & Menus', icon: <FileEdit className="h-4 w-4" /> },
   { href: '/admin/website/theme', label: 'Theme', icon: <Palette className="h-4 w-4" /> },
@@ -44,6 +47,7 @@ const NAV_ITEMS: DashboardNavItem[] = [
   { href: '/admin/website/testimonials', label: 'Testimonials', icon: <Quote className="h-4 w-4" /> },
   { href: '/admin/website/media', label: 'Media Library', icon: <Images className="h-4 w-4" /> },
   { href: '/admin/website/settings', label: 'Business Settings', icon: <Settings className="h-4 w-4" /> },
+  { href: '/admin/settings/features', label: 'Feature Flags', icon: <ToggleLeft className="h-4 w-4" /> },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {

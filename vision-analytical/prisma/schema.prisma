@@ -581,25 +581,61 @@ model CrmActivity {
 // Content
 // ---------------------------------------------------------------------------
 
+/// The editorial lifecycle every piece of knowledge content moves through.
+/// A two-state boolean can't express review or archival, and "archived" is not
+/// the same as "never published" - the difference matters for an audit trail.
+enum ContentStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
 model BlogPost {
-  id             String       @id @default(cuid())
-  slug           String       @unique
+  id             String        @id @default(cuid())
+  slug           String        @unique
   title          String
   excerpt        String
   content        String
   category       BlogCategory
   coverImage     String?
   authorId       String
-  author         User         @relation("AuthoredPosts", fields: [authorId], references: [id])
-  isPublished    Boolean      @default(false)
+  author         User          @relation("AuthoredPosts", fields: [authorId], references: [id])
+  status         ContentStatus @default(DRAFT)
+  /// When set in the future, the post stays hidden until that moment even at
+  /// status PUBLISHED - which is what makes scheduling possible without a job
+  /// runner: visibility is a query condition, not a timer.
+  publishAt      DateTime?
   publishedAt    DateTime?
+  reviewNote     String?
   seoTitle       String?
   seoDescription String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@index([category])
-  @@index([isPublished])
+  @@index([status])
+  @@index([publishAt])
+}
+
+// ---------------------------------------------------------------------------
+// Feature flags - the admin turns modules on and off without a deploy
+// ---------------------------------------------------------------------------
+
+/// Keyed by a stable string rather than an enum: a flag is configuration, and
+/// adding one should never need a migration. Unknown keys resolve to their
+/// coded default, so a flag row that hasn't been seeded yet is not an outage.
+model FeatureFlag {
+  key         String   @id
+  label       String
+  description String?
+  group       String
+  isEnabled   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([group, sortOrder])
 }
 
 // ---------------------------------------------------------------------------

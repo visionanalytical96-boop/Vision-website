@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
+import { publiclyVisibleWhere } from '@/lib/content-status';
 import { CategoryKind, ProductKind } from '@/generated/prisma/client';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
@@ -30,7 +31,7 @@ async function getDynamicEntries(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
       }),
       prisma.blogPost.findMany({
-        where: { isPublished: true },
+        where: publiclyVisibleWhere(),
         select: { slug: true, updatedAt: true },
       }),
     ]);

@@ -11,6 +11,7 @@ import { getInstrumentCategories, getFeaturedProducts } from '@/lib/data/product
 import { getPublishedBrands } from '@/lib/data/brands';
 import { getLatestBlogPosts } from '@/lib/data/blog';
 import { getPublishedTestimonials } from '@/lib/data/testimonials';
+import { getFeatureFlags } from '@/lib/data/features';
 import { resolveIcon } from '@/lib/cms/icons';
 import { CompanyOverviewSection } from '@/components/home/CompanyOverviewSection';
 import { FeaturedProductsSection } from '@/components/home/FeaturedProductsSection';
@@ -54,11 +55,25 @@ export const metadata: Metadata = {
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 export default async function HomePage() {
-  const [sections, settings] = await Promise.all([getHomeSections(), getSiteSettings()]);
+  const [sections, settings, features] = await Promise.all([
+    getHomeSections(),
+    getSiteSettings(),
+    getFeatureFlags(),
+  ]);
 
   const sectionByKey = new Map(sections.map((section) => [section.key, section]));
   const orderedKeys = sections.map((section) => section.key);
-  const isActive = (key: HomeSectionKey) => sectionByKey.get(key)?.isVisible ?? false;
+  // A section is active when the admin has it visible AND its module is on -
+  // turning off Knowledge Center should take its homepage preview with it.
+  const SECTION_FEATURE: Partial<Record<HomeSectionKey, keyof typeof features>> = {
+    [HomeSectionKey.KNOWLEDGE]: 'knowledge_center',
+    [HomeSectionKey.TESTIMONIALS]: 'testimonials',
+  };
+  const isActive = (key: HomeSectionKey) => {
+    if (!(sectionByKey.get(key)?.isVisible ?? false)) return false;
+    const feature = SECTION_FEATURE[key];
+    return feature ? features[feature] : true;
+  };
 
   // Read the curated selection before fetching, so a hidden section costs no
   // query at all and the featured query knows what it is looking for.
@@ -110,7 +125,7 @@ export default async function HomePage() {
 
       {orderedKeys.map((key) => {
         const section = sectionByKey.get(key);
-        if (!section || !section.isVisible) return null;
+        if (!section || !isActive(key)) return null;
 
         switch (key) {
           case HomeSectionKey.HERO: {

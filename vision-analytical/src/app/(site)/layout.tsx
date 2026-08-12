@@ -4,15 +4,33 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { FloatingContactButtons } from '@/components/layout/FloatingContactButtons';
 import { AnnouncementBar } from '@/components/layout/AnnouncementBar';
 import { getSiteSettings, getPageContent } from '@/lib/data/cms';
+import { isFeatureEnabled } from '@/lib/data/features';
+import { getSession } from '@/lib/dal';
+import { MaintenanceNotice } from '@/components/layout/MaintenanceNotice';
+import { Role } from '@/generated/prisma/enums';
 import { announcementContentSchema, parseContent } from '@/lib/cms/schemas';
 import { DEFAULT_ANNOUNCEMENT_CONTENT } from '@/lib/cms/defaults';
 import { ContentPageKey } from '@/generated/prisma/enums';
 
 export default async function SiteLayout({ children }: { children: ReactNode }) {
-  const [settings, announcementPage] = await Promise.all([
+  const [settings, announcementPage, maintenance, session] = await Promise.all([
     getSiteSettings(),
     getPageContent(ContentPageKey.ANNOUNCEMENT),
+    isFeatureEnabled('maintenance_mode'),
+    getSession(),
   ]);
+
+  // Admins keep browsing during maintenance - otherwise the person who turned
+  // it on can't check their own work before turning it back off.
+  if (maintenance && session?.role !== Role.ADMIN) {
+    return (
+      <>
+        <SiteHeader />
+        <MaintenanceNotice settings={settings} />
+        <SiteFooter />
+      </>
+    );
+  }
   const announcement = parseContent(announcementContentSchema, announcementPage?.content, DEFAULT_ANNOUNCEMENT_CONTENT);
 
   return (

@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { RegisterForm } from '@/components/forms/RegisterForm';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = { title: 'Create account' };
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  await requireFeature('customer_registration');
   return (
     <Card>
       <CardHeader>

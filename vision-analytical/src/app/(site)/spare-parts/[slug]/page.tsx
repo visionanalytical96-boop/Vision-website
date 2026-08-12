@@ -21,6 +21,7 @@ import { whatsappLink } from '@/lib/contact-links';
 import { toImageList } from '@/lib/image-list';
 import { buildProductSchema } from '@/lib/seo/product-schema';
 import { StockStatus } from '@/generated/prisma/enums';
+import { requireFeature } from '@/lib/data/features';
 
 export async function generateMetadata(props: PageProps<'/spare-parts/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
@@ -30,6 +31,7 @@ export async function generateMetadata(props: PageProps<'/spare-parts/[slug]'>):
 }
 
 export default async function SparePartDetailPage(props: PageProps<'/spare-parts/[slug]'>) {
+  await requireFeature('spare_parts');
   const { slug } = await props.params;
   const [part, settings] = await Promise.all([getSparePartBySlug(slug), getSiteSettings()]);
   if (!part) notFound();

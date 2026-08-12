@@ -14,9 +14,17 @@ interface MobileNavProps {
   accountHref: string;
   megaColumns: MegaMenuColumn[];
   megaMenuHref: string;
+  showRequestQuote: boolean;
 }
 
-export function MobileNav({ navLinks, isAuthenticated, accountHref, megaColumns, megaMenuHref }: MobileNavProps) {
+export function MobileNav({
+  navLinks,
+  isAuthenticated,
+  accountHref,
+  megaColumns,
+  megaMenuHref,
+  showRequestQuote,
+}: MobileNavProps) {
   const [open, setOpen] = useState(false);
   // The catalogue nests three columns; keeping it collapsed by default stops
   // the sheet opening two screens tall.
@@ -89,13 +97,15 @@ export function MobileNav({ navLinks, isAuthenticated, accountHref, megaColumns,
               ),
             )}
 
-            <Link
-              href="/request-quote"
-              onClick={() => setOpen(false)}
-              className={buttonVariants({ variant: 'primary', className: 'mt-2 justify-center' })}
-            >
-              Request Quote
-            </Link>
+            {showRequestQuote && (
+              <Link
+                href="/request-quote"
+                onClick={() => setOpen(false)}
+                className={buttonVariants({ variant: 'primary', className: 'mt-2 justify-center' })}
+              >
+                Request Quote
+              </Link>
+            )}
             <Link
               href={accountHref}
               onClick={() => setOpen(false)}

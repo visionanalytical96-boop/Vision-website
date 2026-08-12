@@ -9,6 +9,7 @@ import { PartsFinder, type FinderBrand } from '@/components/product/PartsFinder'
 import { getSparePartCategories, getSpareParts, getSparePartFacets } from '@/lib/data/spare-parts';
 import { getPublishedInstrumentModels, getInstrumentModelByPath } from '@/lib/data/instrument-models';
 import { cn } from '@/lib/utils';
+import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = {
   title: 'Spare Parts Store',
@@ -24,6 +25,7 @@ function facetLinkClass(active: boolean) {
 }
 
 export default async function SparePartsPage(props: PageProps<'/spare-parts'>) {
+  await requireFeature('spare_parts');
   const searchParams = await props.searchParams;
   const categorySlug = typeof searchParams.category === 'string' ? searchParams.category : undefined;
   const brandSlug = typeof searchParams.brand === 'string' ? searchParams.brand : undefined;

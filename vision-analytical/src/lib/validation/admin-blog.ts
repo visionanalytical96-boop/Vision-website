@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BlogCategory } from '@/generated/prisma/client';
+import { BlogCategory, ContentStatus } from '@/generated/prisma/client';
 
 export const blogPostFormSchema = z.object({
   slug: z
@@ -11,7 +11,16 @@ export const blogPostFormSchema = z.object({
   category: z.enum(BlogCategory, { error: 'Choose a category.' }),
   excerpt: z.string().trim().min(10, { error: 'Add a short excerpt (at least 10 characters).' }),
   content: z.string().trim().min(50, { error: 'Add the full article content (at least 50 characters).' }),
-  isPublished: z.boolean(),
+  status: z.enum(ContentStatus, { error: 'Choose a status.' }),
+  // datetime-local posts "YYYY-MM-DDTHH:mm" with no zone, which Date reads as
+  // local time - the same clock the admin just typed in.
+  publishAt: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value ? new Date(value) : null))
+    .refine((value) => value === null || !Number.isNaN(value.getTime()), { error: 'Enter a valid date and time.' }),
+  reviewNote: z.string().trim().optional().or(z.literal('')),
   seoTitle: z.string().trim().optional().or(z.literal('')),
   seoDescription: z.string().trim().optional().or(z.literal('')),
 });

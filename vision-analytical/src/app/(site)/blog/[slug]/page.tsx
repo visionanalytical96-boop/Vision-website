@@ -9,6 +9,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { getPublishedBlogPostBySlug } from '@/lib/data/blog';
 import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
 import { formatDate } from '@/lib/format';
+import { requireFeature } from '@/lib/data/features';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
@@ -20,6 +21,7 @@ export async function generateMetadata(props: PageProps<'/blog/[slug]'>): Promis
 }
 
 export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
+  await requireFeature('knowledge_center');
   const { slug } = await props.params;
   const post = await getPublishedBlogPostBySlug(slug);
   if (!post) notFound();

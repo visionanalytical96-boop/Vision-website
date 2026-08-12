@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Container } from '@/components/ui/Container';
 import { RefurbishedCard } from '@/components/product/RefurbishedCard';
 import { getRefurbishedCategoryBySlug, getRefurbishedInstrumentsByCategory } from '@/lib/data/refurbished';
+import { requireFeature } from '@/lib/data/features';
 
 export async function generateMetadata(props: PageProps<'/refurbished/[category]'>): Promise<Metadata> {
   const { category: categorySlug } = await props.params;
@@ -12,6 +13,7 @@ export async function generateMetadata(props: PageProps<'/refurbished/[category]
 }
 
 export default async function RefurbishedCategoryPage(props: PageProps<'/refurbished/[category]'>) {
+  await requireFeature('refurbished');
   const { category: categorySlug } = await props.params;
   const category = await getRefurbishedCategoryBySlug(categorySlug);
   if (!category) notFound();

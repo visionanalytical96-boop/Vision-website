@@ -3,6 +3,8 @@
 import { useActionState } from 'react';
 import { createBlogPost, updateBlogPost, type BlogPostFormState } from '@/lib/actions/admin-blog';
 import { BLOG_CATEGORY_LABELS, BLOG_CATEGORIES } from '@/lib/blog-categories';
+import { CONTENT_STATUSES, CONTENT_STATUS_LABELS } from '@/lib/content-status';
+import { ContentStatus } from '@/generated/prisma/enums';
 import type { BlogPost } from '@/generated/prisma/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -12,6 +14,16 @@ import { FormField } from '@/components/ui/FormField';
 import { ImageInput } from '@/components/ui/ImageInput';
 
 const initialState: BlogPostFormState = {};
+
+/**
+ * datetime-local wants "YYYY-MM-DDTHH:mm" in the browser's own zone. Slicing
+ * toISOString() would silently shift the value by the UTC offset.
+ */
+function toLocalInputValue(date: Date | null | undefined): string {
+  if (!date) return '';
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
 
 export function BlogPostForm({ post }: { post?: BlogPost }) {
   const action = post ? updateBlogPost.bind(null, post.id) : createBlogPost;
@@ -63,10 +75,34 @@ export function BlogPostForm({ post }: { post?: BlogPost }) {
         <Input id="seoDescription" name="seoDescription" defaultValue={post?.seoDescription ?? ''} />
       </FormField>
 
-      <label className="flex items-center gap-2 text-sm text-foreground sm:col-span-2">
-        <input type="checkbox" name="isPublished" value="true" defaultChecked={post?.isPublished ?? false} className="h-4 w-4 rounded border-border" />
-        Published (visible on the public site)
-      </label>
+      <FormField label="Status" htmlFor="status" error={state.errors?.status} required>
+        <Select id="status" name="status" defaultValue={post?.status ?? ContentStatus.DRAFT} required>
+          {CONTENT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {CONTENT_STATUS_LABELS[status]}
+            </option>
+          ))}
+        </Select>
+      </FormField>
+
+      <FormField
+        label="Publish at"
+        htmlFor="publishAt"
+        error={state.errors?.publishAt}
+        hint="Leave blank to go live as soon as the status is Published."
+      >
+        <Input id="publishAt" name="publishAt" type="datetime-local" defaultValue={toLocalInputValue(post?.publishAt)} />
+      </FormField>
+
+      <FormField
+        label="Review note"
+        htmlFor="reviewNote"
+        error={state.errors?.reviewNote}
+        className="sm:col-span-2"
+        hint="Internal only - what still needs checking before this goes live."
+      >
+        <Input id="reviewNote" name="reviewNote" defaultValue={post?.reviewNote ?? ''} />
+      </FormField>
 
       {state.formError && <p className="text-sm text-danger sm:col-span-2">{state.formError}</p>}
 

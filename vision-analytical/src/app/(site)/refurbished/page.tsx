@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { RefreshCw } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { getRefurbishedCategories } from '@/lib/data/refurbished';
+import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = {
   title: 'Refurbished Instruments',
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RefurbishedIndexPage() {
+  await requireFeature('refurbished');
   const categories = await getRefurbishedCategories();
 
   return (

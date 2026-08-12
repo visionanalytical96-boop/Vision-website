@@ -7,6 +7,7 @@ import { getPublishedDownloads, getBrandsWithDownloads } from '@/lib/data/downlo
 import { DOWNLOAD_KINDS, DOWNLOAD_KIND_LABELS, isDownloadKind } from '@/lib/downloads';
 import { formatBytes } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = {
   title: 'Downloads',
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DownloadsPage(props: PageProps<'/downloads'>) {
+  await requireFeature('downloads');
   const searchParams = await props.searchParams;
   const rawKind = typeof searchParams.kind === 'string' ? searchParams.kind : undefined;
   const kind = isDownloadKind(rawKind) ? rawKind : undefined;

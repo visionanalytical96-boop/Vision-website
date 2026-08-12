@@ -216,6 +216,8 @@ model Brand {
   products               Product[]
   refurbishedInstruments RefurbishedInstrument[]
   downloads              Download[]
+  instrumentModels       InstrumentModel[]
+  compatibility          ProductCompatibility[]
 
   @@index([sortOrder])
 }
@@ -236,6 +238,7 @@ model Category {
   products               Product[]
   refurbishedInstruments RefurbishedInstrument[]
   downloads              Download[]
+  instrumentModels       InstrumentModel[]
 
   @@unique([slug, kind])
   @@index([kind])
@@ -251,7 +254,6 @@ model Product {
   category         Category    @relation(fields: [categoryId], references: [id])
   brandId          String?
   brand            Brand?      @relation(fields: [brandId], references: [id])
-  compatibleBrands String[]
   description      String
   images           Json
   priceMinor       Int?
@@ -263,14 +265,80 @@ model Product {
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
-  orderItems     OrderItem[]
-  quoteItems     QuoteItem[]
-  stockMovements StockMovement[]
+  orderItems      OrderItem[]
+  quoteItems      QuoteItem[]
+  stockMovements  StockMovement[]
+  specifications  ProductSpecification[]
+  compatibility   ProductCompatibility[]
+  documents       Download[]
 
   @@index([kind])
   @@index([categoryId])
   @@index([brandId])
   @@index([stockStatus])
+}
+
+// ---------------------------------------------------------------------------
+// Compatibility: which parts fit which instruments
+// ---------------------------------------------------------------------------
+
+/// A specific instrument a customer owns, e.g. "Alliance e2695". Spare parts
+/// hang off this, and so will customer-owned instruments, calibration records
+/// and service history when those modules land.
+model InstrumentModel {
+  id          String    @id @default(cuid())
+  brandId     String
+  brand       Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  // The technique it belongs to, so a model can be browsed like a product.
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  description String?
+  isPublished Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  compatibility ProductCompatibility[]
+
+  @@unique([brandId, slug])
+  @@index([brandId])
+  @@index([categoryId])
+}
+
+/// One compatibility claim: this part fits this brand, optionally narrowed to
+/// one model. A row with no model is a universal fitting ("fits Waters HPLC
+/// systems generally"), which is how a lot of consumables are actually sold -
+/// so the parts finder returns both model-specific and brand-wide matches.
+model ProductCompatibility {
+  id                String           @id @default(cuid())
+  productId         String
+  product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  brandId           String
+  brand             Brand            @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: Cascade)
+  note              String?
+
+  @@index([productId])
+  @@index([brandId])
+  @@index([instrumentModelId])
+}
+
+/// Structured specs rather than prose, so they can be tabulated, compared and
+/// later filtered on. `group` lets a long sheet break into sections.
+model ProductSpecification {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  group     String?
+  label     String
+  value     String
+  unit      String?
+  sortOrder Int     @default(0)
+
+  @@index([productId])
 }
 
 model RefurbishedInstrument {
@@ -674,6 +742,10 @@ model Download {
   brand       Brand?       @relation(fields: [brandId], references: [id])
   categoryId  String?
   category    Category?    @relation(fields: [categoryId], references: [id])
+  // Attaching a document to a product puts it on that product's page as well
+  // as in the downloads centre.
+  productId   String?
+  product     Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
   // Some manufacturer documents may only be released to known customers.
   requiresLogin Boolean    @default(false)
   downloadCount Int        @default(0)
@@ -685,6 +757,7 @@ model Download {
   @@index([kind])
   @@index([brandId])
   @@index([categoryId])
+  @@index([productId])
   @@index([isPublished])
 }
 

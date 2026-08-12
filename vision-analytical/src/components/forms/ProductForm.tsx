@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
 import { ImageInput } from '@/components/ui/ImageInput';
+import { CompatibilityEditor, type CompatibilityOptionModel, type CompatibilityRowValue } from './CompatibilityEditor';
+import { SpecificationEditor, type SpecificationRowValue } from './SpecificationEditor';
 import { toImageList } from '@/lib/image-list';
 
 const initialState: ProductFormState = {};
@@ -17,10 +19,20 @@ const initialState: ProductFormState = {};
 interface ProductFormProps {
   categories: Category[];
   brands: Brand[];
+  instrumentModels: CompatibilityOptionModel[];
+  compatibility?: CompatibilityRowValue[];
+  specifications?: SpecificationRowValue[];
   product?: Product;
 }
 
-export function ProductForm({ categories, brands, product }: ProductFormProps) {
+export function ProductForm({
+  categories,
+  brands,
+  instrumentModels,
+  compatibility = [],
+  specifications = [],
+  product,
+}: ProductFormProps) {
   const action = product ? updateProduct.bind(null, product.id) : createProduct;
   const [state, formAction, pending] = useActionState(action, initialState);
 
@@ -69,10 +81,6 @@ export function ProductForm({ categories, brands, product }: ProductFormProps) {
           ))}
         </Select>
       </FormField>
-      <FormField label="Compatible brands" htmlFor="compatibleBrands" error={state.errors?.compatibleBrands} hint="Comma-separated">
-        <Input id="compatibleBrands" name="compatibleBrands" defaultValue={product?.compatibleBrands.join(', ') ?? ''} />
-      </FormField>
-
       <FormField label="Description" htmlFor="description" error={state.errors?.description} required className="sm:col-span-2">
         <Textarea id="description" name="description" rows={4} defaultValue={product?.description} required />
       </FormField>
@@ -105,6 +113,19 @@ export function ProductForm({ categories, brands, product }: ProductFormProps) {
         <input type="checkbox" name="isPublished" value="true" defaultChecked={product?.isPublished ?? true} className="h-4 w-4 rounded border-border" />
         Published (visible on the public site)
       </label>
+
+      <div className="sm:col-span-2">
+        <CompatibilityEditor
+          name="compatibilityJson"
+          brands={brands}
+          models={instrumentModels}
+          initialRows={compatibility}
+        />
+      </div>
+
+      <div className="sm:col-span-2">
+        <SpecificationEditor name="specificationsJson" initialRows={specifications} />
+      </div>
 
       {state.formError && <p className="text-sm text-danger sm:col-span-2">{state.formError}</p>}
 

@@ -4,7 +4,11 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
-import { productFormSchema } from '@/lib/validation/admin-products';
+import {
+  productFormSchema,
+  compatibilityListSchema,
+  specificationListSchema,
+} from '@/lib/validation/admin-products';
 import { saveUploadedImage } from '@/lib/upload-image';
 import { Role } from '@/generated/prisma/client';
 
@@ -20,6 +24,70 @@ function parsePriceMinor(priceRupees: string | undefined): number | null {
   return Math.round(parsed * 100);
 }
 
+/**
+ * Compatibility and specifications arrive as JSON repeaters. A malformed
+ * payload means a broken editor, not user error, so it surfaces as a form
+ * error rather than being silently dropped.
+ */
+function parseRepeaters(formData: FormData) {
+  let compatibility;
+  let specifications;
+  try {
+    compatibility = compatibilityListSchema.safeParse(JSON.parse(String(formData.get('compatibilityJson') ?? '[]')));
+    specifications = specificationListSchema.safeParse(JSON.parse(String(formData.get('specificationsJson') ?? '[]')));
+  } catch {
+    return { error: 'Something went wrong reading the form. Please refresh and try again.' } as const;
+  }
+
+  if (!compatibility.success) {
+    return { error: compatibility.error.issues.map((issue) => issue.message).join(', ') } as const;
+  }
+  if (!specifications.success) {
+    return { error: specifications.error.issues.map((issue) => issue.message).join(', ') } as const;
+  }
+
+  return { compatibility: compatibility.data, specifications: specifications.data } as const;
+}
+
+/** Replace-in-place: the editor always posts the full intended set. */
+async function writeRepeaters(
+  productId: string,
+  compatibility: { brandId: string; instrumentModelId: string | null; note: string | null }[],
+  specifications: { group: string; label: string; value: string; unit: string }[],
+) {
+  await prisma.$transaction([
+    prisma.productCompatibility.deleteMany({ where: { productId } }),
+    prisma.productSpecification.deleteMany({ where: { productId } }),
+    ...(compatibility.length > 0
+      ? [
+          prisma.productCompatibility.createMany({
+            data: compatibility.map((row) => ({
+              productId,
+              brandId: row.brandId,
+              instrumentModelId: row.instrumentModelId,
+              note: row.note,
+            })),
+            skipDuplicates: true,
+          }),
+        ]
+      : []),
+    ...(specifications.length > 0
+      ? [
+          prisma.productSpecification.createMany({
+            data: specifications.map((row, index) => ({
+              productId,
+              group: row.group.trim() || null,
+              label: row.label.trim(),
+              value: row.value.trim(),
+              unit: row.unit.trim() || null,
+              sortOrder: index,
+            })),
+          }),
+        ]
+      : []),
+  ]);
+}
+
 function parseProductForm(formData: FormData) {
   return productFormSchema.safeParse({
     sku: formData.get('sku'),
@@ -28,7 +96,6 @@ function parseProductForm(formData: FormData) {
     kind: formData.get('kind'),
     categoryId: formData.get('categoryId'),
     brandId: String(formData.get('brandId') ?? ''),
-    compatibleBrands: String(formData.get('compatibleBrands') ?? ''),
     description: formData.get('description'),
     priceRupees: String(formData.get('priceRupees') ?? ''),
     stockStatus: formData.get('stockStatus'),
@@ -63,7 +130,12 @@ export async function createProduct(_prevState: ProductFormState | undefined, fo
     return { errors: { image: [upload.error] } };
   }
 
-  await prisma.product.create({
+  const repeaters = parseRepeaters(formData);
+  if ('error' in repeaters) {
+    return { formError: repeaters.error };
+  }
+
+  const created = await prisma.product.create({
     data: {
       sku: data.sku,
       slug: data.slug,
@@ -71,9 +143,6 @@ export async function createProduct(_prevState: ProductFormState | undefined, fo
       kind: data.kind,
       categoryId: data.categoryId,
       brandId: data.brandId || null,
-      compatibleBrands: data.compatibleBrands
-        ? data.compatibleBrands.split(',').map((b) => b.trim()).filter(Boolean)
-        : [],
       description: data.description,
       images: upload.url ? [upload.url] : [],
       priceMinor: parsePriceMinor(data.priceRupees),
@@ -85,7 +154,11 @@ export async function createProduct(_prevState: ProductFormState | undefined, fo
     },
   });
 
+  await writeRepeaters(created.id, repeaters.compatibility, repeaters.specifications);
+
   revalidatePath('/admin/products');
+  revalidatePath('/products');
+  revalidatePath('/spare-parts');
   redirect('/admin/products');
 }
 
@@ -113,6 +186,11 @@ export async function updateProduct(id: string, _prevState: ProductFormState | u
     return { errors: { image: [upload.error] } };
   }
 
+  const repeaters = parseRepeaters(formData);
+  if ('error' in repeaters) {
+    return { formError: repeaters.error };
+  }
+
   await prisma.product.update({
     where: { id },
     data: {
@@ -122,9 +200,6 @@ export async function updateProduct(id: string, _prevState: ProductFormState | u
       kind: data.kind,
       categoryId: data.categoryId,
       brandId: data.brandId || null,
-      compatibleBrands: data.compatibleBrands
-        ? data.compatibleBrands.split(',').map((b) => b.trim()).filter(Boolean)
-        : [],
       description: data.description,
       ...(upload.url ? { images: [upload.url] } : {}),
       priceMinor: parsePriceMinor(data.priceRupees),
@@ -135,6 +210,8 @@ export async function updateProduct(id: string, _prevState: ProductFormState | u
       seoDescription: data.seoDescription || null,
     },
   });
+
+  await writeRepeaters(id, repeaters.compatibility, repeaters.specifications);
 
   revalidatePath('/admin/products');
   revalidatePath('/products');

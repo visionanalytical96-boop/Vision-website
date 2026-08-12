@@ -31,6 +31,7 @@ export const downloadFormSchema = z.object({
     }),
   brandId: optionalText,
   categoryId: optionalText,
+  productId: optionalText,
   requiresLogin: z.boolean(),
   isPublished: z.boolean(),
   sortOrder: z

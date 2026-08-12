@@ -25,7 +25,21 @@ export function getAdminProducts(filters: AdminProductFilters) {
 }
 
 export function getAdminProductById(id: string) {
-  return prisma.product.findUnique({ where: { id } });
+  return prisma.product.findUnique({
+    where: { id },
+    include: {
+      compatibility: true,
+      specifications: { orderBy: [{ sortOrder: 'asc' }, { label: 'asc' }] },
+    },
+  });
+}
+
+/** Model picker options for the compatibility editor. */
+export function getInstrumentModelOptions() {
+  return prisma.instrumentModel.findMany({
+    select: { id: true, brandId: true, name: true },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+  });
 }
 
 export function getAllCategories() {

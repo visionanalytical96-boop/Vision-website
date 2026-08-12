@@ -22,6 +22,7 @@ import { INSTRUMENT_CATEGORIES } from './seed-data';
 import { SPARE_PART_CATEGORIES } from './seed-data-spare-parts';
 import { REFURBISHED_CATEGORIES } from './seed-data-refurbished';
 import { BLOG_POSTS } from './seed-data-blog';
+import { INSTRUMENT_MODELS } from './seed-data-instrument-models';
 import {
   DEFAULT_HERO_CONTENT,
   DEFAULT_CATEGORIES_CONTENT,
@@ -148,7 +149,6 @@ async function seedInstrumentCatalog(prisma: PrismaClient, brandIds: Map<string,
           kind: ProductKind.INSTRUMENT,
           categoryId: savedCategory.id,
           images: [],
-          compatibleBrands: [],
           stockStatus: StockStatus.MADE_TO_ORDER,
           priceMinor: null,
         },
@@ -161,7 +161,7 @@ async function seedInstrumentCatalog(prisma: PrismaClient, brandIds: Map<string,
 
 // Spare parts: one representative part per part-type category, so the store
 // has a real, browsable catalog across every filter facet the UI exposes.
-async function seedSparePartsCatalog(prisma: PrismaClient) {
+async function seedSparePartsCatalog(prisma: PrismaClient, brandIds: Map<string, string>) {
   let index = 0;
   for (const category of SPARE_PART_CATEGORIES) {
     const savedCategory = await prisma.category.upsert({
@@ -179,12 +179,11 @@ async function seedSparePartsCatalog(prisma: PrismaClient) {
     index += 1;
 
     const part = category.part;
-    await prisma.product.upsert({
+    const savedPart = await prisma.product.upsert({
       where: { sku: part.sku },
       update: {
         name: part.name,
         description: part.description,
-        compatibleBrands: part.compatibleBrands,
         categoryId: savedCategory.id,
       },
       create: {
@@ -192,7 +191,6 @@ async function seedSparePartsCatalog(prisma: PrismaClient) {
         slug: part.slug,
         name: part.name,
         description: part.description,
-        compatibleBrands: part.compatibleBrands,
         kind: ProductKind.SPARE_PART,
         categoryId: savedCategory.id,
         images: [],
@@ -201,9 +199,60 @@ async function seedSparePartsCatalog(prisma: PrismaClient) {
         priceMinor: null,
       },
     });
+
+    // Brand-wide compatibility (no model): these representative parts are
+    // universal fittings. Model-specific claims are an admin's job.
+    for (const brandName of part.compatibleBrands) {
+      const brandId = requireBrandId(brandIds, brandName);
+      const existing = await prisma.productCompatibility.findFirst({
+        where: { productId: savedPart.id, brandId, instrumentModelId: null },
+      });
+      if (!existing) {
+        await prisma.productCompatibility.create({ data: { productId: savedPart.id, brandId } });
+      }
+    }
   }
 
   console.log(`Seeded ${SPARE_PART_CATEGORIES.length} spare part categories.`);
+}
+
+// Starter instrument models, so the parts finder has something to search.
+// Created only when missing, so admin edits and deletions survive a re-run.
+async function seedInstrumentModels(prisma: PrismaClient, brandIds: Map<string, string>) {
+  const categories = await prisma.category.findMany({
+    where: { kind: CategoryKind.INSTRUMENT },
+    select: { id: true, slug: true },
+  });
+  const categoryIdBySlug = new Map(categories.map((category) => [category.slug, category.id]));
+
+  let created = 0;
+  for (const model of INSTRUMENT_MODELS) {
+    const brand = BRANDS.find((candidate) => candidate.slug === model.brandSlug);
+    if (!brand) {
+      throw new Error(
+        `Instrument model "${model.name}" references brand slug "${model.brandSlug}", which is not in BRANDS.`,
+      );
+    }
+    const brandId = requireBrandId(brandIds, brand.name);
+
+    const existing = await prisma.instrumentModel.findUnique({
+      where: { brandId_slug: { brandId, slug: model.slug } },
+    });
+    if (existing) continue;
+
+    await prisma.instrumentModel.create({
+      data: {
+        brandId,
+        name: model.name,
+        slug: model.slug,
+        description: model.description ?? null,
+        categoryId: model.categorySlug ? (categoryIdBySlug.get(model.categorySlug) ?? null) : null,
+      },
+    });
+    created += 1;
+  }
+
+  console.log(`Seeded instrument models (${created} new, ${INSTRUMENT_MODELS.length - created} already present).`);
 }
 
 // Refurbished instruments: one validated, warranty-backed unit per category.
@@ -573,7 +622,8 @@ async function main() {
   const admin = await seedAdmin(prisma);
   const brandIds = await seedBrands(prisma);
   await seedInstrumentCatalog(prisma, brandIds);
-  await seedSparePartsCatalog(prisma);
+  await seedSparePartsCatalog(prisma, brandIds);
+  await seedInstrumentModels(prisma, brandIds);
   await seedRefurbishedInstruments(prisma, brandIds);
 
   if (admin) {

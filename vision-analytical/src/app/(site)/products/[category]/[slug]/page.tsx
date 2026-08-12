@@ -8,7 +8,11 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AddToCartButton } from '@/components/forms/AddToCartButton';
 import { buttonVariants } from '@/components/ui/Button';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { getPublishedProductBySlug } from '@/lib/data/products';
+import { getPublishedProductBySlug, getRelatedSpareParts } from '@/lib/data/products';
+import { ProductCard } from '@/components/product/ProductCard';
+import { SpecificationTable } from '@/components/product/SpecificationTable';
+import { CompatibilityList } from '@/components/product/CompatibilityList';
+import { DocumentList } from '@/components/product/DocumentList';
 import { getSiteSettings } from '@/lib/data/cms';
 import { stockStatusMeta } from '@/lib/status';
 import { formatMinorAmount } from '@/lib/format';
@@ -31,6 +35,8 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
   if (product.category.slug !== categorySlug) {
     redirect(`/products/${product.category.slug}/${product.slug}`);
   }
+
+  const relatedParts = await getRelatedSpareParts(product.id);
 
   const schema = buildProductSchema({
     name: product.name,
@@ -69,17 +75,10 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
             </span>
           </div>
 
-          {product.compatibleBrands.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm font-medium text-foreground">Compatible brands</p>
-              <p className="text-sm text-muted">{product.compatibleBrands.join(', ')}</p>
-            </div>
-          )}
-
           <p className="mt-6 leading-relaxed text-muted">{product.description}</p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href={`/contact?product=${encodeURIComponent(product.name)}`} className={buttonVariants({ variant: 'primary' })}>
+            <Link href={`/request-quote?product=${product.slug}`} className={buttonVariants({ variant: 'primary' })}>
               Request Quote
             </Link>
             <AddToCartButton kind="PRODUCT" id={product.id} slug={product.slug} name={product.name} sku={product.sku} />
@@ -95,6 +94,47 @@ export default async function ProductDetailPage(props: PageProps<'/products/[cat
           </div>
         </div>
       </div>
+
+      {product.specifications.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Specifications</h2>
+          <div className="mt-4">
+            <SpecificationTable specifications={product.specifications} />
+          </div>
+        </section>
+      )}
+
+      {product.compatibility.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Compatible with</h2>
+          <div className="mt-4">
+            <CompatibilityList rows={product.compatibility} />
+          </div>
+        </section>
+      )}
+
+      {product.documents.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Documents</h2>
+          <div className="mt-4">
+            <DocumentList documents={product.documents} />
+          </div>
+        </section>
+      )}
+
+      {relatedParts.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Spare parts &amp; consumables</h2>
+          <p className="mt-1 text-sm text-muted">Parts we stock for this instrument and others like it.</p>
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedParts.map((part) => (
+              <li key={part.id}>
+                <ProductCard product={part} basePath="/spare-parts" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </Container>
   );
 }

@@ -5,6 +5,6 @@ import { getDownloadFormOptions } from '@/lib/data/admin-downloads';
 export const metadata: Metadata = { title: 'Add Download' };
 
 export default async function AdminNewDownloadPage() {
-  const { brands, categories } = await getDownloadFormOptions();
-  return <DownloadForm brands={brands} categories={categories} />;
+  const { brands, categories, products } = await getDownloadFormOptions();
+  return <DownloadForm brands={brands} categories={categories} products={products} />;
 }

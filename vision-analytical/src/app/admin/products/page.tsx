@@ -29,6 +29,9 @@ export default async function AdminProductsPage(props: PageProps<'/admin/product
           <Link href="/admin/products/categories" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
             Manage Categories
           </Link>
+          <Link href="/admin/products/instrument-models" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            Instrument Models
+          </Link>
           <Link href="/admin/products/refurbished" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
             Refurbished
           </Link>

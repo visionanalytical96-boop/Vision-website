@@ -21,10 +21,12 @@ export function DownloadForm({
   download,
   brands,
   categories,
+  products,
 }: {
   download?: Download;
   brands: DownloadFormOption[];
   categories: DownloadFormOption[];
+  products: DownloadFormOption[];
 }) {
   const action = download ? updateDownload.bind(null, download.id) : createDownload;
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -95,6 +97,22 @@ export function DownloadForm({
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
+            </option>
+          ))}
+        </Select>
+      </FormField>
+
+      <FormField
+        label="Product"
+        htmlFor="productId"
+        error={state.errors?.productId}
+        hint="Also shows this document on that product's page."
+      >
+        <Select id="productId" name="productId" defaultValue={download?.productId ?? ''}>
+          <option value="">Not tied to a product</option>
+          {products.map((product) => (
+            <option key={product.id} value={product.id}>
+              {product.name}
             </option>
           ))}
         </Select>

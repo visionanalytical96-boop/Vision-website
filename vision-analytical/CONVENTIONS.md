@@ -68,8 +68,21 @@ it so it backfills before it drops.
 
 Reserved extension points, to be modelled before the modules that need them:
 customer-owned instruments (calibration, warranty and service history attach to
-an instrument at a site, not to a catalogue product), polymorphic document
-attachments, payment state on orders, dealer role and price tiers.
+an instrument at a site, not to a catalogue product — `InstrumentModel` is the
+anchor these hang off), polymorphic document attachments, payment state on
+orders, and price tiers.
+
+Nothing in the catalogue is capped: products, categories, brands, spare parts,
+instrument models, compatibility mappings, documents and downloads are all
+open-ended by design.
+
+## Roles
+
+Today: Admin, Engineer, Customer. The role system must extend to Super Admin,
+Sales, Accounts, Warehouse, Dealer and Technician without a rewrite —
+so authorise against a permission derived from the role, never against a
+hardcoded role check scattered through pages. Access is enforced in the DAL,
+not only at the route edge.
 
 ## Code
 
@@ -84,15 +97,38 @@ them.
 
 ## Deployment
 
-Docker-first, self-hosted Ubuntu, Cloudflare Tunnel. Deployment is
-`git pull && docker compose build && docker compose up -d` with no manual editing
-after. Everything configurable through `.env`.
+Docker-first, self-hosted Ubuntu, Cloudflare Tunnel, Portainer for container
+management. Deployment is `git pull && docker compose build && docker compose up -d`
+with no manual editing after. Everything configurable through `.env`.
 
 `NEXT_PUBLIC_*` values are inlined at build time — they must be passed as build
 args, not only as runtime environment, or the built image ignores them.
 
+No new containers, services or frameworks without a concrete need. One owner
+has to run this.
+
+## Cost
+
+Open-source and self-hosted by default; nothing in development may require a
+paid service. Keep the architecture ready for Razorpay, Google/Microsoft SSO,
+OTP, object storage (R2 or MinIO), Redis, Meilisearch and an email provider —
+but never depend on one to run locally or to deploy.
+
+## Operations
+
+Design for these from the start rather than retrofitting:
+
+- **Backup**: database, Docker volumes, uploaded documents and `.env`, on a
+  schedule, with a written restore procedure that has actually been run.
+- **Monitoring**: CPU, RAM, disk, containers, database, site availability, SSL
+  expiry and backup health.
+
+Anything stateful must be in a named volume or the database — never only in a
+container's writable layer.
+
 ## Definition of done
 
-Typecheck and lint clean, responsive from mobile to desktop, accessible
+Typecheck and lint clean, mobile-first and responsive to desktop, accessible
 (keyboard focus visible, contrast at AA), SEO metadata present, and verified
-running — not just compiled.
+running — not just compiled. Server Components by default, images optimised,
+heavy modules lazy-loaded.

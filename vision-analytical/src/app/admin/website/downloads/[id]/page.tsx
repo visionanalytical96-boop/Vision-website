@@ -11,5 +11,12 @@ export default async function AdminEditDownloadPage(props: PageProps<'/admin/web
   const [download, options] = await Promise.all([getDownloadById(id), getDownloadFormOptions()]);
   if (!download) notFound();
 
-  return <DownloadForm download={download} brands={options.brands} categories={options.categories} />;
+  return (
+    <DownloadForm
+      download={download}
+      brands={options.brands}
+      categories={options.categories}
+      products={options.products}
+    />
+  );
 }

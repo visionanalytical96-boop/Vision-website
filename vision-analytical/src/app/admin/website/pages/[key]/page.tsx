@@ -6,6 +6,7 @@ import {
   aboutContentSchema,
   servicesContentSchema,
   contactContentSchema,
+  announcementContentSchema,
   headerContentSchema,
   footerContentSchema,
   parseContent,
@@ -14,12 +15,14 @@ import {
   DEFAULT_ABOUT_CONTENT,
   DEFAULT_SERVICES_CONTENT,
   DEFAULT_CONTACT_CONTENT,
+  DEFAULT_ANNOUNCEMENT_CONTENT,
   DEFAULT_HEADER_CONTENT,
   DEFAULT_FOOTER_CONTENT,
 } from '@/lib/cms/defaults';
 import { AboutPageForm } from '@/components/forms/cms/AboutPageForm';
 import { ServicesPageForm } from '@/components/forms/cms/ServicesPageForm';
 import { ContactPageForm } from '@/components/forms/cms/ContactPageForm';
+import { AnnouncementBarForm } from '@/components/forms/cms/AnnouncementBarForm';
 import { HeaderContentForm } from '@/components/forms/cms/HeaderContentForm';
 import { FooterContentForm } from '@/components/forms/cms/FooterContentForm';
 import { ContentPageKey } from '@/generated/prisma/enums';
@@ -53,6 +56,9 @@ export default async function AdminPageContentEditPage(props: { params: Promise<
       )}
       {pageKey === ContentPageKey.CONTACT && (
         <ContactPageForm content={parseContent(contactContentSchema, page.content, DEFAULT_CONTACT_CONTENT)} />
+      )}
+      {pageKey === ContentPageKey.ANNOUNCEMENT && (
+        <AnnouncementBarForm content={parseContent(announcementContentSchema, page.content, DEFAULT_ANNOUNCEMENT_CONTENT)} />
       )}
       {pageKey === ContentPageKey.HEADER && (
         <HeaderContentForm content={parseContent(headerContentSchema, page.content, DEFAULT_HEADER_CONTENT)} />

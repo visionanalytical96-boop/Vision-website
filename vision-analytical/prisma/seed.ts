@@ -33,6 +33,14 @@ import {
   DEFAULT_CONTACT_CONTENT,
   DEFAULT_HEADER_CONTENT,
   DEFAULT_FOOTER_CONTENT,
+  DEFAULT_COMPANY_OVERVIEW_CONTENT,
+  DEFAULT_FEATURED_PRODUCTS_CONTENT,
+  DEFAULT_BRANDS_SECTION_CONTENT,
+  DEFAULT_INDUSTRIES_CONTENT,
+  DEFAULT_KNOWLEDGE_CONTENT,
+  DEFAULT_TESTIMONIALS_CONTENT,
+  DEFAULT_CONTACT_BAND_CONTENT,
+  DEFAULT_ANNOUNCEMENT_CONTENT,
 } from '../src/lib/cms/defaults';
 
 // Bootstraps the first Admin account. Safe to re-run: does nothing unless
@@ -439,29 +447,80 @@ async function seedDemoData(prisma: PrismaClient) {
   console.log('Seeded demo customer (demo.customer@example.com) and demo engineer (demo.engineer@example.com).');
 }
 
+/**
+ * Creates any homepage section the database doesn't have yet, and slots it
+ * into the running order without disturbing the admin's own arrangement.
+ *
+ * A new release adds sections in the middle of the canonical order, so a plain
+ * upsert with a hardcoded sortOrder would collide with the numbers an existing
+ * install already uses. Instead: keep the current rows in their current
+ * relative order, drop each new section in after its nearest canonical
+ * predecessor, then renumber the whole list. Only the integers move, never the
+ * order an admin chose.
+ */
+async function seedHomeSectionOrder(
+  prisma: PrismaClient,
+  canonical: Array<{ key: HomeSectionKey; content: object }>,
+) {
+  const existing = await prisma.homeSection.findMany({ orderBy: { sortOrder: 'asc' } });
+  const existingKeys = new Set(existing.map((section) => section.key));
+
+  const order: HomeSectionKey[] = existing.map((section) => section.key);
+  for (const [index, { key }] of canonical.entries()) {
+    if (existingKeys.has(key)) continue;
+
+    // Nearest canonical predecessor that's actually present decides the slot;
+    // with none present (fresh database) the section goes to the end, which
+    // reproduces the canonical order exactly.
+    let insertAt = order.length;
+    for (let back = index - 1; back >= 0; back -= 1) {
+      const position = order.indexOf(canonical[back].key);
+      if (position !== -1) {
+        insertAt = position + 1;
+        break;
+      }
+    }
+    order.splice(insertAt, 0, key);
+    existingKeys.add(key);
+  }
+
+  const contentByKey = new Map(canonical.map(({ key, content }) => [key, content]));
+  for (const [sortOrder, key] of order.entries()) {
+    await prisma.homeSection.upsert({
+      where: { key },
+      // Content is never overwritten - an admin's edits outrank the defaults.
+      update: { sortOrder },
+      create: { key, sortOrder, content: contentByKey.get(key) ?? {} },
+    });
+  }
+}
+
 // Site CMS: homepage sections, other page content, site settings and theme.
 // Upserts so it's safe to re-run - existing admin edits are never
 // overwritten, only missing rows get the launch-day defaults.
 async function seedCms(prisma: PrismaClient) {
-  const homeSections: Array<{ key: HomeSectionKey; sortOrder: number; content: object }> = [
-    { key: HomeSectionKey.HERO, sortOrder: 0, content: DEFAULT_HERO_CONTENT },
-    { key: HomeSectionKey.CATEGORIES, sortOrder: 1, content: DEFAULT_CATEGORIES_CONTENT },
-    { key: HomeSectionKey.LIFECYCLE, sortOrder: 2, content: DEFAULT_LIFECYCLE_CONTENT },
-    { key: HomeSectionKey.WHY_US, sortOrder: 3, content: DEFAULT_WHY_US_CONTENT },
-    { key: HomeSectionKey.CTA, sortOrder: 4, content: DEFAULT_CTA_CONTENT },
+  // The launch-day running order of the homepage.
+  const homeSections: Array<{ key: HomeSectionKey; content: object }> = [
+    { key: HomeSectionKey.HERO, content: DEFAULT_HERO_CONTENT },
+    { key: HomeSectionKey.COMPANY_OVERVIEW, content: DEFAULT_COMPANY_OVERVIEW_CONTENT },
+    { key: HomeSectionKey.CATEGORIES, content: DEFAULT_CATEGORIES_CONTENT },
+    { key: HomeSectionKey.FEATURED_PRODUCTS, content: DEFAULT_FEATURED_PRODUCTS_CONTENT },
+    { key: HomeSectionKey.BRANDS, content: DEFAULT_BRANDS_SECTION_CONTENT },
+    { key: HomeSectionKey.LIFECYCLE, content: DEFAULT_LIFECYCLE_CONTENT },
+    { key: HomeSectionKey.INDUSTRIES, content: DEFAULT_INDUSTRIES_CONTENT },
+    { key: HomeSectionKey.WHY_US, content: DEFAULT_WHY_US_CONTENT },
+    { key: HomeSectionKey.KNOWLEDGE, content: DEFAULT_KNOWLEDGE_CONTENT },
+    { key: HomeSectionKey.TESTIMONIALS, content: DEFAULT_TESTIMONIALS_CONTENT },
+    { key: HomeSectionKey.CONTACT_BAND, content: DEFAULT_CONTACT_BAND_CONTENT },
+    { key: HomeSectionKey.CTA, content: DEFAULT_CTA_CONTENT },
   ];
-  for (const section of homeSections) {
-    await prisma.homeSection.upsert({
-      where: { key: section.key },
-      update: {},
-      create: { key: section.key, sortOrder: section.sortOrder, content: section.content },
-    });
-  }
+  await seedHomeSectionOrder(prisma, homeSections);
 
   const pageContents: Array<{ page: ContentPageKey; content: object }> = [
     { page: ContentPageKey.ABOUT, content: DEFAULT_ABOUT_CONTENT },
     { page: ContentPageKey.SERVICES, content: DEFAULT_SERVICES_CONTENT },
     { page: ContentPageKey.CONTACT, content: DEFAULT_CONTACT_CONTENT },
+    { page: ContentPageKey.ANNOUNCEMENT, content: DEFAULT_ANNOUNCEMENT_CONTENT },
     { page: ContentPageKey.HEADER, content: DEFAULT_HEADER_CONTENT },
     { page: ContentPageKey.FOOTER, content: DEFAULT_FOOTER_CONTENT },
   ];

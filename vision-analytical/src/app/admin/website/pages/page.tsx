@@ -9,6 +9,7 @@ const PAGE_KEYS = [
   ContentPageKey.ABOUT,
   ContentPageKey.SERVICES,
   ContentPageKey.CONTACT,
+  ContentPageKey.ANNOUNCEMENT,
   ContentPageKey.HEADER,
   ContentPageKey.FOOTER,
 ];

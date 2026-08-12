@@ -27,3 +27,26 @@ export function getPublishedProductBySlug(slug: string) {
     include: { category: true, brand: true },
   });
 }
+
+/**
+ * The homepage's curated selection. Falls back to the newest published items
+ * so the section is never blank on a fresh install, and preserves the admin's
+ * chosen order (the database can't order by an arbitrary list of slugs).
+ */
+export async function getFeaturedProducts(slugs: string[], limit = 4) {
+  if (slugs.length === 0) {
+    return prisma.product.findMany({
+      where: { isPublished: true },
+      include: { category: true, brand: true },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  const products = await prisma.product.findMany({
+    where: { slug: { in: slugs }, isPublished: true },
+    include: { category: true, brand: true },
+  });
+  const bySlug = new Map(products.map((product) => [product.slug, product]));
+  return slugs.flatMap((slug) => bySlug.get(slug) ?? []);
+}

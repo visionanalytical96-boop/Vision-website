@@ -50,6 +50,63 @@ export const ctaContentSchema = z.object({
 });
 export type CtaContent = z.infer<typeof ctaContentSchema>;
 
+/**
+ * Sections whose body comes from the database (brands, featured products,
+ * knowledge posts, testimonials) only need their heading and their "see
+ * everything" link stored in the CMS.
+ */
+export const listSectionContentSchema = z.object({
+  heading: z.string(),
+  subheading: z.string(),
+  viewAllLabel: z.string(),
+  viewAllHref: z.string(),
+});
+export type ListSectionContent = z.infer<typeof listSectionContentSchema>;
+
+/** Featured products additionally carry the curated selection itself. */
+export const featuredProductsContentSchema = listSectionContentSchema.extend({
+  // Empty means "latest published" - so the section never renders blank
+  // just because nobody has curated it yet. Blank entries are dropped: the
+  // editor adds an empty row before the admin picks a product.
+  productSlugs: z.array(z.string()).transform((slugs) => slugs.filter((slug) => slug.length > 0)),
+});
+export type FeaturedProductsContent = z.infer<typeof featuredProductsContentSchema>;
+
+export const overviewContentSchema = z.object({
+  eyebrow: z.string(),
+  heading: z.string(),
+  body: z.array(z.string()),
+  stats: z.array(z.object({ value: z.string(), label: z.string() })),
+  image: z.string().nullable(),
+  buttonLabel: z.string(),
+  buttonHref: z.string(),
+});
+export type OverviewContent = z.infer<typeof overviewContentSchema>;
+
+export const industriesContentSchema = z.object({
+  heading: z.string(),
+  subheading: z.string(),
+  industries: z.array(z.object({ name: z.string(), description: z.string(), iconKey: z.string() })),
+});
+export type IndustriesContent = z.infer<typeof industriesContentSchema>;
+
+/** The contact band pairs CMS copy with live details from Business Settings. */
+export const contactBandContentSchema = z.object({
+  heading: z.string(),
+  subheading: z.string(),
+  hoursLabel: z.string(),
+  hoursValue: z.string(),
+});
+export type ContactBandContent = z.infer<typeof contactBandContentSchema>;
+
+export const announcementContentSchema = z.object({
+  isEnabled: z.boolean(),
+  message: z.string(),
+  linkLabel: z.string(),
+  linkHref: z.string(),
+});
+export type AnnouncementContent = z.infer<typeof announcementContentSchema>;
+
 export const factContentSchema = z.object({
   label: z.string(),
   value: z.string(),

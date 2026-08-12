@@ -215,6 +215,7 @@ model Brand {
 
   products               Product[]
   refurbishedInstruments RefurbishedInstrument[]
+  downloads              Download[]
 
   @@index([sortOrder])
 }
@@ -234,6 +235,7 @@ model Category {
 
   products               Product[]
   refurbishedInstruments RefurbishedInstrument[]
+  downloads              Download[]
 
   @@unique([slug, kind])
   @@index([kind])
@@ -545,6 +547,13 @@ enum HomeSectionKey {
   LIFECYCLE
   WHY_US
   CTA
+  COMPANY_OVERVIEW
+  FEATURED_PRODUCTS
+  BRANDS
+  INDUSTRIES
+  KNOWLEDGE
+  TESTIMONIALS
+  CONTACT_BAND
 }
 
 model HomeSection {
@@ -564,6 +573,7 @@ enum ContentPageKey {
   CONTACT
   HEADER
   FOOTER
+  ANNOUNCEMENT
 }
 
 model PageContent {
@@ -637,8 +647,65 @@ model StockMovement {
 }
 
 // ---------------------------------------------------------------------------
+// Knowledge assets: downloadable datasheets, manuals and certificates
+// ---------------------------------------------------------------------------
+
+enum DownloadKind {
+  DATASHEET
+  MANUAL
+  BROCHURE
+  CATALOGUE
+  APPLICATION_NOTE
+  CERTIFICATE
+  SOFTWARE
+}
+
+model Download {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  title       String
+  description String?
+  kind        DownloadKind
+  fileUrl     String
+  // Null when the file is hosted off-site and we can't measure it.
+  fileSizeBytes Int?
+  fileType    String?
+  brandId     String?
+  brand       Brand?       @relation(fields: [brandId], references: [id])
+  categoryId  String?
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  // Some manufacturer documents may only be released to known customers.
+  requiresLogin Boolean    @default(false)
+  downloadCount Int        @default(0)
+  isPublished Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([kind])
+  @@index([brandId])
+  @@index([categoryId])
+  @@index([isPublished])
+}
+
+// ---------------------------------------------------------------------------
 // Misc
 // ---------------------------------------------------------------------------
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  quote       String
+  authorName  String
+  authorTitle String?
+  company     String?
+  logoUrl     String?
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sortOrder])
+}
 
 model ContactMessage {
   id         String   @id @default(cuid())

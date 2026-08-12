@@ -1,0 +1,27 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import type { BlogPost } from '@/generated/prisma/client';
+import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
+import { formatDate } from '@/lib/format';
+
+/** Shared between the Knowledge Center index and the homepage preview. */
+export function BlogPostCard({ post }: { post: BlogPost }) {
+  return (
+    <Link
+      href={`/blog/${post.slug}`}
+      className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-colors hover:border-primary"
+    >
+      {post.coverImage && (
+        <div className="relative h-40 w-full bg-surface-muted">
+          <Image src={post.coverImage} alt="" fill sizes="(min-width: 1024px) 33vw, 50vw" className="object-cover" />
+        </div>
+      )}
+      <div className="flex flex-1 flex-col p-6">
+        <span className="text-xs font-medium text-primary dark:text-secondary">{BLOG_CATEGORY_LABELS[post.category]}</span>
+        <p className="mt-2 font-display text-lg font-semibold text-foreground">{post.title}</p>
+        <p className="mt-2 flex-1 text-sm text-muted">{post.excerpt}</p>
+        {post.publishedAt && <p className="mt-4 text-xs text-muted">{formatDate(post.publishedAt)}</p>}
+      </div>
+    </Link>
+  );
+}

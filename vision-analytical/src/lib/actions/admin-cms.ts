@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import type { ZodType } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
 import {
@@ -15,6 +16,12 @@ import {
   footerContentSchema,
   themeSettingsSchema,
   siteSettingsSchema,
+  overviewContentSchema,
+  featuredProductsContentSchema,
+  listSectionContentSchema,
+  industriesContentSchema,
+  contactBandContentSchema,
+  announcementContentSchema,
 } from '@/lib/cms/schemas';
 import { homeSectionKeyToSlug, pageContentKeyToSlug } from '@/lib/cms/routing';
 import { saveUploadedImage } from '@/lib/upload-image';
@@ -25,13 +32,29 @@ export interface CmsFormState {
   success?: boolean;
 }
 
+// `satisfies` rather than an annotation: it makes a missing HomeSectionKey a
+// compile error while keeping each schema's precise parsed type, which is what
+// lets Prisma accept the validated content as Json.
 const HOME_SECTION_SCHEMAS = {
   [HomeSectionKey.HERO]: heroContentSchema,
+  [HomeSectionKey.COMPANY_OVERVIEW]: overviewContentSchema,
   [HomeSectionKey.CATEGORIES]: categoriesContentSchema,
+  [HomeSectionKey.FEATURED_PRODUCTS]: featuredProductsContentSchema,
+  [HomeSectionKey.BRANDS]: listSectionContentSchema,
   [HomeSectionKey.LIFECYCLE]: cardsContentSchema,
+  [HomeSectionKey.INDUSTRIES]: industriesContentSchema,
   [HomeSectionKey.WHY_US]: cardsContentSchema,
+  [HomeSectionKey.KNOWLEDGE]: listSectionContentSchema,
+  [HomeSectionKey.TESTIMONIALS]: listSectionContentSchema,
+  [HomeSectionKey.CONTACT_BAND]: contactBandContentSchema,
   [HomeSectionKey.CTA]: ctaContentSchema,
-} as const;
+} as const satisfies Record<HomeSectionKey, ZodType>;
+
+/** Sections with an uploadable image, and the content field it lands in. */
+const SECTION_IMAGE_FIELDS: Partial<Record<HomeSectionKey, string>> = {
+  [HomeSectionKey.HERO]: 'backgroundImage',
+  [HomeSectionKey.COMPANY_OVERVIEW]: 'image',
+};
 
 export async function updateHomeSection(
   key: HomeSectionKey,
@@ -47,14 +70,15 @@ export async function updateHomeSection(
     return { formError: 'Something went wrong reading the form. Please refresh and try again.' };
   }
 
-  if (key === HomeSectionKey.HERO) {
+  const imageField = SECTION_IMAGE_FIELDS[key];
+  if (imageField) {
     const imageFile = formData.get('image');
     const upload = await saveUploadedImage(imageFile instanceof File ? imageFile : null, 'site');
     if (upload.error) {
       return { formError: upload.error };
     }
     if (upload.url && typeof rawContent === 'object' && rawContent !== null) {
-      rawContent = { ...rawContent, backgroundImage: upload.url };
+      rawContent = { ...rawContent, [imageField]: upload.url };
     }
   }
 
@@ -97,9 +121,10 @@ const PAGE_CONTENT_SCHEMAS = {
   [ContentPageKey.ABOUT]: aboutContentSchema,
   [ContentPageKey.SERVICES]: servicesContentSchema,
   [ContentPageKey.CONTACT]: contactContentSchema,
+  [ContentPageKey.ANNOUNCEMENT]: announcementContentSchema,
   [ContentPageKey.HEADER]: headerContentSchema,
   [ContentPageKey.FOOTER]: footerContentSchema,
-} as const;
+} as const satisfies Record<ContentPageKey, ZodType>;
 
 export async function updatePageContent(
   page: ContentPageKey,

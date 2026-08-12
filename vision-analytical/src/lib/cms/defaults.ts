@@ -8,6 +8,12 @@ import type {
   ContactContent,
   HeaderContent,
   FooterContent,
+  ListSectionContent,
+  FeaturedProductsContent,
+  OverviewContent,
+  IndustriesContent,
+  ContactBandContent,
+  AnnouncementContent,
 } from './schemas';
 
 // Default/seed content - the exact copy the site launched with. Used both to
@@ -101,6 +107,80 @@ export const DEFAULT_CTA_CONTENT: CtaContent = {
   subheading: 'Our team responds the same day, across Maharashtra & Gujarat.',
   buttonLabel: 'Request Quote',
   buttonHref: '/contact',
+};
+
+export const DEFAULT_COMPANY_OVERVIEW_CONTENT: OverviewContent = {
+  eyebrow: 'Who we are',
+  heading: 'A single team for the whole instrument lifecycle',
+  body: [
+    'Vision Analytical has supplied, serviced and refurbished analytical instruments for laboratories across Maharashtra and Gujarat since 2016. We work with pharma QC labs, contract testing houses, food and water testing labs, and research institutions.',
+    'Because we handle sales, spares, service and qualification ourselves, we keep the full history of every instrument we touch — which is what makes a same-day breakdown response and an audit-ready qualification file possible.',
+  ],
+  stats: [
+    { value: '2016', label: 'Serving labs since' },
+    { value: '6+', label: 'Instrument techniques' },
+    { value: '2', label: 'States covered' },
+    { value: 'Same day', label: 'Typical response' },
+  ],
+  image: null,
+  buttonLabel: 'More about us',
+  buttonHref: '/about',
+};
+
+export const DEFAULT_FEATURED_PRODUCTS_CONTENT: FeaturedProductsContent = {
+  heading: 'Featured instruments & parts',
+  subheading: 'A sample of what we currently supply. Ask us about anything not listed.',
+  viewAllLabel: 'Browse the full catalogue',
+  viewAllHref: '/products',
+  productSlugs: [],
+};
+
+export const DEFAULT_BRANDS_SECTION_CONTENT: ListSectionContent = {
+  heading: 'Brands we sell & service',
+  subheading: 'Our engineers are trained across the major chromatography and spectroscopy platforms.',
+  viewAllLabel: 'All brands',
+  viewAllHref: '/brands',
+};
+
+export const DEFAULT_INDUSTRIES_CONTENT: IndustriesContent = {
+  heading: 'Industries we serve',
+  subheading: 'Regulated, high-uptime environments where an instrument going down stops the line.',
+  industries: [
+    { name: 'Pharmaceutical', description: 'QC release testing, stability studies and audit-ready qualification.', iconKey: 'pill' },
+    { name: 'Biotechnology', description: 'Method development and analytical support for biologics workflows.', iconKey: 'flask' },
+    { name: 'Food & Beverage QC', description: 'Residue, additive and nutritional testing on tight turnaround.', iconKey: 'leaf' },
+    { name: 'Environmental & Water', description: 'Trace contaminant and potability testing for labs and utilities.', iconKey: 'droplets' },
+    { name: 'Petrochemical', description: 'Fuel, lubricant and process-stream analysis by GC and GC-MS.', iconKey: 'factory' },
+    { name: 'Academic & Research', description: 'Teaching and research labs, including refurbished budget options.', iconKey: 'graduation-cap' },
+  ],
+};
+
+export const DEFAULT_KNOWLEDGE_CONTENT: ListSectionContent = {
+  heading: 'From the Knowledge Center',
+  subheading: 'Maintenance guides, troubleshooting notes and buying advice written by our engineers.',
+  viewAllLabel: 'All articles',
+  viewAllHref: '/blog',
+};
+
+export const DEFAULT_TESTIMONIALS_CONTENT: ListSectionContent = {
+  heading: 'What lab teams say',
+  subheading: '',
+  viewAllLabel: 'Talk to us',
+  viewAllHref: '/contact',
+};
+
+export const DEFAULT_CONTACT_BAND_CONTENT: ContactBandContent = {
+  heading: 'Talk to an engineer, not a call centre',
+  subheading: 'Quotes, spare-part availability and breakdown support — reach us whichever way suits you.',
+  hoursLabel: 'Office hours',
+  hoursValue: 'Mon–Sat, 9:30 am – 6:30 pm IST',
+};
+
+export const DEFAULT_ANNOUNCEMENT_CONTENT: AnnouncementContent = {
+  isEnabled: false,
+  message: 'Spare parts for HPLC and GC in stock — same-week dispatch across Maharashtra & Gujarat.',
+  linkLabel: 'Browse spare parts',
+  linkHref: '/spare-parts',
 };
 
 export const DEFAULT_ABOUT_CONTENT: AboutContent = {

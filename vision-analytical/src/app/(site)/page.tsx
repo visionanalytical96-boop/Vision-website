@@ -7,13 +7,28 @@ import { Container } from '@/components/ui/Container';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { whatsappLink, telLink } from '@/lib/contact-links';
 import { getHomeSections, getSiteSettings } from '@/lib/data/cms';
-import { getInstrumentCategories } from '@/lib/data/products';
+import { getInstrumentCategories, getFeaturedProducts } from '@/lib/data/products';
+import { getPublishedBrands } from '@/lib/data/brands';
+import { getLatestBlogPosts } from '@/lib/data/blog';
+import { getPublishedTestimonials } from '@/lib/data/testimonials';
 import { resolveIcon } from '@/lib/cms/icons';
+import { CompanyOverviewSection } from '@/components/home/CompanyOverviewSection';
+import { FeaturedProductsSection } from '@/components/home/FeaturedProductsSection';
+import { BrandsSection } from '@/components/home/BrandsSection';
+import { IndustriesSection } from '@/components/home/IndustriesSection';
+import { KnowledgeSection } from '@/components/home/KnowledgeSection';
+import { TestimonialsSection } from '@/components/home/TestimonialsSection';
+import { ContactBandSection } from '@/components/home/ContactBandSection';
 import {
   heroContentSchema,
   categoriesContentSchema,
   cardsContentSchema,
   ctaContentSchema,
+  overviewContentSchema,
+  featuredProductsContentSchema,
+  listSectionContentSchema,
+  industriesContentSchema,
+  contactBandContentSchema,
   parseContent,
 } from '@/lib/cms/schemas';
 import {
@@ -22,6 +37,13 @@ import {
   DEFAULT_LIFECYCLE_CONTENT,
   DEFAULT_WHY_US_CONTENT,
   DEFAULT_CTA_CONTENT,
+  DEFAULT_COMPANY_OVERVIEW_CONTENT,
+  DEFAULT_FEATURED_PRODUCTS_CONTENT,
+  DEFAULT_BRANDS_SECTION_CONTENT,
+  DEFAULT_INDUSTRIES_CONTENT,
+  DEFAULT_KNOWLEDGE_CONTENT,
+  DEFAULT_TESTIMONIALS_CONTENT,
+  DEFAULT_CONTACT_BAND_CONTENT,
 } from '@/lib/cms/defaults';
 import { HomeSectionKey } from '@/generated/prisma/enums';
 
@@ -32,10 +54,27 @@ export const metadata: Metadata = {
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 export default async function HomePage() {
-  const [sections, categories, settings] = await Promise.all([getHomeSections(), getInstrumentCategories(), getSiteSettings()]);
+  const [sections, settings] = await Promise.all([getHomeSections(), getSiteSettings()]);
 
   const sectionByKey = new Map(sections.map((section) => [section.key, section]));
   const orderedKeys = sections.map((section) => section.key);
+  const isActive = (key: HomeSectionKey) => sectionByKey.get(key)?.isVisible ?? false;
+
+  // Read the curated selection before fetching, so a hidden section costs no
+  // query at all and the featured query knows what it is looking for.
+  const featuredContent = parseContent(
+    featuredProductsContentSchema,
+    sectionByKey.get(HomeSectionKey.FEATURED_PRODUCTS)?.content,
+    DEFAULT_FEATURED_PRODUCTS_CONTENT,
+  );
+
+  const [categories, featuredProducts, brands, latestPosts, testimonials] = await Promise.all([
+    isActive(HomeSectionKey.CATEGORIES) ? getInstrumentCategories() : [],
+    isActive(HomeSectionKey.FEATURED_PRODUCTS) ? getFeaturedProducts(featuredContent.productSlugs) : [],
+    isActive(HomeSectionKey.BRANDS) ? getPublishedBrands() : [],
+    isActive(HomeSectionKey.KNOWLEDGE) ? getLatestBlogPosts(3) : [],
+    isActive(HomeSectionKey.TESTIMONIALS) ? getPublishedTestimonials(6) : [],
+  ]);
 
   const phone = settings?.phone || process.env.NEXT_PUBLIC_CONTACT_PHONE || undefined;
   const organizationSchema = {
@@ -157,6 +196,61 @@ export default async function HomePage() {
               </section>
             );
           }
+
+          case HomeSectionKey.COMPANY_OVERVIEW:
+            return (
+              <CompanyOverviewSection
+                key={key}
+                content={parseContent(overviewContentSchema, section.content, DEFAULT_COMPANY_OVERVIEW_CONTENT)}
+              />
+            );
+
+          case HomeSectionKey.FEATURED_PRODUCTS:
+            return <FeaturedProductsSection key={key} content={featuredContent} products={featuredProducts} />;
+
+          case HomeSectionKey.BRANDS:
+            return (
+              <BrandsSection
+                key={key}
+                content={parseContent(listSectionContentSchema, section.content, DEFAULT_BRANDS_SECTION_CONTENT)}
+                brands={brands}
+              />
+            );
+
+          case HomeSectionKey.INDUSTRIES:
+            return (
+              <IndustriesSection
+                key={key}
+                content={parseContent(industriesContentSchema, section.content, DEFAULT_INDUSTRIES_CONTENT)}
+              />
+            );
+
+          case HomeSectionKey.KNOWLEDGE:
+            return (
+              <KnowledgeSection
+                key={key}
+                content={parseContent(listSectionContentSchema, section.content, DEFAULT_KNOWLEDGE_CONTENT)}
+                posts={latestPosts}
+              />
+            );
+
+          case HomeSectionKey.TESTIMONIALS:
+            return (
+              <TestimonialsSection
+                key={key}
+                content={parseContent(listSectionContentSchema, section.content, DEFAULT_TESTIMONIALS_CONTENT)}
+                testimonials={testimonials}
+              />
+            );
+
+          case HomeSectionKey.CONTACT_BAND:
+            return (
+              <ContactBandSection
+                key={key}
+                content={parseContent(contactBandContentSchema, section.content, DEFAULT_CONTACT_BAND_CONTENT)}
+                settings={settings}
+              />
+            );
 
           case HomeSectionKey.CATEGORIES: {
             const content = parseContent(categoriesContentSchema, section.content, DEFAULT_CATEGORIES_CONTENT);

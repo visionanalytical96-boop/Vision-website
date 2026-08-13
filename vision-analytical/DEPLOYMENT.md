@@ -404,3 +404,35 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env run --rm migr
 | Changed `NEXT_PUBLIC_SITE_URL`, nothing happened | These are inlined at build time | Rebuild: `up -d --build`. |
 | Everyone logged out after a deploy | `SESSION_SECRET` changed | Expected. Keep it stable. |
 | `prisma migrate deploy` reports a failed migration | A migration errored midway | Read the error, fix the data, then re-run the migrate job. Do not edit an applied migration file. |
+| Page renders as unstyled plain text | See below — check with `./scripts/diagnose-css.sh` before assuming the CSS is missing. | |
+
+### The site looks unstyled
+
+Run the diagnostic first. It checks the five things in order and stops at the
+one that is actually broken:
+
+```bash
+./scripts/diagnose-css.sh                       # defaults to localhost:8088
+./scripts/diagnose-css.sh https://your-domain
+```
+
+**Do not use `curl … | grep _next/static/css` to decide whether CSS was
+built.** It finds nothing on a perfectly healthy site. That path is webpack's
+layout; this app builds with **Turbopack** (the Next 16 default), which emits
+the stylesheet to `/_next/static/chunks/<hash>.css`. There is no
+`.next/static/css/` directory and there is not meant to be one.
+
+The real check is whether the HTML carries a stylesheet link at all:
+
+```bash
+curl -s http://localhost:8088/ | grep -o '<link[^>]*stylesheet[^>]*>'
+# <link rel="stylesheet" href="/_next/static/chunks/2-1yhe4qd7g9f.css" data-precedence="next"/>
+```
+
+If that link is present but the page is unstyled, fetch the file it names. A
+404 there almost always means a **stale container** — the HTML came from a new
+image and the static files from an old one:
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+```

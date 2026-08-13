@@ -1,48 +1,48 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
-import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { requireSession } from '@/lib/dal';
-import { getEngineerJobHistory } from '@/lib/data/engineer';
+import { getEngineerVisitHistory } from '@/lib/data/engineer-visits';
 import { formatDate } from '@/lib/format';
-import { serviceRequestStatusMeta } from '@/lib/status';
+import { visitStatusMeta } from '@/lib/service-visit';
 import { SERVICE_REQUEST_TYPE_LABELS } from '@/lib/service-request-labels';
 
 export const metadata: Metadata = { title: 'Job History' };
 
 export default async function EngineerHistoryPage() {
   const session = await requireSession();
-  const jobs = await getEngineerJobHistory(session.userId);
+  const visits = await getEngineerVisitHistory(session.userId);
 
-  if (jobs.length === 0) {
-    return <EmptyState title="No completed jobs yet" description="Jobs you've completed or that were closed will appear here." />;
+  if (visits.length === 0) {
+    return <EmptyState title="No finished jobs yet" description="Jobs you have closed will appear here." />;
   }
 
   return (
     <Table>
       <TableHead>
         <TableRow>
-          <TableHeaderCell>Ticket #</TableHeaderCell>
+          <TableHeaderCell>Visit #</TableHeaderCell>
           <TableHeaderCell>Customer</TableHeaderCell>
           <TableHeaderCell>Type</TableHeaderCell>
-          <TableHeaderCell>Updated</TableHeaderCell>
-          <TableHeaderCell>Status</TableHeaderCell>
+          <TableHeaderCell>Finished</TableHeaderCell>
+          <TableHeaderCell>Outcome</TableHeaderCell>
           <TableHeaderCell />
         </TableRow>
       </TableHead>
       <TableBody>
-        {jobs.map((job) => (
-          <TableRow key={job.id}>
-            <TableCell className="font-mono">{job.ticketNumber}</TableCell>
-            <TableCell>{job.customer.companyName ?? job.customer.name}</TableCell>
-            <TableCell>{SERVICE_REQUEST_TYPE_LABELS[job.type]}</TableCell>
-            <TableCell>{formatDate(job.updatedAt)}</TableCell>
+        {visits.map((visit) => (
+          <TableRow key={visit.id}>
+            <TableCell className="font-mono">{visit.visitNumber}</TableCell>
+            <TableCell>{visit.serviceRequest.customer.companyName ?? visit.serviceRequest.customer.name}</TableCell>
+            <TableCell>{SERVICE_REQUEST_TYPE_LABELS[visit.serviceRequest.type]}</TableCell>
+            <TableCell>{formatDate(visit.closedAt ?? visit.updatedAt)}</TableCell>
             <TableCell>
-              <StatusBadge meta={serviceRequestStatusMeta[job.status]} />
+              <Badge tone={visitStatusMeta[visit.status].tone}>{visitStatusMeta[visit.status].label}</Badge>
             </TableCell>
             <TableCell>
-              <Link href={`/engineer/jobs/${job.id}`} className="text-primary hover:underline dark:text-secondary">
+              <Link href={`/engineer/jobs/${visit.id}`} className="text-primary hover:underline dark:text-secondary">
                 View
               </Link>
             </TableCell>

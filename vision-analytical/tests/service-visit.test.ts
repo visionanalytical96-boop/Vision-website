@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { VisitStatus } from '@/generated/prisma/enums';
+import { VisitStatus, ServiceRequestStatus } from '@/generated/prisma/enums';
 import {
   visitStatusMeta,
   nextStatuses,
@@ -11,6 +11,7 @@ import {
   expectsLocation,
   timestampField,
   isLocationTrustworthy,
+  requestStatusForVisits,
   distanceKm,
   minutesBetween,
   ACTIVE_STATUSES,
@@ -87,10 +88,8 @@ test('a check-out cannot happen without a check-in', () => {
   // timestamp always has an arrival before it.
   for (const status of ALL_STATUSES) {
     if (!nextStatuses(status).includes(VisitStatus.WORK_COMPLETED)) continue;
-    assert.ok(
-      [VisitStatus.WORK_STARTED, VisitStatus.WAITING_FOR_PARTS].includes(status),
-      `${status} should not lead straight to work completed`,
-    );
+    const allowedPredecessors: VisitStatus[] = [VisitStatus.WORK_STARTED, VisitStatus.WAITING_FOR_PARTS];
+    assert.ok(allowedPredecessors.includes(status), `${status} should not lead straight to work completed`);
   }
 });
 
@@ -154,6 +153,58 @@ test('every stamped timestamp is a real column on ServiceVisit', () => {
     assert.ok(dateFields.has(field), `${field} is not a nullable DateTime on ServiceVisit`);
   }
   assert.equal(new Set(stamped).size, stamped.length, 'two states writing one column would overwrite each other');
+});
+
+test('the ticket follows the work happening under it', () => {
+  const open = ServiceRequestStatus.OPEN;
+
+  assert.equal(requestStatusForVisits([VisitStatus.ASSIGNED], open), ServiceRequestStatus.ASSIGNED);
+  assert.equal(requestStatusForVisits([VisitStatus.TRAVELLING], open), ServiceRequestStatus.IN_PROGRESS);
+  assert.equal(requestStatusForVisits([VisitStatus.WORK_STARTED], open), ServiceRequestStatus.IN_PROGRESS);
+  assert.equal(requestStatusForVisits([VisitStatus.CLOSED], open), ServiceRequestStatus.COMPLETED);
+});
+
+test('a ticket is not complete until the work is signed off', () => {
+  // WORK_COMPLETED means the engineer packed up, not that the customer
+  // accepted it. Reporting "Completed" to the customer at that point is a
+  // claim we cannot back up, and it is the point the AMC visit counter moves.
+  assert.equal(
+    requestStatusForVisits([VisitStatus.WORK_COMPLETED], ServiceRequestStatus.OPEN),
+    ServiceRequestStatus.IN_PROGRESS,
+  );
+  assert.equal(
+    requestStatusForVisits([VisitStatus.AWAITING_CUSTOMER_APPROVAL], ServiceRequestStatus.OPEN),
+    ServiceRequestStatus.IN_PROGRESS,
+  );
+});
+
+test('a ticket with a finished visit stays finished even while a return trip runs', () => {
+  // Second visit for the same fault: the ticket does not regress to
+  // in-progress and un-count the AMC visit already used.
+  assert.equal(
+    requestStatusForVisits([VisitStatus.CLOSED, VisitStatus.WORK_STARTED], ServiceRequestStatus.IN_PROGRESS),
+    ServiceRequestStatus.COMPLETED,
+  );
+});
+
+test('a declined job goes back to the unassigned queue', () => {
+  // Otherwise it sits assigned to someone who already said no, and nobody
+  // notices until the customer calls.
+  assert.equal(
+    requestStatusForVisits([VisitStatus.REJECTED], ServiceRequestStatus.ASSIGNED),
+    ServiceRequestStatus.OPEN,
+  );
+  assert.equal(
+    requestStatusForVisits([VisitStatus.CANCELLED, VisitStatus.RESCHEDULED], ServiceRequestStatus.IN_PROGRESS),
+    ServiceRequestStatus.OPEN,
+  );
+});
+
+test('a ticket the office closed or cancelled is not reopened from the field', () => {
+  for (const final of [ServiceRequestStatus.CLOSED, ServiceRequestStatus.CANCELLED]) {
+    assert.equal(requestStatusForVisits([VisitStatus.WORK_STARTED], final), null);
+    assert.equal(requestStatusForVisits([VisitStatus.REJECTED], final), null);
+  }
 });
 
 test('a vague GPS fix is not treated as proof of being on site', () => {

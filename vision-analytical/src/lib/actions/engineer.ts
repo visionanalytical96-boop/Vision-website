@@ -3,31 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { requireRole } from '@/lib/dal';
-import { setServiceRequestStatus } from '@/lib/service-request-status';
-import { updateJobStatusSchema, submitServiceReportSchema } from '@/lib/validation/engineer';
+import { submitServiceReportSchema } from '@/lib/validation/engineer';
 import { Role } from '@/generated/prisma/client';
-
-export async function updateJobStatus(formData: FormData): Promise<void> {
-  const session = await requireRole(Role.ENGINEER);
-
-  const validated = updateJobStatusSchema.safeParse({
-    jobId: formData.get('jobId'),
-    status: formData.get('status'),
-  });
-  if (!validated.success) return;
-
-  const { jobId, status } = validated.data;
-
-  const job = await prisma.serviceRequest.findFirst({ where: { id: jobId, assignedEngineerId: session.userId } });
-  if (!job) return;
-
-  await setServiceRequestStatus(jobId, status);
-
-  revalidatePath(`/engineer/jobs/${jobId}`);
-  revalidatePath('/engineer');
-  revalidatePath('/engineer/history');
-  revalidatePath(`/portal/service-requests/${jobId}`);
-}
 
 export interface ServiceReportFormState {
   errors?: Record<string, string[] | undefined>;
@@ -71,7 +48,7 @@ export async function submitServiceReport(
     },
   });
 
-  revalidatePath(`/engineer/jobs/${jobId}`);
+  revalidatePath('/engineer');
   revalidatePath(`/portal/service-requests/${jobId}`);
   return { success: true };
 }

@@ -1,4 +1,4 @@
-import { VisitStatus } from '@/generated/prisma/enums';
+import { VisitStatus, ServiceRequestStatus } from '@/generated/prisma/enums';
 import type { BadgeTone } from '@/components/ui/Badge';
 
 /**
@@ -232,6 +232,41 @@ export function timestampField(target: VisitStatus): string | null {
     default:
       return null;
   }
+}
+
+/**
+ * What the parent ticket's status should be, given the visits under it.
+ *
+ * The ticket and the visit are not the same thing, and the customer only ever
+ * sees the ticket. Deriving one from the other keeps them from disagreeing —
+ * the alternative is two status fields updated by hand in different places,
+ * which is how a customer ends up reading "Open" about a job that finished
+ * last week.
+ *
+ * `null` means leave it alone: the request is in a state only an admin owns.
+ */
+export function requestStatusForVisits(
+  visitStatuses: VisitStatus[],
+  currentRequestStatus: ServiceRequestStatus,
+): ServiceRequestStatus | null {
+  // Cancelling or closing a ticket is an office decision, not a field one.
+  if (currentRequestStatus === ServiceRequestStatus.CANCELLED || currentRequestStatus === ServiceRequestStatus.CLOSED) {
+    return null;
+  }
+
+  if (visitStatuses.includes(VisitStatus.CLOSED)) return ServiceRequestStatus.COMPLETED;
+
+  const inTheField = visitStatuses.some(
+    (status) => ACTIVE_STATUSES.includes(status) && status !== VisitStatus.ASSIGNED,
+  );
+  if (inTheField) return ServiceRequestStatus.IN_PROGRESS;
+
+  if (visitStatuses.includes(VisitStatus.ASSIGNED)) return ServiceRequestStatus.ASSIGNED;
+
+  // Every visit was declined, cancelled or rebooked. The work still needs
+  // doing, so the ticket goes back to the unassigned queue rather than sitting
+  // in a state with nobody working it.
+  return ServiceRequestStatus.OPEN;
 }
 
 /**

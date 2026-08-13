@@ -11,7 +11,12 @@
     "start": "mkdir -p public/uploads .next/standalone/public .next/standalone/.next/static && rm -rf .next/standalone/public/uploads && cp -r public/. .next/standalone/public/ && cp -r .next/static/. .next/standalone/.next/static/ && rm -rf .next/standalone/public/uploads && ln -sfn ../../../public/uploads .next/standalone/public/uploads && node .next/standalone/server.js",
     "lint": "eslint",
     "test": "tsx --test tests/*.test.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "changelog": "node scripts/changelog.mjs",
+    "changelog:check": "node scripts/changelog.mjs --check",
+    "backup": "./scripts/backup.sh",
+    "restore": "./scripts/restore.sh",
+    "healthcheck": "./scripts/healthcheck.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",

@@ -14,11 +14,16 @@ vision-analytical/
 ├── public/              Static assets served as-is (includes uploads/)
 ├── deploy/              Docker Compose stack, nginx config, deploy env
 ├── docs/                Long-form documentation
+├── scripts/             Operational scripts (backup, restore, health, changelog)
 ├── tests/               Unit tests (node:test via tsx)
 ├── Dockerfile           Multi-stage production image
 ├── next.config.ts       Next.js config, security headers, CSP
 ├── prisma.config.ts     Prisma CLI config (schema path, seed command)
 ├── DEPLOYMENT.md        How to build, deploy, roll back
+├── BACKUP.md            Backup and restore procedure
+├── RECOVERY.md          Incident runbook, by scenario
+├── HEALTHCHECK.md       What to check in production
+├── CHANGELOG.md         Generated from git history
 ├── PROJECT_STRUCTURE.md This file
 ├── CONVENTIONS.md       Standing engineering rules for the project
 ├── AGENTS.md / CLAUDE.md  Instructions for AI coding sessions
@@ -28,8 +33,8 @@ vision-analytical/
 > The repository root is an n8n fork; this application is the
 > `vision-analytical/` subdirectory. All commands run from here.
 
-There is **no** `scripts/` folder and **no** top-level `uploads/` folder in
-this application — uploads live in `public/uploads/`.
+There is **no** top-level `uploads/` folder — uploads live in
+`public/uploads/`.
 
 ---
 
@@ -203,6 +208,22 @@ No host ports are published. `cloudflared` is the only ingress.
 |---|---|
 | `architecture-review.md` | Inventory of the platform; what was reused, extended, refactored, built new; risks |
 | `attendance-devices.md` | The punch pipeline, what works, and the unbuilt vendor TCP adapter |
+
+---
+
+## `scripts/`
+
+Operational, not build-time. All runnable from the project directory.
+
+| Script | npm script | Purpose |
+|---|---|---|
+| `backup.sh` | `npm run backup` | Dump the database, uploads and `deploy/.env`; keep the last 14 |
+| `restore.sh` | `npm run restore` | Restore a dump, taking a safety dump first |
+| `healthcheck.sh` | `npm run healthcheck` | 14 production checks; exit code = failure count |
+| `changelog.mjs` | `npm run changelog` | Regenerate `CHANGELOG.md` from git history |
+
+`CHANGELOG.md` is generated, never hand-edited — a changelog someone has to
+remember to update goes stale, and a stale one is read as fact.
 
 ---
 

@@ -204,8 +204,8 @@ Install Docker per [DEPLOYMENT.md §3.1](./DEPLOYMENT.md#31-install-prerequisite
 
 ```bash
 mkdir -p ~/apps && cd ~/apps
-git clone https://github.com/visionanalytical96-boop/n8n.git
-cd n8n && git checkout claude/vision-analytical-server-arch-3jjosh
+git clone https://github.com/visionanalytical96-boop/Vision-website.git
+cd Vision-website && git checkout claude/vision-analytical-server-arch-3jjosh
 cd vision-analytical
 ```
 

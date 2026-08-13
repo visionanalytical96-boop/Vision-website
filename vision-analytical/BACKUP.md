@@ -163,7 +163,7 @@ The honest test is a restore onto a machine that is not production:
 
 ```bash
 # On a spare machine or a second directory
-git clone https://github.com/visionanalytical96-boop/n8n.git test-restore
+git clone https://github.com/visionanalytical96-boop/Vision-website.git test-restore
 cd test-restore && git checkout claude/vision-analytical-server-arch-3jjosh
 cd vision-analytical
 

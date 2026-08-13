@@ -9,7 +9,8 @@ site. No step assumes knowledge that isn't written down here.
 
 | | |
 |---|---|
-| **Git repository** | `https://github.com/visionanalytical96-boop/n8n` |
+| **Git repository (use this)** | `https://github.com/visionanalytical96-boop/Vision-website` |
+| **Former name (still redirects)** | `https://github.com/visionanalytical96-boop/n8n` |
 | **Branch** | `claude/vision-analytical-server-arch-3jjosh` |
 | **Application path inside the repo** | `vision-analytical/` |
 | **Absolute path on the development machine** | `/home/user/n8n/vision-analytical` |
@@ -18,10 +19,32 @@ site. No step assumes knowledge that isn't written down here.
 > the `vision-analytical/` **subdirectory**. Every command in this document is
 > run from inside `vision-analytical/`, not from the repository root.
 
+### The repository was renamed
+
+It was created as `n8n` and is now `Vision-website`. Both URLs reach the same
+repository — GitHub redirects the old name — which was verified by comparing
+the complete ref lists of both URLs: they are byte-identical.
+
+**Use `Vision-website`.** The redirect is not permanent in one specific way: if
+anyone later creates a *new* repository called `n8n` under this account, the
+redirect stops and `git clone .../n8n` silently fetches that new, wrong
+repository instead. A clone that succeeds against the wrong source is worse
+than one that fails.
+
+An existing clone still pointing at the old name keeps working, but should be
+updated:
+
+```bash
+cd ~/apps/n8n/vision-analytical      # wherever your clone lives
+git remote -v                        # shows the old .../n8n URL
+git remote set-url origin https://github.com/visionanalytical96-boop/Vision-website.git
+git remote -v                        # confirm it now shows Vision-website
+```
+
 To find the exact commit a server is running:
 
 ```bash
-cd ~/vision-analytical-app/n8n/vision-analytical
+cd <your-clone>/vision-analytical
 git rev-parse HEAD
 git log -1 --format='%h %ad %s' --date=iso
 ```
@@ -53,8 +76,10 @@ All paths relative to `vision-analytical/`.
 | Uploaded files at runtime | `public/uploads/` *(Docker volume in production)* |
 | Tests | `tests/` |
 
-There is no `scripts/` directory in this application, and no top-level
-`uploads/` directory — uploads live under `public/uploads/`.
+| Operational scripts | `scripts/` (backup, restore, healthcheck, changelog) |
+
+There is no top-level `uploads/` directory — uploads live under
+`public/uploads/`.
 
 ---
 
@@ -94,11 +119,15 @@ docker compose version
 
 ```bash
 mkdir -p ~/apps && cd ~/apps
-git clone https://github.com/visionanalytical96-boop/n8n.git
-cd n8n
+git clone https://github.com/visionanalytical96-boop/Vision-website.git
+cd Vision-website
 git checkout claude/vision-analytical-server-arch-3jjosh
 cd vision-analytical
 ```
+
+The clone directory is named after the repository, so it is `Vision-website/`,
+not `n8n/`. Adjust the paths in the rest of this document if your existing
+clone is still called `n8n` — that is fine and needs no change.
 
 ### 3.3 Environment variables
 

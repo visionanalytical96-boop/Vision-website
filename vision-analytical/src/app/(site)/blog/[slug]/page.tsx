@@ -8,7 +8,6 @@ import { Container } from '@/components/ui/Container';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getKnowledgeArticleBySlug, recordArticleView } from '@/lib/data/knowledge';
 import { ArticleLinks } from '@/components/blog/ArticleLinks';
-import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
 import { ARTICLE_KIND_LABELS } from '@/lib/article-kinds';
 import { ArticleKind } from '@/generated/prisma/enums';
 import { formatDate } from '@/lib/format';
@@ -52,7 +51,7 @@ export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
           ← Knowledge Center
         </Link>
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-          <span className="font-medium text-primary dark:text-secondary">{BLOG_CATEGORY_LABELS[post.category]}</span>
+          <span className="font-medium text-primary dark:text-secondary">{ARTICLE_KIND_LABELS[post.kind]}</span>
           {post.kind !== ArticleKind.ARTICLE && (
             <span className="rounded-full border border-border px-2 py-0.5 text-muted">
               {ARTICLE_KIND_LABELS[post.kind]}

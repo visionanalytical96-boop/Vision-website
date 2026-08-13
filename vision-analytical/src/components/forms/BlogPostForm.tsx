@@ -2,7 +2,6 @@
 
 import { useActionState } from 'react';
 import { createBlogPost, updateBlogPost, type BlogPostFormState } from '@/lib/actions/admin-blog';
-import { BLOG_CATEGORY_LABELS, BLOG_CATEGORIES } from '@/lib/blog-categories';
 import { ARTICLE_KINDS, ARTICLE_KIND_LABELS } from '@/lib/article-kinds';
 import { ArticleKind } from '@/generated/prisma/enums';
 import {
@@ -39,12 +38,19 @@ export function BlogPostForm({
   brands,
   models,
   products,
+  topics,
+  reviewers = [],
+  tags = '',
   links = [],
 }: {
   post?: KnowledgeArticle;
   brands: LinkOption[];
   models: ModelOption[];
   products: LinkOption[];
+  topics: Array<{ id: string; name: string }>;
+  reviewers?: Array<{ id: string; name: string }>;
+  /** Comma-separated, as the field is edited. */
+  tags?: string;
   links?: ArticleLinkValue[];
 }) {
   const action = post ? updateBlogPost.bind(null, post.id) : createBlogPost;
@@ -74,11 +80,43 @@ export function BlogPostForm({
         </Select>
       </FormField>
 
-      <FormField label="Category" htmlFor="category" error={state.errors?.category} required>
-        <Select id="category" name="category" defaultValue={submittedOr(state.values, 'category', post?.category)} required>
-          {BLOG_CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {BLOG_CATEGORY_LABELS[category]}
+      <FormField
+        label="Topic"
+        htmlFor="topicId"
+        error={state.errors?.topicId}
+        hint="What it is about — the technique or subject area."
+      >
+        <Select id="topicId" name="topicId" defaultValue={submittedOr(state.values, 'topicId', post?.topicId ?? '')}>
+          <option value="">Not filed under a topic</option>
+          {topics.map((topic) => (
+            <option key={topic.id} value={topic.id}>
+              {topic.name}
+            </option>
+          ))}
+        </Select>
+      </FormField>
+
+      <FormField
+        label="Tags"
+        htmlFor="tags"
+        error={state.errors?.tags}
+        hint="Comma separated, e.g. baseline, pump, leak."
+        className="sm:col-span-2"
+      >
+        <Input id="tags" name="tags" defaultValue={submittedOr(state.values, 'tags', tags)} placeholder="baseline, pump" />
+      </FormField>
+
+      <FormField
+        label="Reviewed by"
+        htmlFor="reviewerId"
+        error={state.errors?.reviewerId}
+        hint="Who checked the technical content. Recorded on the article."
+      >
+        <Select id="reviewerId" name="reviewerId" defaultValue={submittedOr(state.values, 'reviewerId', post?.reviewerId ?? '')}>
+          <option value="">Not reviewed</option>
+          {reviewers.map((reviewer) => (
+            <option key={reviewer.id} value={reviewer.id}>
+              {reviewer.name}
             </option>
           ))}
         </Select>

@@ -9,6 +9,61 @@ import { blogPostFormSchema, articleLinkListSchema } from '@/lib/validation/admi
 import { saveUploadedImage } from '@/lib/upload-image';
 import { Role, ContentStatus } from '@/generated/prisma/client';
 import { isContentStatus } from '@/lib/content-status';
+import { slugify } from '@/lib/slug';
+
+/**
+ * Tags as typed, one line of comma-separated names.
+ *
+ * Upserted by slug so "HPLC" and "hplc" land on the same tag rather than
+ * quietly creating two that mean the same thing.
+ */
+async function writeArticleTags(articleId: string, raw: string): Promise<void> {
+  const names = [...new Set(raw.split(',').map((name) => name.trim()).filter(Boolean))].slice(0, 25);
+
+  const tagIds: string[] = [];
+  for (const name of names) {
+    const tag = await prisma.tag.upsert({
+      where: { slug: slugify(name) },
+      update: {},
+      create: { name, slug: slugify(name) },
+    });
+    tagIds.push(tag.id);
+  }
+
+  await prisma.$transaction([
+    prisma.knowledgeArticleTag.deleteMany({ where: { articleId } }),
+    ...(tagIds.length > 0
+      ? [prisma.knowledgeArticleTag.createMany({ data: tagIds.map((tagId) => ({ articleId, tagId })) })]
+      : []),
+  ]);
+}
+
+/**
+ * Snapshots an article before it is overwritten.
+ *
+ * Taken before the update rather than after, so the stored revision is the
+ * version that existed - not the one replacing it.
+ */
+async function snapshotRevision(articleId: string, editorId: string, editorLabel: string, changeNote?: string) {
+  const current = await prisma.knowledgeArticle.findUnique({ where: { id: articleId } });
+  if (!current) return;
+
+  await prisma.articleRevision.upsert({
+    where: { articleId_version: { articleId, version: current.version } },
+    update: {},
+    create: {
+      articleId,
+      version: current.version,
+      title: current.title,
+      excerpt: current.excerpt,
+      content: current.content,
+      status: current.status,
+      editedById: editorId,
+      editorLabel,
+      changeNote: changeNote || null,
+    },
+  });
+}
 
 /**
  * "What this article is about" - replace-in-place, like the product editor's
@@ -59,7 +114,9 @@ function parseBlogPostForm(formData: FormData) {
   return blogPostFormSchema.safeParse({
     slug: formData.get('slug'),
     title: formData.get('title'),
-    category: formData.get('category'),
+    topicId: String(formData.get('topicId') ?? ''),
+    tags: String(formData.get('tags') ?? ''),
+    reviewerId: String(formData.get('reviewerId') ?? ''),
     kind: formData.get('kind'),
     errorCode: String(formData.get('errorCode') ?? ''),
     videoUrl: String(formData.get('videoUrl') ?? ''),
@@ -97,7 +154,8 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
     data: {
       slug: data.slug,
       title: data.title,
-      category: data.category,
+      topicId: data.topicId || null,
+      reviewerId: data.reviewerId || null,
       kind: data.kind,
       errorCode: data.errorCode || null,
       videoUrl: data.videoUrl,
@@ -118,6 +176,7 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
 
   const linkError = await writeArticleLinks(created.id, formData);
   if (linkError) return { formError: linkError, values: formValues(formData) };
+  await writeArticleTags(created.id, String(formData.get('tags') ?? ''));
 
   revalidatePath('/admin/blog');
   revalidatePath('/blog');
@@ -125,7 +184,7 @@ export async function createBlogPost(_prevState: BlogPostFormState | undefined, 
 }
 
 export async function updateBlogPost(id: string, _prevState: BlogPostFormState | undefined, formData: FormData): Promise<BlogPostFormState> {
-  await requireRole(Role.ADMIN);
+  const session = await requireRole(Role.ADMIN);
 
   const validated = parseBlogPostForm(formData);
   if (!validated.success) {
@@ -149,12 +208,29 @@ export async function updateBlogPost(id: string, _prevState: BlogPostFormState |
     return { errors: { image: [upload.error] }, values: formValues(formData) };
   }
 
+  // Snapshot before overwriting, so the stored revision is the version that
+  // existed rather than the one replacing it.
+  const editor = await prisma.user.findUnique({ where: { id: session.userId }, select: { name: true, email: true } });
+  await snapshotRevision(
+    id,
+    session.userId,
+    editor ? `${editor.name} (${editor.email})` : 'Unknown',
+    String(formData.get('reviewNote') ?? ''),
+  );
+
+  // Content edits bump the version; a status-only change does not, so the
+  // history counts real revisions rather than button presses.
+  const contentChanged =
+    existing.title !== data.title || existing.excerpt !== data.excerpt || existing.content !== data.content;
+
   await prisma.knowledgeArticle.update({
     where: { id },
     data: {
+      version: contentChanged ? existing.version + 1 : existing.version,
       slug: data.slug,
       title: data.title,
-      category: data.category,
+      topicId: data.topicId || null,
+      reviewerId: data.reviewerId || null,
       kind: data.kind,
       errorCode: data.errorCode || null,
       videoUrl: data.videoUrl,
@@ -175,6 +251,7 @@ export async function updateBlogPost(id: string, _prevState: BlogPostFormState |
 
   const linkError = await writeArticleLinks(id, formData);
   if (linkError) return { formError: linkError, values: formValues(formData) };
+  await writeArticleTags(id, String(formData.get('tags') ?? ''));
 
   revalidatePath('/admin/blog');
   revalidatePath('/blog');

@@ -131,13 +131,6 @@ enum CrmActivityType {
 /// The topic a knowledge article sits under. Separate from ArticleKind: kind
 /// is the *shape* of the content (a FAQ, an error code, a video), category is
 /// what it is about.
-enum BlogCategory {
-  TROUBLESHOOTING
-  FAQ
-  TECHNICAL_ARTICLE
-  INSTRUMENT_GUIDE
-}
-
 /// What kind of thing an article is. Drives how it's presented and where it
 /// surfaces - an ERROR_CODE article is reachable from the error-code lookup, a
 /// VIDEO renders its player, a FAQ is short-form.
@@ -149,6 +142,24 @@ enum ArticleKind {
   ERROR_CODE
   CASE_STUDY
   VIDEO
+  APPLICATION_NOTE
+  INSTALLATION_GUIDE
+  MAINTENANCE_GUIDE
+  CALIBRATION_GUIDE
+  TRAINING_GUIDE
+  BEST_PRACTICE
+  RELEASE_NOTE
+  PRODUCT_UPDATE
+}
+
+/// How badly an error stops work. Drives ordering in the code library: an
+/// instrument that won't run outranks a warning you can finish the batch with.
+enum ErrorSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
 }
 
 enum StockMovementType {
@@ -185,6 +196,9 @@ model User {
   assignedLeads       CrmLead[]        @relation("AssignedLeads")
   crmActivities       CrmActivity[]    @relation("CreatedActivities")
   articles            KnowledgeArticle[] @relation("AuthoredArticles")
+  reviewedArticles    KnowledgeArticle[] @relation("ReviewedArticles")
+  articleRevisions    ArticleRevision[]  @relation("ArticleRevisions")
+  searchQueries       SearchQuery[]      @relation("SearchQueries")
   employeeProfile     Employee?        @relation("EmployeeAccount")
   auditEntries        AuditLog[]       @relation("AuditActor")
   stockMovements      StockMovement[]  @relation("RecordedMovements")
@@ -237,6 +251,9 @@ model Brand {
   instrumentModels       InstrumentModel[]
   compatibility          ProductCompatibility[]
   articleLinks           KnowledgeArticleLink[]
+  errorCodes             ErrorCode[]
+  serviceCases           ServiceCase[]
+  symptoms               TroubleshootingSymptom[]
 
   @@index([sortOrder])
 }
@@ -258,6 +275,7 @@ model Category {
   refurbishedInstruments RefurbishedInstrument[]
   downloads              Download[]
   instrumentModels       InstrumentModel[]
+  knowledgeTopics        KnowledgeTopic[]
 
   @@unique([slug, kind])
   @@index([kind])
@@ -291,6 +309,9 @@ model Product {
   compatibility   ProductCompatibility[]
   documents       Download[]
   articleLinks    KnowledgeArticleLink[]
+  errorCodeParts  ErrorCodePart[]
+  serviceCaseParts ServiceCasePart[]
+  troubleshootingParts TroubleshootingCausePart[]
 
   @@index([kind])
   @@index([categoryId])
@@ -322,6 +343,9 @@ model InstrumentModel {
 
   compatibility ProductCompatibility[]
   articleLinks  KnowledgeArticleLink[]
+  errorCodes    ErrorCode[]
+  serviceCases  ServiceCase[]
+  symptoms      TroubleshootingSymptom[]
 
   @@unique([brandId, slug])
   @@index([brandId])
@@ -535,6 +559,9 @@ model ServiceReport {
   customerSignatureUrl String?
   reportedAt           DateTime       @default(now())
 
+  /// A write-up of this job, once it is worth publishing.
+  serviceCase ServiceCase?
+
   @@index([serviceRequestId])
 }
 
@@ -623,15 +650,25 @@ model KnowledgeArticle {
   excerpt        String
   content        String
   kind           ArticleKind   @default(ARTICLE)
-  category       BlogCategory
+  /// What the article is *about* - HPLC, GC-MS, Balances. Separate from `kind`,
+  /// which is what it *is*. The two were one field once, which left no way to
+  /// say "a troubleshooting guide about HPLC".
+  topicId        String?
+  topic          KnowledgeTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
   coverImage     String?
   /// VIDEO articles embed this; any article may also link one.
   videoUrl       String?
-  /// The manufacturer's code this article explains, e.g. "E-1201". Unique per
-  /// brand rather than globally: two manufacturers reuse the same numbers.
+  /// The manufacturer's code this article explains, e.g. "E-1201". Kept for
+  /// articles that predate the ErrorCode entity; new codes belong there.
   errorCode      String?
   authorId       String
   author         User          @relation("AuthoredArticles", fields: [authorId], references: [id])
+  /// Who checked it. Technical content that nobody signed off on is a liability
+  /// in a lab, so the reviewer is recorded rather than implied by the status.
+  reviewerId     String?
+  reviewer       User?         @relation("ReviewedArticles", fields: [reviewerId], references: [id], onDelete: SetNull)
+  /// Bumped on every published edit, and stamped onto each revision.
+  version        Int           @default(1)
   status         ContentStatus @default(DRAFT)
   /// When set in the future, the article stays hidden until that moment even at
   /// status PUBLISHED - which is what makes scheduling possible without a job
@@ -646,13 +683,19 @@ model KnowledgeArticle {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  links KnowledgeArticleLink[]
+  links       KnowledgeArticleLink[]
+  tags        KnowledgeArticleTag[]
+  revisions   ArticleRevision[]
+  errorCodes  ErrorCode[]
+  serviceCases ServiceCase[]
+  troubleshootingCauses TroubleshootingCause[] @relation("CauseArticle")
 
-  @@index([category])
+  @@index([topicId])
   @@index([kind])
   @@index([status])
   @@index([publishAt])
   @@index([errorCode])
+  @@index([viewCount])
   @@map("BlogPost")
 }
 
@@ -674,6 +717,319 @@ model KnowledgeArticleLink {
   @@index([brandId])
   @@index([instrumentModelId])
   @@index([productId])
+}
+
+/// A subject area: HPLC, GC-MS, Balances, Water Purification.
+///
+/// A separate taxonomy from the product `Category` tree on purpose - "Software"
+/// and "General Laboratory" are things people need to read about but not things
+/// we sell, and putting them in the catalogue's categories would list them on
+/// shop pages. `categoryId` bridges the two where they genuinely coincide, so
+/// an HPLC topic can offer "browse HPLC instruments" without duplicating it.
+model KnowledgeTopic {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  /// Lucide icon name, so the hub can show a topic without an image upload.
+  icon        String?
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  articles     KnowledgeArticle[]
+  errorCodes   ErrorCode[]
+  serviceCases ServiceCase[]
+  downloads    Download[]
+  symptoms     TroubleshootingSymptom[]
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+/// Free-form labels. Kept as rows rather than a string array so a tag can be
+/// renamed once, counted, and browsed - which is what makes it useful for
+/// retrieval later rather than just decoration.
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  articles KnowledgeArticleTag[]
+
+  @@index([slug])
+}
+
+model KnowledgeArticleTag {
+  articleId String
+  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+}
+
+/// A snapshot of an article as it stood before an edit.
+///
+/// Stored as full content rather than a diff: the point is to be able to read
+/// and restore an old version months later without a patch algorithm, and
+/// technical articles are small next to the cost of getting one wrong.
+model ArticleRevision {
+  id          String           @id @default(cuid())
+  articleId   String
+  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  version     Int
+  title       String
+  excerpt     String
+  content     String
+  status      ContentStatus
+  editedById  String?
+  editedBy    User?            @relation("ArticleRevisions", fields: [editedById], references: [id], onDelete: SetNull)
+  /// Who made the change, kept as text so the history survives the account.
+  editorLabel String
+  changeNote  String?
+  createdAt   DateTime         @default(now())
+
+  @@unique([articleId, version])
+  @@index([articleId])
+}
+
+// ---------------------------------------------------------------------------
+// Error code library
+// ---------------------------------------------------------------------------
+
+/// One manufacturer error code, with what it means and what to do about it.
+///
+/// An entity rather than a string on an article because an engineer standing at
+/// an instrument needs the cause, the fix and the part number - not an essay.
+/// The same printed code means different things on different instruments, so
+/// identity is the code plus the brand and model it applies to.
+model ErrorCode {
+  id   String @id @default(cuid())
+  /// As printed on the instrument, e.g. "E-1201".
+  code String
+  /// Punctuation and case stripped, so "E1201", "E-1201" and "e 1201" all
+  /// match what the customer is reading off the screen.
+  normalisedCode String
+
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: SetNull)
+  topicId           String?
+  topic             KnowledgeTopic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  title               String
+  description         String?
+  possibleCauses      String?
+  recommendedSolution String?
+  severity            ErrorSeverity @default(MEDIUM)
+
+  /// The deep-dive article, when one exists.
+  articleId String?
+  article   KnowledgeArticle? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  videoUrl  String?
+
+  status    ContentStatus @default(PUBLISHED)
+  viewCount Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  parts     ErrorCodePart[]
+  documents ErrorCodeDocument[]
+  troubleshootingCauses TroubleshootingCause[] @relation("CauseErrorCode")
+
+  @@index([normalisedCode])
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([status])
+  @@index([severity])
+}
+
+/// The spare parts a fix usually needs. A code that tells you what is wrong but
+/// not what to order sends the engineer back to the office.
+model ErrorCodePart {
+  id          String    @id @default(cuid())
+  errorCodeId String
+  errorCode   ErrorCode @relation(fields: [errorCodeId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  note        String?
+
+  @@unique([errorCodeId, productId])
+  @@index([productId])
+}
+
+model ErrorCodeDocument {
+  id          String    @id @default(cuid())
+  errorCodeId String
+  errorCode   ErrorCode @relation(fields: [errorCodeId], references: [id], onDelete: Cascade)
+  downloadId  String
+  download    Download  @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+
+  @@unique([errorCodeId, downloadId])
+  @@index([downloadId])
+}
+
+// ---------------------------------------------------------------------------
+// Service case library
+// ---------------------------------------------------------------------------
+
+/// A real job, written up so the next person doesn't rediscover it.
+///
+/// Optionally anchored to the ServiceReport it came from, which is what keeps
+/// the library honest: a case is a published account of work that happened, not
+/// a hypothetical.
+model ServiceCase {
+  id        String @id @default(cuid())
+  reference String @unique
+  slug      String @unique
+  title     String
+
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: SetNull)
+  topicId           String?
+  topic             KnowledgeTopic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  serviceReportId   String?          @unique
+  serviceReport     ServiceReport?   @relation(fields: [serviceReportId], references: [id], onDelete: SetNull)
+  articleId         String?
+  article           KnowledgeArticle? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  problem       String
+  rootCause     String
+  solution      String
+  engineerNotes String?
+  /// How long it actually took, which is what a customer asking "how long will
+  /// this take" wants and what a planner needs.
+  timeTakenMinutes Int?
+  customerIndustry String?
+  beforeImageUrl   String?
+  afterImageUrl    String?
+  occurredOn       DateTime?
+
+  status    ContentStatus @default(DRAFT)
+  viewCount Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  parts ServiceCasePart[]
+
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([topicId])
+  @@index([status])
+}
+
+model ServiceCasePart {
+  id            String      @id @default(cuid())
+  serviceCaseId String
+  serviceCase   ServiceCase @relation(fields: [serviceCaseId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity      Int         @default(1)
+
+  @@unique([serviceCaseId, productId])
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Troubleshooting wizard
+// ---------------------------------------------------------------------------
+
+/// A problem in the customer's words - "baseline drift", "no flow", "leak at
+/// the pump head". The wizard walks brand → instrument → symptom, so symptoms
+/// are rows an admin can add rather than branches in code.
+model TroubleshootingSymptom {
+  id          String @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: Cascade)
+  topicId           String?
+  topic             KnowledgeTopic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  causes TroubleshootingCause[]
+
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([topicId])
+  @@index([isActive])
+}
+
+/// One possible cause of a symptom, with the check that confirms it and the fix.
+/// Ordered by likelihood so the wizard suggests the common case first.
+model TroubleshootingCause {
+  id        String                 @id @default(cuid())
+  symptomId String
+  symptom   TroubleshootingSymptom @relation(fields: [symptomId], references: [id], onDelete: Cascade)
+
+  cause      String
+  howToCheck String?
+  solution   String
+  /// Lower is more likely, so the first suggestion is the usual answer.
+  sortOrder  Int    @default(0)
+
+  articleId   String?
+  article     KnowledgeArticle? @relation("CauseArticle", fields: [articleId], references: [id], onDelete: SetNull)
+  errorCodeId String?
+  errorCodeRef ErrorCode?       @relation("CauseErrorCode", fields: [errorCodeId], references: [id], onDelete: SetNull)
+
+  parts TroubleshootingCausePart[]
+
+  @@index([symptomId])
+}
+
+model TroubleshootingCausePart {
+  id      String               @id @default(cuid())
+  causeId String
+  cause   TroubleshootingCause @relation(fields: [causeId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([causeId, productId])
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Search analytics
+// ---------------------------------------------------------------------------
+
+/// Every search, with how many results it got.
+///
+/// The zero-result rows are the valuable ones: they are a list, written by
+/// customers, of the content the knowledge base is missing.
+model SearchQuery {
+  id             String   @id @default(cuid())
+  term           String
+  /// Trimmed and lowercased, so "HPLC leak" and "hplc  leak" group together.
+  normalisedTerm String
+  resultCount    Int
+  /// Which search box it came from: global, knowledge, error-codes, documents.
+  source         String
+  userId         String?
+  user           User?    @relation("SearchQueries", fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([normalisedTerm])
+  @@index([createdAt])
+  @@index([resultCount])
+  @@index([source])
 }
 
 // ---------------------------------------------------------------------------
@@ -839,6 +1195,9 @@ model Download {
   // as in the downloads centre.
   productId   String?
   product     Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // The subject area, so the document library can be browsed by technique.
+  topicId     String?
+  topic       KnowledgeTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
   // Some manufacturer documents may only be released to known customers.
   requiresLogin Boolean    @default(false)
   downloadCount Int        @default(0)
@@ -847,10 +1206,13 @@ model Download {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
+  errorCodeLinks ErrorCodeDocument[]
+
   @@index([kind])
   @@index([brandId])
   @@index([categoryId])
   @@index([productId])
+  @@index([topicId])
   @@index([isPublished])
 }
 

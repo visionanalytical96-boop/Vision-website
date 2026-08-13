@@ -2,18 +2,21 @@ import 'server-only';
 import { prisma } from '@/lib/db';
 import { publiclyVisibleWhere } from '@/lib/content-status';
 import { normaliseErrorCode } from '@/lib/article-kinds';
-import { ArticleKind, type BlogCategory, type Prisma } from '@/generated/prisma/client';
+import { ArticleKind, type Prisma } from '@/generated/prisma/client';
 
 export interface KnowledgeFilters {
-  category?: BlogCategory;
+  /** Subject area slug, e.g. "hplc". */
+  topic?: string;
   kind?: ArticleKind;
+  tag?: string;
   query?: string;
 }
 
 function knowledgeWhere(filters: KnowledgeFilters): Prisma.KnowledgeArticleWhereInput {
   const where: Prisma.KnowledgeArticleWhereInput = { ...publiclyVisibleWhere() };
-  if (filters.category) where.category = filters.category;
+  if (filters.topic) where.topic = { slug: filters.topic };
   if (filters.kind) where.kind = filters.kind;
+  if (filters.tag) where.tags = { some: { tag: { slug: filters.tag } } };
   if (filters.query) {
     where.OR = [
       { title: { contains: filters.query, mode: 'insensitive' } },
@@ -28,8 +31,21 @@ function knowledgeWhere(filters: KnowledgeFilters): Prisma.KnowledgeArticleWhere
 export function getKnowledgeArticles(filters: KnowledgeFilters = {}) {
   return prisma.knowledgeArticle.findMany({
     where: knowledgeWhere(filters),
+    include: { topic: { select: { name: true, slug: true } } },
     orderBy: { publishedAt: 'desc' },
   });
+}
+
+export type KnowledgeArticleListItem = Awaited<ReturnType<typeof getKnowledgeArticles>>[number];
+
+/** Counts per topic, computed with the topic filter itself lifted. */
+export async function getKnowledgeTopicCounts(filters: KnowledgeFilters = {}) {
+  const groups = await prisma.knowledgeArticle.groupBy({
+    by: ['topicId'],
+    where: knowledgeWhere({ ...filters, topic: undefined }),
+    _count: { _all: true },
+  });
+  return new Map(groups.filter((g) => g.topicId).map((g) => [g.topicId as string, g._count._all]));
 }
 
 /** Counts per kind, computed with the kind filter itself lifted. */
@@ -47,6 +63,9 @@ export function getKnowledgeArticleBySlug(slug: string) {
     where: { slug, ...publiclyVisibleWhere() },
     include: {
       author: { select: { name: true } },
+      reviewer: { select: { name: true } },
+      topic: { select: { name: true, slug: true, description: true } },
+      tags: { include: { tag: true } },
       links: {
         include: {
           brand: true,

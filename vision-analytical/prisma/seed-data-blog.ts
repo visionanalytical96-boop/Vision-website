@@ -1,10 +1,14 @@
-import { BlogCategory } from '../src/generated/prisma/client';
+import { ArticleKind } from '../src/generated/prisma/enums';
+
 
 export interface SeedBlogPost {
   slug: string;
   title: string;
   excerpt: string;
-  category: BlogCategory;
+  /** What it is - the content type. */
+  kind: ArticleKind;
+  /** What it is about - a slug matched against the seeded knowledge topics. */
+  topicSlug?: string;
   content: string;
 }
 
@@ -13,7 +17,8 @@ export const BLOG_POSTS: SeedBlogPost[] = [
     slug: 'diagnosing-hplc-baseline-noise-and-drift',
     title: 'Diagnosing HPLC Baseline Noise and Drift',
     excerpt: 'A step-by-step checklist for tracking down noisy or drifting HPLC baselines before you call for service.',
-    category: BlogCategory.TROUBLESHOOTING,
+    kind: ArticleKind.TROUBLESHOOTING,
+    topicSlug: 'hplc',
     content: `A noisy or drifting baseline is one of the most common HPLC complaints we see. Before raising a service ticket, work through this checklist - it resolves the issue in most cases without an engineer visit.
 
 ## 1. Check the lamp
@@ -42,7 +47,8 @@ If you've worked through all five and the baseline is still unstable, it's likel
     slug: 'amc-vs-cmc-whats-the-difference',
     title: "AMC vs CMC: What's the Difference?",
     excerpt: 'Annual and Comprehensive Maintenance Contracts sound similar but cover very different scope. Here is how to choose.',
-    category: BlogCategory.FAQ,
+    kind: ArticleKind.FAQ,
+    topicSlug: 'general-laboratory',
     content: `Both AMC and CMC are yearly service contracts, but they cover different scope - and picking the wrong one is a common source of billing surprises.
 
 ## AMC (Annual Maintenance Contract)
@@ -72,7 +78,8 @@ If you're not sure which fits your instrument and usage pattern, tell us the ins
     slug: 'understanding-iq-oq-pq-qualification',
     title: 'Understanding IQ/OQ/PQ Qualification for Analytical Instruments',
     excerpt: 'What each qualification phase actually verifies, and why auditors ask for all three.',
-    category: BlogCategory.TECHNICAL_ARTICLE,
+    kind: ArticleKind.ARTICLE,
+    topicSlug: 'hplc',
     content: `IQ, OQ and PQ are three distinct qualification stages, each answering a different question about an instrument. Regulated labs (pharma, biotech, contract testing) need documented evidence for all three - here's what each one actually covers.
 
 ## Installation Qualification (IQ)
@@ -103,7 +110,8 @@ We provide IQ/OQ/PQ documentation packages sized for both routine QC labs and fu
     slug: 'gc-column-selection-guide',
     title: 'GC Column Selection Guide for Routine Analysis',
     excerpt: 'How stationary phase, film thickness and column dimensions affect separation - and how to pick a sensible starting point.',
-    category: BlogCategory.INSTRUMENT_GUIDE,
+    kind: ArticleKind.GUIDE,
+    topicSlug: 'gc',
     content: `Choosing a GC column is a trade-off between resolution, analysis time and column lifetime. Here's a practical starting point for routine methods.
 
 ## Stationary phase

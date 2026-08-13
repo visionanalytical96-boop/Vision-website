@@ -5,11 +5,15 @@ import { Container } from '@/components/ui/Container';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BlogPostCard } from '@/components/blog/BlogPostCard';
-import { getKnowledgeArticles, getKnowledgeKindCounts, getPopularArticles } from '@/lib/data/knowledge';
-import { BLOG_CATEGORY_LABELS, BLOG_CATEGORIES } from '@/lib/blog-categories';
+import {
+  getKnowledgeArticles,
+  getKnowledgeKindCounts,
+  getKnowledgeTopicCounts,
+  getPopularArticles,
+} from '@/lib/data/knowledge';
+import { getKnowledgeTopics } from '@/lib/data/knowledge-topics';
 import { ARTICLE_KINDS, ARTICLE_KIND_PLURALS, isArticleKind } from '@/lib/article-kinds';
 import { cn } from '@/lib/utils';
-import type { BlogCategory } from '@/generated/prisma/client';
 import { requireFeature } from '@/lib/data/features';
 
 export const metadata: Metadata = {
@@ -17,10 +21,6 @@ export const metadata: Metadata = {
   description:
     'Troubleshooting guides, FAQs, error-code explanations, technical articles, case studies and instrument guides for analytical lab equipment.',
 };
-
-function isBlogCategory(value: string | undefined): value is BlogCategory {
-  return BLOG_CATEGORIES.some((category) => category === value);
-}
 
 function chipClass(active: boolean) {
   return cn(
@@ -32,22 +32,23 @@ function chipClass(active: boolean) {
 export default async function BlogIndexPage(props: PageProps<'/blog'>) {
   await requireFeature('knowledge_center');
   const searchParams = await props.searchParams;
-  const rawCategory = typeof searchParams.category === 'string' ? searchParams.category : undefined;
-  const category = isBlogCategory(rawCategory) ? rawCategory : undefined;
+  const topic = typeof searchParams.topic === 'string' ? searchParams.topic : undefined;
   const rawKind = typeof searchParams.kind === 'string' ? searchParams.kind : undefined;
   const kind = isArticleKind(rawKind) ? rawKind : undefined;
   const query = typeof searchParams.q === 'string' ? searchParams.q : undefined;
 
-  const filters = { category, kind, query };
-  const [posts, kindCounts, popular] = await Promise.all([
+  const filters = { topic, kind, query };
+  const [posts, kindCounts, topicCounts, topics, popular] = await Promise.all([
     getKnowledgeArticles(filters),
     getKnowledgeKindCounts(filters),
+    getKnowledgeTopicCounts(filters),
+    getKnowledgeTopics(),
     getPopularArticles(5),
   ]);
 
   function buildHref(overrides: Record<string, string | undefined>) {
     const params = new URLSearchParams();
-    const current: Record<string, string | undefined> = { q: query, category, kind, ...overrides };
+    const current: Record<string, string | undefined> = { q: query, topic, kind, ...overrides };
     for (const [key, value] of Object.entries(current)) {
       if (value) params.set(key, value);
     }
@@ -64,7 +65,7 @@ export default async function BlogIndexPage(props: PageProps<'/blog'>) {
 
       <div className="mt-8 grid gap-4 sm:grid-cols-[minmax(0,28rem)_auto] sm:items-center">
         <form method="GET" role="search">
-          {category && <input type="hidden" name="category" value={category} />}
+          {topic && <input type="hidden" name="topic" value={topic} />}
           {kind && <input type="hidden" name="kind" value={kind} />}
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -97,12 +98,15 @@ export default async function BlogIndexPage(props: PageProps<'/blog'>) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Link href={buildHref({ category: undefined })} className={chipClass(!category)}>
+          <Link href={buildHref({ topic: undefined })} className={chipClass(!topic)}>
             All topics
           </Link>
-          {BLOG_CATEGORIES.map((value) => (
-            <Link key={value} href={buildHref({ category: value })} className={chipClass(category === value)}>
-              {BLOG_CATEGORY_LABELS[value]}
+          {topics.map((value) => (
+            <Link key={value.slug} href={buildHref({ topic: value.slug })} className={chipClass(topic === value.slug)}>
+              {value.name}
+              {topicCounts.get(value.id) ? (
+                <span className="ml-1.5 text-xs opacity-60">{topicCounts.get(value.id)}</span>
+              ) : null}
             </Link>
           ))}
         </div>

@@ -1,11 +1,11 @@
 import 'server-only';
 import { prisma } from '@/lib/db';
 import { publiclyVisibleWhere } from '@/lib/content-status';
-import type { BlogCategory } from '@/generated/prisma/client';
 
-export function getPublishedBlogPosts(category?: BlogCategory) {
+export function getPublishedBlogPosts() {
   return prisma.knowledgeArticle.findMany({
-    where: { ...publiclyVisibleWhere(), ...(category ? { category } : {}) },
+    where: publiclyVisibleWhere(),
+    include: { topic: { select: { name: true, slug: true } } },
     orderBy: { publishedAt: 'desc' },
   });
 }
@@ -14,6 +14,7 @@ export function getPublishedBlogPosts(category?: BlogCategory) {
 export function getLatestBlogPosts(limit = 3) {
   return prisma.knowledgeArticle.findMany({
     where: publiclyVisibleWhere(),
+    include: { topic: { select: { name: true, slug: true } } },
     orderBy: { publishedAt: 'desc' },
     take: limit,
   });

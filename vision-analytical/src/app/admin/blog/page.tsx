@@ -10,7 +10,6 @@ import { deleteBlogPost, setBlogPostStatus } from '@/lib/actions/admin-blog';
 import { Select } from '@/components/ui/Select';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { CONTENT_STATUSES, CONTENT_STATUS_LABELS, contentStatusMeta, isScheduled } from '@/lib/content-status';
-import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
 import { formatDate, formatDateTime } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Blog' };
@@ -54,7 +53,7 @@ export default async function AdminBlogPage() {
           {posts.map((post) => (
             <TableRow key={post.id}>
               <TableCell>{post.title}</TableCell>
-              <TableCell>{BLOG_CATEGORY_LABELS[post.category]}</TableCell>
+              <TableCell className="text-muted">{post.topic?.name ?? '—'}</TableCell>
               <TableCell>{post.author.name}</TableCell>
               <TableCell>{formatDate(post.createdAt)}</TableCell>
               <TableCell>

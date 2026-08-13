@@ -25,6 +25,7 @@ import { REFURBISHED_CATEGORIES } from './seed-data-refurbished';
 import { BLOG_POSTS } from './seed-data-blog';
 import { INSTRUMENT_MODELS } from './seed-data-instrument-models';
 import { FEATURE_FLAGS, FEATURE_FLAG_KEYS } from '../src/lib/features';
+import { KNOWLEDGE_TOPIC_SEEDS } from '../src/lib/knowledge-topics';
 import {
   DEFAULT_HERO_CONTENT,
   DEFAULT_CATEGORIES_CONTENT,
@@ -315,22 +316,63 @@ async function seedRefurbishedInstruments(prisma: PrismaClient, brandIds: Map<st
 }
 
 // Knowledge Center content, attributed to the admin account.
-async function seedBlogPosts(prisma: PrismaClient, authorId: string) {
+/**
+ * The subject areas the knowledge base is organised by.
+ *
+ * Upserted by slug and never overwritten, so renaming a topic in the admin
+ * survives a re-seed. Where a topic matches an instrument category we link
+ * them, which is what lets a topic page offer "browse HPLC instruments"
+ * without a second copy of the category tree.
+ */
+async function seedKnowledgeTopics(prisma: PrismaClient): Promise<Map<string, string>> {
+  const categories = await prisma.category.findMany({
+    where: { kind: CategoryKind.INSTRUMENT },
+    select: { id: true, slug: true },
+  });
+  const categoryBySlug = new Map(categories.map((category) => [category.slug, category.id]));
+  const topicIds = new Map<string, string>();
+
+  for (const [index, topic] of KNOWLEDGE_TOPIC_SEEDS.entries()) {
+    const saved = await prisma.knowledgeTopic.upsert({
+      where: { slug: topic.slug },
+      update: {},
+      create: {
+        name: topic.name,
+        slug: topic.slug,
+        description: topic.description,
+        icon: topic.icon,
+        // A topic whose category doesn't exist still gets created - the link is
+        // a convenience, not a requirement.
+        categoryId: topic.categorySlug ? (categoryBySlug.get(topic.categorySlug) ?? null) : null,
+        sortOrder: index,
+      },
+    });
+    topicIds.set(topic.slug, saved.id);
+  }
+
+  console.log(`Seeded ${KNOWLEDGE_TOPIC_SEEDS.length} knowledge topics.`);
+  return topicIds;
+}
+
+async function seedBlogPosts(prisma: PrismaClient, authorId: string, topicIds: Map<string, string>) {
   for (const post of BLOG_POSTS) {
+    const topicId = post.topicSlug ? (topicIds.get(post.topicSlug) ?? null) : null;
     await prisma.knowledgeArticle.upsert({
       where: { slug: post.slug },
       update: {
         title: post.title,
         excerpt: post.excerpt,
         content: post.content,
-        category: post.category,
+        kind: post.kind,
+        topicId,
       },
       create: {
         slug: post.slug,
         title: post.title,
         excerpt: post.excerpt,
         content: post.content,
-        category: post.category,
+        kind: post.kind,
+        topicId,
         authorId,
         status: ContentStatus.PUBLISHED,
         publishedAt: new Date(),
@@ -338,7 +380,7 @@ async function seedBlogPosts(prisma: PrismaClient, authorId: string) {
     });
   }
 
-  console.log(`Seeded ${BLOG_POSTS.length} blog posts.`);
+  console.log(`Seeded ${BLOG_POSTS.length} knowledge articles.`);
 }
 
 // Optional sample transactional data (customer, engineer, order, quote,
@@ -753,8 +795,10 @@ async function main() {
   await seedInstrumentModels(prisma, brandIds);
   await seedRefurbishedInstruments(prisma, brandIds);
 
+  const topicIds = await seedKnowledgeTopics(prisma);
+
   if (admin) {
-    await seedBlogPosts(prisma, admin.id);
+    await seedBlogPosts(prisma, admin.id, topicIds);
   } else {
     console.log('Skipping blog post seed - no admin user available to author them.');
   }

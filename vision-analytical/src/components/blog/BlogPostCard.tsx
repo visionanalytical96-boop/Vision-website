@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { KnowledgeArticle } from '@/generated/prisma/client';
-import { BLOG_CATEGORY_LABELS } from '@/lib/blog-categories';
 import { ARTICLE_KIND_LABELS } from '@/lib/article-kinds';
 import { ArticleKind } from '@/generated/prisma/enums';
 import { formatDate } from '@/lib/format';
@@ -20,7 +19,7 @@ export function BlogPostCard({ post }: { post: KnowledgeArticle }) {
       )}
       <div className="flex flex-1 flex-col p-6">
         <span className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="font-medium text-primary dark:text-secondary">{BLOG_CATEGORY_LABELS[post.category]}</span>
+          <span className="font-medium text-primary dark:text-secondary">{ARTICLE_KIND_LABELS[post.kind]}</span>
           {post.kind !== ArticleKind.ARTICLE && (
             <span className="rounded-full border border-border px-2 py-0.5 text-muted">
               {ARTICLE_KIND_LABELS[post.kind]}

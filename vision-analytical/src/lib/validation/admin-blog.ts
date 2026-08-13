@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BlogCategory, ContentStatus, ArticleKind } from '@/generated/prisma/client';
+import { ContentStatus, ArticleKind } from '@/generated/prisma/client';
 import { toVideoEmbedUrl } from '@/lib/video-embed';
 
 export const blogPostFormSchema = z.object({
@@ -9,7 +9,10 @@ export const blogPostFormSchema = z.object({
     .min(1, { error: 'Slug is required.' })
     .regex(/^[a-z0-9-]+$/, { error: 'Use lowercase letters, numbers and hyphens only.' }),
   title: z.string().trim().min(2, { error: 'Title is required.' }),
-  category: z.enum(BlogCategory, { error: 'Choose a category.' }),
+  // Optional: an article can be filed before anyone decides its subject area.
+  topicId: z.string().trim().optional().or(z.literal('')),
+  tags: z.string().trim().optional().or(z.literal('')),
+  reviewerId: z.string().trim().optional().or(z.literal('')),
   kind: z.enum(ArticleKind, { error: 'Choose an article type.' }),
   errorCode: z.string().trim().optional().or(z.literal('')),
   // Normalised to the embeddable form, and rejected when it isn't a host the

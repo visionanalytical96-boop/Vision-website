@@ -21,6 +21,15 @@ import {
   FileDown,
   Quote,
   Settings,
+  UsersRound,
+  IdCard,
+  CalendarCheck,
+  CalendarOff,
+  CalendarDays,
+  Building2,
+  Fingerprint,
+  SlidersHorizontal,
+  History,
 } from 'lucide-react';
 import { requireUser } from '@/lib/dal';
 import { Role } from '@/generated/prisma/client';
@@ -40,6 +49,18 @@ const NAV_ITEMS: DashboardNavItem[] = [
   { href: '/admin/blog', label: 'Blog', icon: <Newspaper className="h-4 w-4" /> },
   { href: '/admin/reports', label: 'Reports', icon: <BarChart3 className="h-4 w-4" /> },
   { href: '/admin/quality', label: 'Data Quality', icon: <ClipboardCheck className="h-4 w-4" /> },
+  // Everything about employees lives under Team. Keeping it one section stops
+  // the main nav growing a row every time HR gains a feature.
+  { href: '/admin/team', label: 'Dashboard', icon: <UsersRound className="h-4 w-4" />, section: 'Team' },
+  { href: '/admin/team/employees', label: 'Employees', icon: <IdCard className="h-4 w-4" /> },
+  { href: '/admin/team/attendance', label: 'Attendance', icon: <CalendarCheck className="h-4 w-4" /> },
+  { href: '/admin/team/leave', label: 'Leave', icon: <CalendarOff className="h-4 w-4" /> },
+  { href: '/admin/team/holidays', label: 'Holidays', icon: <CalendarDays className="h-4 w-4" /> },
+  { href: '/admin/team/departments', label: 'Departments', icon: <Building2 className="h-4 w-4" /> },
+  { href: '/admin/team/reports', label: 'Reports', icon: <BarChart3 className="h-4 w-4" /> },
+  { href: '/admin/team/devices', label: 'Device Settings', icon: <Fingerprint className="h-4 w-4" /> },
+  { href: '/admin/team/rules', label: 'Attendance Rules', icon: <SlidersHorizontal className="h-4 w-4" /> },
+  { href: '/admin/team/activity', label: 'Activity Logs', icon: <History className="h-4 w-4" /> },
   { href: '/admin/website/homepage', label: 'Homepage Builder', icon: <LayoutTemplate className="h-4 w-4" />, section: 'Website' },
   { href: '/admin/website/pages', label: 'Pages & Menus', icon: <FileEdit className="h-4 w-4" /> },
   { href: '/admin/website/theme', label: 'Theme', icon: <Palette className="h-4 w-4" /> },

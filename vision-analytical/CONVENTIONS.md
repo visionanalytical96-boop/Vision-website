@@ -76,6 +76,36 @@ Nothing in the catalogue is capped: products, categories, brands, spare parts,
 instrument models, compatibility mappings, documents and downloads are all
 open-ended by design.
 
+## People and records about people
+
+An `Employee` is not a `User`. Field staff often have no login and most users
+are customers, so the link is optional on both sides rather than folding HR data
+onto the account.
+
+Records that decide someone's pay carry stricter rules than the rest of the
+platform:
+
+- **Every change is audited, in the same transaction as the change.** If the log
+  cannot be written, the change does not happen. One `AuditLog` table serves the
+  whole platform, so an audit has one place to look.
+- **A derived number is stored, not recomputed on read.** Worked, late and
+  overtime minutes are written onto the attendance row, so changing a policy
+  next quarter cannot rewrite a month that has already been paid.
+- **Raw and derived data stay in separate tables.** Device punches are
+  append-only and deduplicated by a unique index; a day's attendance is one
+  derived row. That is what makes re-processing and duplicate detection possible
+  rather than guesswork.
+- **A manual correction outranks an automatic one.** A later sync skips any day
+  a person entered by hand and signed for.
+- **Nobody is deactivated by deletion.** Employment history is a payroll record;
+  leavers are marked inactive so their attendance survives.
+- **An unmarked day is not an absent day.** The gap is shown as unmarked and
+  closed deliberately, by a named action that logs what it wrote.
+
+Wall-clock policy carries an explicit IANA timezone. The server runs UTC in
+Docker, so "09:30" has no fixed meaning without one, and a punch after midnight
+local lands on the wrong day.
+
 ## Roles
 
 Today: Admin, Engineer, Customer. The role system must extend to Super Admin,
@@ -151,9 +181,32 @@ After each phase: review, refactor, reuse, document, test — then continue.
 Debt does not roll forward. A two-state boolean that has to express five states
 gets migrated, not worked around.
 
+## Tests
+
+`pnpm test` runs Node's built-in test runner over `tests/` through tsx — no test
+framework dependency to keep current.
+
+Pure logic that decides something consequential gets a test: the attendance
+engine, timezone conversion, CSV escaping, device-export parsing. Keep that
+logic in modules without `server-only` so it can be imported directly; a pure
+function trapped behind a database guard is a function nobody will test. Where a
+module has both halves, split them (`punch-csv.ts` / `attendance-sync.ts`,
+`audit-diff.ts` / `audit.ts`).
+
+Everything else is verified by driving the running app.
+
 ## Definition of done
 
 Typecheck and lint clean, mobile-first and responsive to desktop, accessible
 (keyboard focus visible, contrast at AA), SEO metadata present, and verified
 running — not just compiled. Server Components by default, images optimised,
 heavy modules lazy-loaded.
+
+Verify against a production build, not `next dev`. Dev-mode recompiles can add
+tens of seconds to a request and look exactly like an application bug.
+
+Route handlers do not run through layouts. A handler under `/admin` is
+unprotected unless it calls `requireRole` itself — including file downloads.
+
+Anything exported to CSV passes through `toCsv`, which neutralises cells a
+spreadsheet would otherwise execute as a formula.

@@ -185,6 +185,8 @@ model User {
   assignedLeads       CrmLead[]        @relation("AssignedLeads")
   crmActivities       CrmActivity[]    @relation("CreatedActivities")
   articles            KnowledgeArticle[] @relation("AuthoredArticles")
+  employeeProfile     Employee?        @relation("EmployeeAccount")
+  auditEntries        AuditLog[]       @relation("AuditActor")
   stockMovements      StockMovement[]  @relation("RecordedMovements")
 
   @@index([role])
@@ -880,4 +882,343 @@ model ContactMessage {
   message    String
   isResolved Boolean  @default(false)
   createdAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Team: employees, attendance, leave
+//
+// Designed as the base for HRMS, payroll and asset tracking rather than a
+// standalone attendance page. Two rules shape it:
+//
+//  1. An Employee is not a User. Field staff often have no login, and most
+//     Users (customers) are not employees, so the link is optional on both
+//     sides rather than folding HR data onto the account.
+//  2. Device punches and attendance are separate tables. Punches are raw,
+//     append-only and high-volume; a day's attendance is one derived row.
+//     Keeping them apart is what makes duplicate detection, re-processing and
+//     large logs tractable.
+// ---------------------------------------------------------------------------
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+/// Office staff and field engineers are counted separately on the dashboard
+/// and have different attendance expectations.
+enum StaffCategory {
+  OFFICE_STAFF
+  FIELD_ENGINEER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  HALF_DAY
+  ABSENT
+  ON_LEAVE
+  WEEKLY_OFF
+  HOLIDAY
+}
+
+/// Where an attendance row came from. Manual rows are the ones an audit will
+/// ask about, which is why every edit is logged.
+enum AttendanceSource {
+  BIOMETRIC
+  MANUAL
+  IMPORT
+}
+
+enum PunchDirection {
+  IN
+  OUT
+  UNKNOWN
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum EmployeeDocumentKind {
+  ID_PROOF
+  OFFER_LETTER
+  EXPERIENCE
+  CERTIFICATE
+  CONTRACT
+  OTHER
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  headId      String?
+  head        Employee? @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees    Employee[]   @relation("DepartmentMembers")
+  designations Designation[]
+
+  @@index([sortOrder])
+}
+
+model Designation {
+  id           String      @id @default(cuid())
+  name         String
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  sortOrder    Int         @default(0)
+  isActive     Boolean     @default(true)
+
+  employees Employee[]
+
+  @@unique([name, departmentId])
+  @@index([departmentId])
+}
+
+model Employee {
+  id           String  @id @default(cuid())
+  employeeCode String  @unique
+  /// Present only when the person has a login. Field staff often don't.
+  userId       String? @unique
+  user         User?   @relation("EmployeeAccount", fields: [userId], references: [id], onDelete: SetNull)
+
+  name            String
+  photoUrl        String?
+  departmentId    String?
+  department      Department?  @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: SetNull)
+  designationId   String?
+  designation     Designation? @relation(fields: [designationId], references: [id], onDelete: SetNull)
+  reportingToId   String?
+  reportingTo     Employee?    @relation("ReportingLine", fields: [reportingToId], references: [id], onDelete: SetNull)
+  directReports   Employee[]   @relation("ReportingLine")
+  headsDepartments Department[] @relation("DepartmentHead")
+
+  employmentType EmploymentType @default(FULL_TIME)
+  category       StaffCategory  @default(OFFICE_STAFF)
+  joiningDate    DateTime
+  exitDate       DateTime?
+  dateOfBirth    DateTime?
+
+  mobile                String?
+  email                 String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  addressLine           String?
+  city                  String?
+  state                 String?
+  postalCode            String?
+
+  /// The user id programmed into the biometric device. Unique because a punch
+  /// is matched back to an employee by this and nothing else.
+  biometricId String? @unique
+  skills      String[]
+  notes       String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendance    AttendanceRecord[]
+  punches       AttendancePunch[]
+  leaveRequests LeaveRequest[]     @relation("LeaveRequester")
+  decidedLeave  LeaveRequest[]     @relation("LeaveDecider")
+  documents     EmployeeDocument[]
+
+  @@index([departmentId])
+  @@index([category])
+  @@index([isActive])
+}
+
+model EmployeeDocument {
+  id         String               @id @default(cuid())
+  employeeId String
+  employee   Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  kind       EmployeeDocumentKind
+  title      String
+  fileUrl    String
+  issuedOn   DateTime?
+  expiresOn  DateTime?
+  createdAt  DateTime             @default(now())
+
+  @@index([employeeId])
+}
+
+/// One row per employee per day. `date` is midnight UTC so a day is a single
+/// comparable value regardless of when punches landed.
+model AttendanceRecord {
+  id         String           @id @default(cuid())
+  employeeId String
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime         @db.Date
+  checkInAt  DateTime?
+  checkOutAt DateTime?
+  status     AttendanceStatus
+  /// Derived from the rules at write time and stored, so a later rule change
+  /// never silently rewrites history that payroll has already used.
+  workedMinutes   Int @default(0)
+  lateMinutes     Int @default(0)
+  overtimeMinutes Int @default(0)
+  source     AttendanceSource @default(MANUAL)
+  notes      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([date])
+  @@index([status])
+  @@index([employeeId, date])
+}
+
+model BiometricDevice {
+  id            String   @id @default(cuid())
+  name          String
+  model         String   @default("Team Office Z900")
+  host          String
+  port          Int      @default(4370)
+  serialNumber  String?
+  isActive      Boolean  @default(true)
+  lastSyncAt    DateTime?
+  lastSyncOk    Boolean?
+  lastSyncNote  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  punches AttendancePunch[]
+
+  @@index([isActive])
+}
+
+/// Raw device reads, append-only. The unique constraint is the duplicate
+/// detection: a device that re-sends a window of punches cannot create two rows.
+model AttendancePunch {
+  id          String           @id @default(cuid())
+  deviceId    String?
+  device      BiometricDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  biometricId String
+  punchedAt   DateTime
+  direction   PunchDirection   @default(UNKNOWN)
+  /// Set once the punch has been folded into an AttendanceRecord. Null means
+  /// it still needs processing, which is also how failed rows stay visible.
+  processedAt DateTime?
+  employeeId  String?
+  employee    Employee?        @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  importNote  String?
+  createdAt   DateTime         @default(now())
+
+  @@unique([biometricId, punchedAt])
+  @@index([punchedAt])
+  @@index([processedAt])
+  @@index([employeeId])
+}
+
+/// Attendance policy. A single active row today; the table shape leaves room
+/// for per-department or shift-specific rules without a migration.
+model AttendanceRule {
+  id                    String   @id @default(cuid())
+  name                  String   @default("Default")
+  /// IANA zone the office times are written in. Stored rather than assumed:
+  /// the server runs UTC, so without it "09:30" has no fixed meaning and a
+  /// punch after midnight local lands on the wrong day.
+  timezone              String   @default("Asia/Kolkata")
+  /// "HH:mm" local time - a wall-clock policy, not an instant.
+  officeStartTime       String   @default("09:30")
+  officeEndTime         String   @default("18:30")
+  graceMinutes          Int      @default(10)
+  halfDayAfterMinutes   Int      @default(120)
+  fullDayMinutes        Int      @default(480)
+  halfDayMinutes        Int      @default(240)
+  overtimeAfterMinutes  Int      @default(540)
+  /// 0 = Sunday, matching JavaScript's getDay().
+  weeklyOffDays         Int[]    @default([0])
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Holiday {
+  id         String   @id @default(cuid())
+  date       DateTime @db.Date
+  name       String
+  isOptional Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([date, name])
+  @@index([date])
+}
+
+model LeaveType {
+  id           String  @id @default(cuid())
+  name         String  @unique
+  code         String  @unique
+  /// Days granted per calendar year. Null means uncapped (e.g. unpaid leave).
+  annualQuota  Int?
+  isPaid       Boolean @default(true)
+  requiresAttachment Boolean @default(false)
+  sortOrder    Int     @default(0)
+  isActive     Boolean @default(true)
+
+  requests LeaveRequest[]
+
+  @@index([sortOrder])
+}
+
+model LeaveRequest {
+  id          String             @id @default(cuid())
+  employeeId  String
+  employee    Employee           @relation("LeaveRequester", fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId String
+  leaveType   LeaveType          @relation(fields: [leaveTypeId], references: [id])
+  startDate   DateTime           @db.Date
+  endDate     DateTime           @db.Date
+  /// Stored rather than derived: half-days and holidays mean the span alone
+  /// doesn't tell you how much leave was actually consumed.
+  days        Float
+  reason      String
+  status      LeaveRequestStatus @default(PENDING)
+  attachmentUrl String?
+  decidedById String?
+  decidedBy   Employee?          @relation("LeaveDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt   DateTime?
+  decisionNote String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+}
+
+// ---------------------------------------------------------------------------
+// Audit trail
+// ---------------------------------------------------------------------------
+
+/// Who changed what, when. Platform-wide rather than attendance-only: every
+/// module that grows into the ERP needs the same record, and one table means
+/// one place to look during an audit.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String
+  action     String
+  entityType String
+  entityId   String
+  summary    String
+  /// Only the fields that changed, so the log stays readable and small.
+  changes    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorId])
 }

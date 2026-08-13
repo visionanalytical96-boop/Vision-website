@@ -636,6 +636,108 @@ async function seedCms(prisma: PrismaClient) {
   console.log('Seeded site CMS defaults (homepage sections, page content, site & theme settings).');
 }
 
+// Team reference data: the lists an HR page is unusable without.
+//
+// Deliberately no employees. Staff records are real people with real joining
+// dates and phone numbers - inventing them would put fiction in front of
+// whoever opens the page first. Departments, leave types and the attendance
+// rule are structure, not claims about anyone, so they are safe to ship.
+async function seedTeamDefaults(prisma: PrismaClient) {
+  const departments: Array<{ name: string; slug: string; description: string; designations: string[] }> = [
+    {
+      name: 'Sales',
+      slug: 'sales',
+      description: 'Enquiries, quotations and order closure.',
+      designations: ['Sales Executive', 'Sales Manager', 'Business Development Executive'],
+    },
+    {
+      name: 'Service',
+      slug: 'service',
+      description: 'Installation, breakdown calls, AMC visits and calibration.',
+      designations: ['Service Engineer', 'Senior Service Engineer', 'Service Manager'],
+    },
+    {
+      name: 'Accounts',
+      slug: 'accounts',
+      description: 'Invoicing, payments, GST and payroll.',
+      designations: ['Accounts Executive', 'Accounts Manager'],
+    },
+    {
+      name: 'Warehouse',
+      slug: 'warehouse',
+      description: 'Stock, dispatch and inward material.',
+      designations: ['Store Keeper', 'Dispatch Executive', 'Warehouse Manager'],
+    },
+    {
+      name: 'Administration',
+      slug: 'administration',
+      description: 'HR, office administration and management.',
+      designations: ['HR Executive', 'Office Administrator', 'Director'],
+    },
+  ];
+
+  for (const [index, dept] of departments.entries()) {
+    const saved = await prisma.department.upsert({
+      where: { slug: dept.slug },
+      update: {},
+      create: { name: dept.name, slug: dept.slug, description: dept.description, sortOrder: index },
+    });
+
+    for (const [position, name] of dept.designations.entries()) {
+      await prisma.designation.upsert({
+        where: { name_departmentId: { name, departmentId: saved.id } },
+        update: {},
+        create: { name, departmentId: saved.id, sortOrder: position },
+      });
+    }
+  }
+
+  // Starting quotas. Entitlements differ by state and by company policy, so
+  // these are defaults to edit in Team → Settings, not a statutory statement.
+  const leaveTypes = [
+    { name: 'Casual Leave', code: 'CL', annualQuota: 12, isPaid: true, requiresAttachment: false },
+    { name: 'Sick Leave', code: 'SL', annualQuota: 12, isPaid: true, requiresAttachment: false },
+    { name: 'Earned Leave', code: 'EL', annualQuota: 15, isPaid: true, requiresAttachment: false },
+    { name: 'Leave Without Pay', code: 'LWP', annualQuota: null, isPaid: false, requiresAttachment: false },
+  ];
+  for (const [index, type] of leaveTypes.entries()) {
+    await prisma.leaveType.upsert({
+      where: { code: type.code },
+      update: {},
+      create: { ...type, sortOrder: index },
+    });
+  }
+
+  // One active policy to start from. Every attendance calculation reads this,
+  // so the module has to work before anyone has visited the settings page.
+  if ((await prisma.attendanceRule.count()) === 0) {
+    await prisma.attendanceRule.create({ data: { name: 'Default' } });
+  }
+
+  // Only the three national holidays with fixed dates. Festival dates follow
+  // the lunar calendar and shift every year - guessing them would put wrong
+  // dates in a calendar people plan leave against.
+  const year = new Date().getFullYear();
+  const nationalHolidays = [
+    { month: 1, day: 26, name: 'Republic Day' },
+    { month: 8, day: 15, name: 'Independence Day' },
+    { month: 10, day: 2, name: 'Gandhi Jayanti' },
+  ];
+  for (const holiday of nationalHolidays) {
+    const date = new Date(Date.UTC(year, holiday.month - 1, holiday.day));
+    await prisma.holiday.upsert({
+      where: { date_name: { date, name: holiday.name } },
+      update: {},
+      create: { date, name: holiday.name },
+    });
+  }
+
+  console.log(
+    `Seeded team defaults: ${departments.length} departments, ${leaveTypes.length} leave types, ` +
+      `an attendance rule and ${nationalHolidays.length} national holidays for ${year}. No employees - add them in Team → Employees.`,
+  );
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -660,6 +762,7 @@ async function main() {
   await seedDemoData(prisma);
   await seedCms(prisma);
   await seedFeatureFlags(prisma);
+  await seedTeamDefaults(prisma);
 
   await prisma.$disconnect();
 }

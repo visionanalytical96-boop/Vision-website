@@ -7,12 +7,18 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-46 commits.
+51 commits.
 
 ## 2026-08-13
 
 ### Features
 
+- visit-driven job portal with GPS check-in (`512de0fa`)
+  The engineer portal now works off visits rather than tickets, so a job that needs a second trip has somewhere to record it.
+- field service schema and visit lifecycle (`66644d65`)
+  Adds the data model for field service work and the state machine that governs it.
+- data import framework foundation — schema, parsing, definitions (`30821202`)
+  Groundwork for CSV and Excel import. Additive and inert: three new tables, one new entity, and library code that no route references yet. The running application behaves exactly as before.
 - knowledge schema — separate topic from content type (`c86efa4d`)
   Session 6 groundwork, plus the architecture review that preceded it.
 - Team section — employees, attendance, leave and audit trail (`9770e85e`)
@@ -20,6 +26,10 @@ type within each date.
 
 ### Documentation
 
+- correct the repository name after it was renamed (`550b726d`)
+  The repository was created as `n8n` and is now `Vision-website`. The docs named the old one.
+- changelog, backup, recovery and health check runbooks (`ade1f12b`)
+  Four operational documents, each backed by a script so they are runnable rather than merely readable.
 - DEPLOYMENT.md and PROJECT_STRUCTURE.md (`c3d9600f`)
   Complete build-and-deploy instructions for a clean Ubuntu server, and a folder-by-folder description of the architecture.
 

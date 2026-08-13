@@ -4,6 +4,16 @@ Production platform for Vision Analytical — sales, refurbishment, spare
 parts, service (AMC/CMC) and support for analytical lab instruments
 (HPLC, GC, LC-MS, UV-Vis and related equipment).
 
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Build from scratch, deploy to Ubuntu, health checks, rollback, credentials |
+| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) | Folder-by-folder architecture and the rules behind it |
+| [CONVENTIONS.md](./CONVENTIONS.md) | Standing engineering rules for the project |
+| [docs/architecture-review.md](./docs/architecture-review.md) | Platform inventory: reused, extended, refactored, built new |
+| [docs/attendance-devices.md](./docs/attendance-devices.md) | Biometric punch pipeline and the unbuilt vendor adapter |
+
 ## Tech stack
 
 - **Framework:** Next.js 16 (App Router, Turbopack, Server Actions)

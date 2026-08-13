@@ -180,7 +180,11 @@ model User {
   role         Role     @default(CUSTOMER)
   name         String
   phone        String?
+  /// Free-text company name. Superseded by `companyId`; kept so nothing that
+  /// reads it breaks while records are linked to real Company rows.
   companyName  String?
+  companyId    String?
+  company      Company? @relation("CompanyContacts", fields: [companyId], references: [id], onDelete: SetNull)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -199,11 +203,52 @@ model User {
   reviewedArticles    KnowledgeArticle[] @relation("ReviewedArticles")
   articleRevisions    ArticleRevision[]  @relation("ArticleRevisions")
   searchQueries       SearchQuery[]      @relation("SearchQueries")
+  importJobs          ImportJob[]        @relation("ImportJobs")
   employeeProfile     Employee?        @relation("EmployeeAccount")
   auditEntries        AuditLog[]       @relation("AuditActor")
   stockMovements      StockMovement[]  @relation("RecordedMovements")
 
   @@index([role])
+  @@index([companyId])
+}
+
+/// A customer organisation — a laboratory, hospital, plant or institute.
+///
+/// A real entity rather than the free-text `User.companyName` it replaces: one
+/// lab has a QC manager, a purchase officer and a lab head, all of whom need
+/// their own login while sharing one account, one GSTIN and one address.
+/// A string on each user cannot express that, and cannot be corrected in one
+/// place when the name is spelled three ways.
+///
+/// `User.companyName` is kept alongside `companyId` during the transition, so
+/// nothing that reads it breaks while records are gradually linked up.
+model Company {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  /// GST identification number, for invoicing.
+  gstin    String?
+  industry String?
+
+  addressLine String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String  @default("India")
+
+  phone   String?
+  email   String?
+  website String?
+  notes   String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contacts User[] @relation("CompanyContacts")
+
+  @@index([isActive])
+  @@index([name])
 }
 
 model Address {
@@ -1030,6 +1075,104 @@ model SearchQuery {
   @@index([createdAt])
   @@index([resultCount])
   @@index([source])
+}
+
+// ---------------------------------------------------------------------------
+// Data import
+// ---------------------------------------------------------------------------
+
+enum ImportStatus {
+  /// Parsed and validated; waiting for someone to look at the preview.
+  VALIDATED
+  COMPLETED
+  /// The transaction rolled back. Nothing was written.
+  FAILED
+  CANCELLED
+}
+
+/// What the importer decided to do with one row.
+enum ImportRowAction {
+  CREATE
+  UPDATE
+  /// A duplicate whose values already match — writing it would change nothing.
+  SKIP
+  /// Failed validation. Never written, and always explained.
+  ERROR
+}
+
+/// One upload, from parse through to commit.
+///
+/// Parsed rows are persisted rather than held in memory between the preview and
+/// the confirmation: the two are separate requests, and a preview that has to
+/// re-parse the file is a preview that can disagree with what gets written.
+model ImportJob {
+  id       String @id @default(cuid())
+  /// Which import definition this used, e.g. "products".
+  entity   String
+  fileName String
+  fileType String
+
+  status ImportStatus @default(VALIDATED)
+  /// "create" refuses to touch existing rows; "upsert" updates them.
+  mode   String       @default("upsert")
+
+  totalRows   Int @default(0)
+  createRows  Int @default(0)
+  updateRows  Int @default(0)
+  skipRows    Int @default(0)
+  errorRows   Int @default(0)
+
+  startedById String?
+  startedBy   User?   @relation("ImportJobs", fields: [startedById], references: [id], onDelete: SetNull)
+  /// Kept as text so the log survives the account being removed.
+  actorLabel  String
+
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  rows ImportJobRow[]
+
+  @@index([entity])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ImportJobRow {
+  id    String    @id @default(cuid())
+  jobId String
+  job   ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  /// Line number in the uploaded file, so an error can be found and fixed there.
+  rowNumber Int
+  action    ImportRowAction
+  message   String?
+  /// The parsed row as it was read, so the preview and the error report show
+  /// what the file actually said rather than what we hoped it said.
+  data      Json
+  /// What this row created or updated, once committed.
+  entityId  String?
+
+  @@unique([jobId, rowNumber])
+  @@index([jobId, action])
+}
+
+/// Everything the demo seed created, so all of it can be removed exactly.
+///
+/// A pointer table rather than an `isDemo` column on twenty models: it needs no
+/// migration when a new module is added, and it cannot be forgotten on one
+/// table and leave fake customers behind after a purge.
+model DemoRecord {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  /// Which seed run created it, so a partial purge is possible if ever needed.
+  batch      String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, entityId])
+  @@index([entityType])
+  @@index([batch])
 }
 
 // ---------------------------------------------------------------------------

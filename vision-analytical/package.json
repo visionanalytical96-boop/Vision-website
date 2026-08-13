@@ -26,6 +26,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "exceljs": "^4.4.0",
     "jose": "^6.2.8",
     "lucide-react": "^1.28.0",
     "nanoid": "^6.0.1",
@@ -56,5 +57,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.6",
     "typescript": "^5"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

@@ -204,6 +204,12 @@ model User {
   articleRevisions    ArticleRevision[]  @relation("ArticleRevisions")
   searchQueries       SearchQuery[]      @relation("SearchQueries")
   importJobs          ImportJob[]        @relation("ImportJobs")
+  ownedInstruments    CustomerInstrument[] @relation("OwnedInstruments")
+  engineerVisits      ServiceVisit[]     @relation("EngineerVisits")
+  visitEvents         VisitEvent[]       @relation("VisitEventActor")
+  requestedParts      PartRequest[]      @relation("RequestedParts")
+  decidedParts        PartRequest[]      @relation("DecidedParts")
+  notifications       Notification[]     @relation("UserNotifications")
   employeeProfile     Employee?        @relation("EmployeeAccount")
   auditEntries        AuditLog[]       @relation("AuditActor")
   stockMovements      StockMovement[]  @relation("RecordedMovements")
@@ -245,7 +251,8 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contacts User[] @relation("CompanyContacts")
+  contacts    User[]               @relation("CompanyContacts")
+  instruments CustomerInstrument[]
 
   @@index([isActive])
   @@index([name])
@@ -357,6 +364,9 @@ model Product {
   errorCodeParts  ErrorCodePart[]
   serviceCaseParts ServiceCasePart[]
   troubleshootingParts TroubleshootingCausePart[]
+  customerInstruments CustomerInstrument[]
+  servicePartsUsed ServiceReportPart[] @relation("ServicePartsUsed")
+  requestedParts  PartRequest[]      @relation("RequestedPartProduct")
 
   @@index([kind])
   @@index([categoryId])
@@ -391,6 +401,7 @@ model InstrumentModel {
   errorCodes    ErrorCode[]
   serviceCases  ServiceCase[]
   symptoms      TroubleshootingSymptom[]
+  customerInstruments CustomerInstrument[]
 
   @@unique([brandId, slug])
   @@index([brandId])
@@ -586,8 +597,13 @@ model ServiceRequest {
   resolvedAt            DateTime?
 
   reports ServiceReport[]
+  visits  ServiceVisit[]
+
+  customerInstrumentId String?
+  customerInstrument   CustomerInstrument? @relation(fields: [customerInstrumentId], references: [id], onDelete: SetNull)
 
   @@index([customerId])
+  @@index([customerInstrumentId])
   @@index([assignedEngineerId])
   @@index([status])
 }
@@ -598,16 +614,42 @@ model ServiceReport {
   serviceRequest       ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   engineerId           String
   engineer             User           @relation("EngineerServiceReports", fields: [engineerId], references: [id])
+  /// Which trip to site produced it. Optional so reports predating the
+  /// visit model keep working.
+  visitId              String?
+  visit                ServiceVisit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  kind                 ServiceReportKind @default(INSPECTION)
   workPerformed        String
+  /// Superseded by the ServiceReportPart and ServiceReportPhoto rows.
+  /// Kept so existing reports are not rewritten by a migration.
   partsUsed            Json
   photos               Json
+  rootCause            String?
+  correctiveAction     String?
+  recommendations      String?
+  engineerRemarks      String?
+  customerRemarks      String?
+  customerName         String?
   customerSignatureUrl String?
+  signedAt             DateTime?
+  /// Calibration and validation only.
+  certificateNumber    String?
+  standardUsed         String?
+  /// When the next calibration or PM falls due, copied onto the instrument.
+  nextDueOn            DateTime?
+  approvedById         String?
+  approvedAt           DateTime?
   reportedAt           DateTime       @default(now())
 
   /// A write-up of this job, once it is worth publishing.
   serviceCase ServiceCase?
+  items       ServiceReportItem[]
+  reportPhotos ServiceReportPhoto[]
+  reportParts ServiceReportPart[]
 
   @@index([serviceRequestId])
+  @@index([visitId])
+  @@index([kind])
 }
 
 model AmcContract {
@@ -627,6 +669,7 @@ model AmcContract {
 
   serviceRequests ServiceRequest[]
   invoices        Invoice[]
+  instruments     CustomerInstrument[]
 
   @@index([customerId])
   @@index([status])
@@ -1726,4 +1769,330 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@index([actorId])
+}
+
+// ---------------------------------------------------------------------------
+// Field service: the install base, visits, and what happened on them
+//
+// Three ideas shape this section:
+//
+//  1. A CustomerInstrument is not a Product. A catalogue product is a thing we
+//     sell; a customer instrument is a specific serial number standing in a
+//     specific lab, with its own warranty, AMC and service history. This is the
+//     extension point CONVENTIONS.md reserved.
+//  2. A ServiceRequest is a ticket; a ServiceVisit is one trip to site. One
+//     ticket often needs several visits - "waiting for parts" means coming back
+//     - so the field lifecycle lives on the visit, not the ticket. Putting it
+//     on the ticket makes a second visit impossible to record.
+//  3. Reports carry structured rows, not JSON blobs. A calibration reading and
+//     a PM checklist tick are the same shape: label, expected, actual, result.
+// ---------------------------------------------------------------------------
+
+enum InstrumentStatus {
+  ACTIVE
+  UNDER_REPAIR
+  STANDBY
+  DECOMMISSIONED
+}
+
+/// The field lifecycle of one visit, in the order it happens.
+enum VisitStatus {
+  ASSIGNED
+  ACCEPTED
+  REJECTED
+  TRAVELLING
+  REACHED_SITE
+  WORK_STARTED
+  WAITING_FOR_PARTS
+  WORK_COMPLETED
+  AWAITING_CUSTOMER_APPROVAL
+  CLOSED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum ServiceReportKind {
+  INSPECTION
+  INSTALLATION
+  CALIBRATION
+  PREVENTIVE_MAINTENANCE
+  BREAKDOWN
+  REPAIR
+  VALIDATION
+  TRAINING
+}
+
+/// The outcome of a checklist line or a measurement.
+enum ReportItemResult {
+  PASS
+  FAIL
+  NOT_APPLICABLE
+  OBSERVATION
+}
+
+enum PartRequestStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  DISPATCHED
+  RECEIVED
+  CANCELLED
+}
+
+enum NotificationKind {
+  JOB_ASSIGNED
+  JOB_UPDATED
+  SCHEDULE_CHANGED
+  REPORT_PENDING
+  REPORT_APPROVED
+  PART_REQUEST_UPDATED
+  REMINDER
+}
+
+/// A specific instrument a customer owns, identified by its serial number.
+///
+/// Warranty, AMC, calibration due dates and service history hang off this and
+/// not off the catalogue Product: two labs can own the same model and have
+/// entirely different histories, and the one being serviced is the one with
+/// that serial number on the panel.
+model CustomerInstrument {
+  id           String @id @default(cuid())
+  serialNumber String
+
+  /// The lab that owns it. Preferred over `owner`, which is one contact person.
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  ownerId   String?
+  owner     User?    @relation("OwnedInstruments", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: SetNull)
+  /// Set when we sold it, so the sale and the install base are one record.
+  productId         String?
+  product           Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  /// What the customer calls it — "QC Lab HPLC 2" — which is how an engineer
+  /// is told which instrument to look at.
+  nickname String?
+  siteName String?
+
+  addressLine String?
+  city        String?
+  state       String?
+  postalCode  String?
+
+  installedOn      DateTime?
+  warrantyEndsOn   DateTime?
+  calibrationDueOn DateTime?
+  nextPmDueOn      DateTime?
+
+  amcContractId String?
+  amcContract   AmcContract? @relation(fields: [amcContractId], references: [id], onDelete: SetNull)
+
+  status InstrumentStatus @default(ACTIVE)
+
+  /// Random token behind the QR sticker on the instrument. Not the id: a QR
+  /// code is photographed, shared and left on a bench, so it gets an
+  /// identifier that can be rotated without touching foreign keys.
+  qrToken String @unique @default(cuid())
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  serviceRequests ServiceRequest[]
+  visits          ServiceVisit[]
+
+  /// Serial numbers repeat across manufacturers, so identity is the serial
+  /// plus the model. Enforced by a COALESCE index in the migration, because
+  /// Postgres treats NULLs as distinct.
+  @@index([companyId])
+  @@index([serialNumber])
+  @@index([status])
+  @@index([warrantyEndsOn])
+}
+
+/// One trip to site.
+model ServiceVisit {
+  id               String         @id @default(cuid())
+  visitNumber      String         @unique
+  serviceRequestId String
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+
+  engineerId String
+  engineer   User   @relation("EngineerVisits", fields: [engineerId], references: [id])
+
+  customerInstrumentId String?
+  customerInstrument   CustomerInstrument? @relation(fields: [customerInstrumentId], references: [id], onDelete: SetNull)
+
+  status       VisitStatus @default(ASSIGNED)
+  scheduledFor DateTime?
+  /// Why an engineer declined or rescheduled. Required by the action, because
+  /// a rejected job with no reason cannot be re-assigned sensibly.
+  statusNote   String?
+
+  acceptedAt       DateTime?
+  travelStartedAt  DateTime?
+  checkInAt        DateTime?
+  checkOutAt       DateTime?
+  workStartedAt    DateTime?
+  workCompletedAt  DateTime?
+  closedAt         DateTime?
+
+  /// Where the engineer was when they checked in and out. Stored as the raw
+  /// fix plus its accuracy: a reading good to 2km is not evidence of anything,
+  /// and pretending otherwise is worse than having no reading.
+  checkInLatitude   Float?
+  checkInLongitude  Float?
+  checkInAccuracyM  Float?
+  checkOutLatitude  Float?
+  checkOutLongitude Float?
+  checkOutAccuracyM Float?
+  /// Entered by the engineer, not derived from GPS - a straight-line distance
+  /// between two fixes is not what anyone gets reimbursed for.
+  travelDistanceKm  Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events       VisitEvent[]
+  reports      ServiceReport[]
+  partRequests PartRequest[]
+
+  @@index([engineerId, status])
+  @@index([serviceRequestId])
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+/// Every status change on a visit, with where and when it happened.
+///
+/// Append-only. The visit carries the current state for querying; this is the
+/// trail that answers "when did the engineer actually arrive" months later.
+model VisitEvent {
+  id      String       @id @default(cuid())
+  visitId String
+  visit   ServiceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  status    VisitStatus
+  note      String?
+  latitude  Float?
+  longitude Float?
+  accuracyM Float?
+
+  actorId    String?
+  actor      User?    @relation("VisitEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String
+  createdAt  DateTime @default(now())
+
+  @@index([visitId, createdAt])
+}
+
+/// A structured line in a report: a checklist tick or a measurement.
+///
+/// One shape for both, because they are the same thing — a calibration reading
+/// is a checklist line that happens to carry numbers. Separate tables for
+/// calibration, PM and installation checklists would be three copies of this.
+model ServiceReportItem {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  /// "Pump pressure at 1.0 mL/min", "Lamp hours", "Door interlock".
+  label     String
+  /// The specification, where there is one.
+  expected  String?
+  actual    String?
+  unit      String?
+  result    ReportItemResult @default(PASS)
+  notes     String?
+  sortOrder Int              @default(0)
+
+  @@index([reportId, sortOrder])
+}
+
+/// A photo attached to a report, with what it is a photo of.
+///
+/// Rows rather than the JSON array this replaces: "before" and "after" have to
+/// be distinguishable to be worth taking, and a blob cannot be queried or
+/// counted for the data-quality report.
+model ServiceReportPhoto {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  url       String
+  stage     String  @default("DURING")
+  caption   String?
+  sortOrder Int     @default(0)
+
+  @@index([reportId, sortOrder])
+}
+
+/// A part used on a visit. Replaces the JSON array, so stock and history can
+/// actually be traced back to the job that consumed the part.
+model ServiceReportPart {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation("ServicePartsUsed", fields: [productId], references: [id], onDelete: SetNull)
+  /// Free text for a part not in the catalogue, so a report is never blocked
+  /// by the parts list being incomplete.
+  partName  String
+  quantity  Int      @default(1)
+  notes     String?
+
+  @@index([reportId])
+  @@index([productId])
+}
+
+/// A part an engineer needs and does not have, and what happened to the ask.
+model PartRequest {
+  id      String        @id @default(cuid())
+  visitId String?
+  visit   ServiceVisit? @relation(fields: [visitId], references: [id], onDelete: SetNull)
+
+  requestedById String
+  requestedBy   User   @relation("RequestedParts", fields: [requestedById], references: [id])
+
+  productId String?
+  product   Product? @relation("RequestedPartProduct", fields: [productId], references: [id], onDelete: SetNull)
+  partName  String
+  quantity  Int      @default(1)
+  reason    String?
+
+  status       PartRequestStatus @default(REQUESTED)
+  decidedById  String?
+  decidedBy    User?             @relation("DecidedParts", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt    DateTime?
+  decisionNote String?
+  dispatchedAt DateTime?
+  receivedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([requestedById])
+  @@index([visitId])
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  kind    NotificationKind
+  title   String
+  body    String?
+  /// Where clicking it goes. Relative, so it survives a domain change.
+  linkUrl String?
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  /// Unread-first is the only ordering this table is ever read in.
+  @@index([userId, readAt, createdAt])
 }

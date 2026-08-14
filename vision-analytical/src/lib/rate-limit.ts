@@ -1,50 +1,32 @@
 import 'server-only';
 import { headers } from 'next/headers';
 
-interface Bucket {
-  count: number;
-  resetAt: number;
-}
-
-const buckets = new Map<string, Bucket>();
-
-// Prevents unbounded growth on a long-running process. Not cryptographically
-// precise timing, just periodic sweeping of expired entries.
-const CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, bucket] of buckets) {
-    if (bucket.resetAt < now) buckets.delete(key);
-  }
-}, CLEANUP_INTERVAL_MS).unref();
+// The counters themselves are pure and live in their own module so the tests
+// can reach them; this file adds the part that needs a request.
+export {
+  checkRateLimit,
+  isWithinRateLimit,
+  recordAttempt,
+  clearRateLimit,
+} from '@/lib/rate-limit-buckets';
 
 /**
- * Fixed-window in-memory rate limiter. Fine for the single-instance
- * deployment this app ships with (see deploy/docker-compose.yml) - a
- * horizontally-scaled deployment would need a shared store (e.g. Redis)
- * instead, since each instance would otherwise keep its own counters.
+ * Best-effort client IP.
+ *
+ * Order matters. Behind a Cloudflare tunnel every request reaches nginx from
+ * the cloudflared container, so X-Forwarded-For would make the whole internet
+ * look like a single address sharing one budget — a handful of failed logins
+ * anywhere would then lock out everybody. CF-Connecting-IP carries the real
+ * caller and is set by Cloudflare itself, so it wins where present.
  */
-export function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now();
-  const bucket = buckets.get(key);
-
-  if (!bucket || bucket.resetAt < now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-
-  if (bucket.count >= limit) {
-    return false;
-  }
-
-  bucket.count += 1;
-  return true;
-}
-
-/** Best-effort client IP from the proxy chain (nginx sets X-Forwarded-For in production). */
 export async function getClientIp(): Promise<string> {
   const headerList = await headers();
+
+  const cloudflare = headerList.get('cf-connecting-ip');
+  if (cloudflare) return cloudflare.trim();
+
   const forwardedFor = headerList.get('x-forwarded-for');
   if (forwardedFor) return forwardedFor.split(',')[0].trim();
+
   return headerList.get('x-real-ip') ?? 'unknown';
 }

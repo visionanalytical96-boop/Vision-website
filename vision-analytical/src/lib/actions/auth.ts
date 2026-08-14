@@ -7,7 +7,13 @@ import { createSession, deleteSession } from '@/lib/session';
 import { roleHomePath } from '@/lib/roles';
 import { safeRedirectPath } from '@/lib/safe-redirect';
 import { loginSchema, registerSchema } from '@/lib/validation/auth';
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import {
+  checkRateLimit,
+  isWithinRateLimit,
+  recordAttempt,
+  clearRateLimit,
+  getClientIp,
+} from '@/lib/rate-limit';
 import { Role } from '@/generated/prisma/client';
 
 export interface AuthFormState {
@@ -32,24 +38,40 @@ export async function login(_prevState: AuthFormState | undefined, formData: For
   const { email, password } = validated.data;
 
   const ip = await getClientIp();
-  // Per-account limit blocks brute-forcing one target regardless of how many
-  // IPs the attacker rotates through; per-IP limit blocks spraying many
-  // different accounts from one source.
-  const withinAccountLimit = checkRateLimit(`login:account:${email}`, 10, LOGIN_WINDOW_MS);
-  const withinIpLimit = checkRateLimit(`login:ip:${ip}`, 30, LOGIN_WINDOW_MS);
-  if (!withinAccountLimit || !withinIpLimit) {
+  const accountKey = `login:account:${email}`;
+  const ipKey = `login:ip:${ip}`;
+
+  // Only failed attempts count. Checking and spending in one step meant a
+  // person signing in through the day exhausted their own budget and was then
+  // told their correct password was wrong — the "sometimes it won't take my
+  // password" report. Per-account blocks brute-forcing one target across many
+  // IPs; per-IP blocks spraying many accounts from one source.
+  if (
+    !isWithinRateLimit(accountKey, 10, LOGIN_WINDOW_MS) ||
+    !isWithinRateLimit(ipKey, 50, LOGIN_WINDOW_MS)
+  ) {
     return { formError: RATE_LIMIT_ERROR };
   }
 
+  const failed = () => {
+    recordAttempt(accountKey, LOGIN_WINDOW_MS);
+    recordAttempt(ipKey, LOGIN_WINDOW_MS);
+    return { formError: GENERIC_LOGIN_ERROR };
+  };
+
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.isActive) {
-    return { formError: GENERIC_LOGIN_ERROR };
+    return failed();
   }
 
   const passwordMatches = await verifyPassword(password, user.passwordHash);
   if (!passwordMatches) {
-    return { formError: GENERIC_LOGIN_ERROR };
+    return failed();
   }
+
+  // Proving the password clears the record, so a few typos before a correct
+  // entry never leave the account part-way to a lockout.
+  clearRateLimit(accountKey);
 
   await createSession({ userId: user.id, role: user.role });
   redirect(safeRedirectPath(formData.get('next')) ?? roleHomePath(user.role));

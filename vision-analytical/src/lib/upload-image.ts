@@ -33,28 +33,59 @@ function loadSharp(): SharpFactory {
     cachedSharp = nodeRequire('sharp') as SharpFactory;
     return cachedSharp;
   } catch (error) {
-    // Say which bindings are actually present, because sharp's own report is
-    // the thing that failed. Without this the log is a bare TypeError and the
-    // next person has nothing to go on.
-    const candidates = [
-      `@img/sharp-${process.platform}-${process.arch}/sharp.node`,
-      '@img/sharp-wasm32/sharp.node',
-    ];
-    const findings = candidates.map((id) => {
-      try {
-        nodeRequire.resolve(id);
-        return `${id}: present`;
-      } catch {
-        return `${id}: missing`;
-      }
-    });
+    throw new Error(describeSharpFailure(error), { cause: error });
+  }
+}
 
-    throw new Error(
-      `Image processing is unavailable: sharp failed to load on ${process.platform}-${process.arch}. ` +
-        `${findings.join('; ')}. Original error: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
+/**
+ * Turns sharp's failure into something actionable.
+ *
+ * sharp collects an error per binding it tried, then composes a report by
+ * reading `err.code` on each — but one of the errors it pushes is built with
+ * `new Error(msg, { code })`, and Error's second argument only carries `cause`.
+ * So `err.code` is undefined, the report dies with "Cannot read properties of
+ * undefined (reading 'endsWith')", and the actual reason is never printed.
+ *
+ * The reason that cost a day here: sharp's prebuilt Linux x64 binaries require
+ * the x86-64-v2 microarchitecture. A VM running Proxmox's default `kvm64` CPU
+ * does not expose those instructions, so sharp loads the binary, checks the
+ * CPU, discards it, and falls through to a wasm build that fails too. The
+ * binary is fine — `require('@img/sharp-linux-x64/sharp.node')` succeeds by
+ * hand, which is what makes this so confusing to chase.
+ */
+function describeSharpFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const platform = `${process.platform}-${process.arch}`;
+
+  const bindings = [`@img/sharp-${platform}/sharp.node`, '@img/sharp-wasm32/sharp.node'].map((id) => {
+    try {
+      nodeRequire.resolve(id);
+      return `${id}: present`;
+    } catch {
+      return `${id}: missing`;
+    }
+  });
+
+  // sharp's own error handler crashes on this exact string. Seeing it means the
+  // report never ran, so the likely cause has to be named here instead.
+  const maskedBySharpsOwnBug = message.includes("reading 'endsWith'");
+
+  const lines = [
+    `Image processing is unavailable: sharp failed to load on ${platform}.`,
+    bindings.join('; '),
+  ];
+
+  if (maskedBySharpsOwnBug && process.platform === 'linux' && process.arch === 'x64') {
+    lines.push(
+      "sharp hid its own reason (a known bug in its error path), and on linux-x64 the usual cause " +
+        'is a CPU without x86-64-v2 — check with: grep -c sse4_2 /proc/cpuinfo. If that is 0 and ' +
+        "this is a VM, set the guest CPU type to 'host' (Proxmox defaults to kvm64, which hides " +
+        'those instructions) and fully stop/start the VM.',
     );
   }
+
+  lines.push(`Underlying error: ${message}`);
+  return lines.join(' ');
 }
 
 const generateId = customAlphabet('23456789abcdefghjkmnpqrstuvwxyz', 16);

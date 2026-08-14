@@ -7,12 +7,14 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-66 commits.
+68 commits.
 
 ## 2026-08-14
 
 ### Features
 
+- real connection test and network discovery (`032da327`)
+  "Test connection" opened a TCP socket and reported success. That is not a test: a web server, a printer, or an entirely different device will all accept a connection on port 4370, and an admin who sees "Reachable" reasonably concludes syncing will work. It now completes the protocol handshake and reads the serial number back, so a pass means the thing at that address is a terminal that will answer commands. The serial it reports is recorded, so a swapped unit shows up as a changed serial rather than quietly syncing somebody else's attendance.
 - ZKTeco wire protocol, with tests (`6ce7eeae`)
   Team Office Z9000, ZKTeco, eSSL and Realand terminals all speak the same undocumented TCP protocol on port 4370. Until now testBiometricDevice only opened a socket — it proved the port was listening and nothing more, so a device that answered but refused every command still read as "Reachable".
 - motion — floating shapes, sheen, entrance and press feedback (`ee10b897`)
@@ -33,6 +35,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`81d17c63`)
 - update changelog (`4eac327a`)
 - update changelog (`4e141585`)
 - update changelog (`285ed5b4`)

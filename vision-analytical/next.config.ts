@@ -53,6 +53,13 @@ const nextConfig: NextConfig = {
   // app looks fine. Listing it here makes Next resolve it with a plain
   // require from node_modules instead.
   serverExternalPackages: ["sharp"],
+  // src/lib/upload-image.ts loads sharp through createRequire rather than a
+  // static import, so the dependency tracer cannot see it and would leave the
+  // binary out of the standalone output. Naming it here copies sharp and its
+  // platform binaries in regardless of what the tracer infers.
+  outputFileTracingIncludes: {
+    "/**": ["./node_modules/sharp/**/*", "./node_modules/@img/**/*"],
+  },
   experimental: {
     serverActions: {
       // Server Actions cap request bodies at 1MB by default, and every image

@@ -1,7 +1,61 @@
 import 'server-only';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { customAlphabet } from 'nanoid';
+
+// `require('sharp')` hands back the callable itself, not the module namespace
+// that `import` would give — so the type is the default export, not the module.
+type SharpFactory = (typeof import('sharp'))['default'];
+
+/**
+ * Loads sharp through Node's own resolver rather than `await import('sharp')`.
+ *
+ * Turbopack compiles that dynamic import into an async "external module"
+ * wrapper (`[externals]_sharp_*.js`). sharp's binding loader tries each
+ * candidate native module in turn and, if none load, walks the collected
+ * errors reading `err.code` to compose its message. Errors raised by the
+ * wrapper carry no `code`, so the loader dies on `err.code.endsWith(...)` and
+ * the genuine reason is replaced by an unrelated TypeError — which is exactly
+ * what production reported while the binary itself loaded fine by hand.
+ *
+ * Resolving from the working directory keeps this correct in the standalone
+ * build, where server.js runs from the app root and node_modules sits beside it.
+ */
+const nodeRequire = createRequire(path.join(process.cwd(), 'index.js'));
+
+let cachedSharp: SharpFactory | null = null;
+
+function loadSharp(): SharpFactory {
+  if (cachedSharp) return cachedSharp;
+
+  try {
+    cachedSharp = nodeRequire('sharp') as SharpFactory;
+    return cachedSharp;
+  } catch (error) {
+    // Say which bindings are actually present, because sharp's own report is
+    // the thing that failed. Without this the log is a bare TypeError and the
+    // next person has nothing to go on.
+    const candidates = [
+      `@img/sharp-${process.platform}-${process.arch}/sharp.node`,
+      '@img/sharp-wasm32/sharp.node',
+    ];
+    const findings = candidates.map((id) => {
+      try {
+        nodeRequire.resolve(id);
+        return `${id}: present`;
+      } catch {
+        return `${id}: missing`;
+      }
+    });
+
+    throw new Error(
+      `Image processing is unavailable: sharp failed to load on ${process.platform}-${process.arch}. ` +
+        `${findings.join('; ')}. Original error: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+}
 
 const generateId = customAlphabet('23456789abcdefghjkmnpqrstuvwxyz', 16);
 
@@ -29,12 +83,12 @@ export async function saveUploadedImage(file: File | null, category: UploadCateg
     return { url: null, error: 'Image must be smaller than 8MB.' };
   }
 
-  // Lazy-loaded: sharp is a native module pulled in only by this function's
-  // callers. A top-level import drags its native binary loading into every
-  // route that imports from this file's callers (blog/products/CMS/media
-  // admin actions), including Next's build-time page-data collection for
-  // routes that never touch an upload.
-  const { default: sharp } = await import('sharp');
+  // Loaded here and not at module scope: sharp is a native module, and a
+  // top-level import drags its binary loading into every route that reaches
+  // this file's callers (blog/products/CMS/media admin actions), including
+  // Next's build-time page-data collection for routes that never upload
+  // anything. `loadSharp` caches, so this costs one require per process.
+  const sharp = loadSharp();
 
   const buffer = Buffer.from(await file.arrayBuffer());
 

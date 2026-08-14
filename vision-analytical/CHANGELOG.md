@@ -7,7 +7,7 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-68 commits.
+70 commits.
 
 ## 2026-08-14
 
@@ -24,6 +24,8 @@ type within each date.
 
 ### Fixes
 
+- scan the LAN, not the container's own bridge network (`9907ab02`)
+  Find devices reported "Searched 172.23.0.1-254 ... no terminals answered" against a device that was sitting on 192.168.1.6 with its port open. The app runs in a container, so the interfaces it can see are Docker's bridge network and never the LAN the terminal is on. The scan searched a range no device could ever be on and then offered advice about the device's own settings — pointing the operator at the one thing that was already correct.
 - make image upload work in the production build (`80192797`)
   Two separate faults, both reported from the server log of a real deployment, both of which made every photo upload fail with "A server error occurred" while the rest of the admin worked.
 - catch a renamed database user before Prisma does (`426cf356`)
@@ -35,6 +37,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`cc4c1844`)
 - update changelog (`81d17c63`)
 - update changelog (`4eac327a`)
 - update changelog (`4e141585`)

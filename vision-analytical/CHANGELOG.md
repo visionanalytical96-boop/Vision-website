@@ -7,12 +7,14 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-64 commits.
+66 commits.
 
 ## 2026-08-14
 
 ### Features
 
+- ZKTeco wire protocol, with tests (`6ce7eeae`)
+  Team Office Z9000, ZKTeco, eSSL and Realand terminals all speak the same undocumented TCP protocol on port 4370. Until now testBiometricDevice only opened a socket — it proved the port was listening and nothing more, so a device that answered but refused every command still read as "Reachable".
 - motion — floating shapes, sheen, entrance and press feedback (`ee10b897`)
   Theme Settings has had an "animations" toggle since the theme customizer was built, and it controlled nothing: globals.css contained no keyframes at all, so switching it off disabled a set of animations that did not exist. This adds the motion the switch was always meant to govern.
 - one-command first deployment alongside a live site (`ac1bede6`)
@@ -31,6 +33,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`4eac327a`)
 - update changelog (`4e141585`)
 - update changelog (`285ed5b4`)
 - update changelog (`326b52e2`)

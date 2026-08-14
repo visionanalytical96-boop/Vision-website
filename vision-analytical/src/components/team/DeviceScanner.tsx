@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { Radar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { scanForBiometricDevices, type DeviceScanState } from '@/lib/actions/admin-team';
 
 /**
@@ -13,7 +14,7 @@ import { scanForBiometricDevices, type DeviceScanState } from '@/lib/actions/adm
  * the server never looked at the network the device is on, which is the more
  * common and much less obvious case.
  */
-export function DeviceScanner() {
+export function DeviceScanner({ defaultSubnet }: { defaultSubnet?: string }) {
   const [state, formAction, pending] = useActionState<DeviceScanState | undefined, FormData>(
     scanForBiometricDevices,
     undefined,
@@ -21,13 +22,29 @@ export function DeviceScanner() {
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label htmlFor="subnet" className="text-xs font-medium text-muted">
+            Network to search
+          </label>
+          <Input
+            id="subnet"
+            name="subnet"
+            placeholder="192.168.1"
+            defaultValue={defaultSubnet}
+            className="h-9 w-40 font-mono text-sm"
+          />
+        </div>
         <Button type="submit" variant="outline" size="sm" disabled={pending}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radar className="h-4 w-4" />}
-          {pending ? 'Scanning…' : 'Scan network for devices'}
+          {pending ? 'Scanning…' : 'Scan for devices'}
         </Button>
-        <span className="text-xs text-muted">Takes up to a minute. Only devices that answer the protocol count.</span>
       </div>
+      <p className="text-xs text-muted">
+        The first three parts of the device&apos;s address — the same as this server&apos;s. Leave blank to search
+        whatever networks the app container is on, though inside Docker those are usually not your LAN. Takes up to a
+        minute; only devices that answer the protocol count.
+      </p>
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
@@ -53,7 +70,7 @@ export function DeviceScanner() {
             </ul>
           ) : (
             <div className="mt-3 space-y-2 text-muted">
-              <p className="font-medium text-foreground">No terminals answered on the networks above.</p>
+              <p className="font-medium text-foreground">No terminals answered on the range above.</p>
               <p>
                 The usual cause is that the device sits on a different network from this server — a terminal left on an
                 address from a previous install cannot be reached however correct the settings here are.

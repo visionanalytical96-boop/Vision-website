@@ -985,15 +985,36 @@ export interface DeviceScanState {
  */
 export async function scanForBiometricDevices(
   _prev: DeviceScanState | undefined,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<DeviceScanState> {
   await requireRole(Role.ADMIN);
 
   const { discoverDevices, localSubnetPrefixes } = await import('@/lib/biometric/zk-client');
-  const prefixes = await localSubnetPrefixes();
 
-  if (prefixes.length === 0) {
-    return { error: 'This server does not appear to be on any network it can scan.' };
+  // The app runs in a container, so its own interfaces are Docker's bridge
+  // network (172.x) and never the LAN the device is on. Scanning only those
+  // searched a network no terminal could ever be on and reported "nothing
+  // found", which reads as "the device is off" rather than "we looked in the
+  // wrong place". An explicit subnet is therefore the primary input, and the
+  // container's own networks are only the fallback.
+  const typed = String(formData.get('subnet') ?? '').trim();
+  let prefixes: string[];
+
+  if (typed) {
+    const match = typed.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\.\d{1,3})?$/);
+    if (!match) {
+      return { error: 'Enter the first three parts of the address, like 192.168.1' };
+    }
+    const octets = [match[1], match[2], match[3]].map(Number);
+    if (octets.some((octet) => octet > 255)) {
+      return { error: `${typed} is not a valid address range.` };
+    }
+    prefixes = [octets.join('.')];
+  } else {
+    prefixes = await localSubnetPrefixes();
+    if (prefixes.length === 0) {
+      return { error: 'This server is not on a network it can scan. Type the range instead, like 192.168.1' };
+    }
   }
 
   const results = await Promise.all(prefixes.map((prefix) => discoverDevices(prefix)));

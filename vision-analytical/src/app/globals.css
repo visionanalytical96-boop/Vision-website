@@ -90,10 +90,207 @@ body {
   color: white;
 }
 
-/* Theme Settings > animations toggle - disables transitions/animations site-wide. */
+/* ---------------------------------------------------------------------------
+   Motion
+   ---------------------------------------------------------------------------
+   Everything below is opt-in per element and switched off in two places: the
+   Theme Settings > animations toggle (which adds .no-animations to <html>) and
+   the visitor's own reduced-motion preference. Until this existed the toggle
+   controlled nothing at all - there were no animations to disable.
+
+   Durations stay under ~700ms and nothing loops faster than 6s: this is a
+   laboratory-equipment supplier, and motion is here to make the page feel
+   alive, not to perform.
+   --------------------------------------------------------------------------- */
+
+@keyframes va-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes va-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slow, irregular drift for the decorative blobs behind the hero. Two axes at
+   different periods so the path never looks like a loop. */
+@keyframes va-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(3%, -4%) scale(1.05);
+  }
+  66% {
+    transform: translate(-2%, 3%) scale(0.97);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* Light sweeping across the wordmark. Travels well past the edge so the gap
+   between passes reads as a pause rather than a stutter. */
+@keyframes va-sheen {
+  0% {
+    background-position: -150% 0;
+  }
+  60%,
+  100% {
+    background-position: 250% 0;
+  }
+}
+
+@keyframes va-spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes va-ripple {
+  from {
+    opacity: 0.35;
+    transform: scale(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+/* --- Entrance ------------------------------------------------------------- */
+
+.va-rise {
+  animation: va-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.va-fade {
+  animation: va-fade 0.6s ease-out both;
+}
+
+/* Stagger children of a hero or a card grid without a class per child. */
+.va-stagger > * {
+  animation: va-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.va-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.va-stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.va-stagger > *:nth-child(3) { animation-delay: 0.2s; }
+.va-stagger > *:nth-child(4) { animation-delay: 0.28s; }
+.va-stagger > *:nth-child(5) { animation-delay: 0.36s; }
+.va-stagger > *:nth-child(6) { animation-delay: 0.44s; }
+
+/* --- Ambient ------------------------------------------------------------- */
+
+.va-drift {
+  animation: va-drift 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.va-drift-slow {
+  animation: va-drift 38s ease-in-out infinite reverse;
+  will-change: transform;
+}
+
+.va-spin-slow {
+  animation: va-spin-slow 18s linear infinite;
+}
+
+/* The wordmark's moving highlight. Needs a text gradient, so the colour comes
+   from the clip rather than from `color`. */
+.va-sheen {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-foreground) 38%,
+    var(--info) 50%,
+    var(--color-foreground) 62%
+  );
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: va-sheen 6s ease-in-out infinite;
+}
+
+/* --- Interaction --------------------------------------------------------- */
+
+/* Press feedback. Applied to buttons and card links so a tap registers even
+   before the page responds - on a slow connection that reassurance is the
+   difference between one click and four. */
+.va-press {
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+}
+.va-press:active {
+  transform: scale(0.975);
+}
+
+.va-lift {
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.va-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.09);
+}
+
+/* Ripple origin is set from the click coordinates by the Ripple component. */
+.va-ripple-dot {
+  position: absolute;
+  border-radius: 9999px;
+  background: currentColor;
+  pointer-events: none;
+  animation: va-ripple 0.55s ease-out forwards;
+}
+
+/* --- Off switches -------------------------------------------------------- */
+
+/* Theme Settings > animations toggle. */
 .no-animations,
 .no-animations * {
   transition-duration: 0s !important;
   animation-duration: 0s !important;
+  animation-iteration-count: 1 !important;
   scroll-behavior: auto !important;
+}
+
+/* The wordmark would be invisible without its animation, since the gradient
+   clip is what colours it. Hand the colour back. */
+.no-animations .va-sheen {
+  background-image: none;
+  color: var(--color-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .va-sheen {
+    background-image: none;
+    color: var(--color-foreground);
+  }
+
+  .va-press:active,
+  .va-lift:hover {
+    transform: none;
+  }
 }

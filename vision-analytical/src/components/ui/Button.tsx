@@ -22,9 +22,13 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
 export function buttonVariants(
   options: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {},
 ): string {
+  // va-press adds the scale-down on :active. It is a class rather than a
+  // Tailwind active: utility so the animations toggle and reduced-motion can
+  // switch it off from one place in globals.css.
   const { variant = 'primary', size = 'md', className } = options;
   return cn(
     'inline-flex items-center justify-center rounded-[var(--btn-radius)] font-medium transition-colors',
+    'va-press',
     'disabled:pointer-events-none disabled:opacity-50',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
     VARIANT_CLASSES[variant],

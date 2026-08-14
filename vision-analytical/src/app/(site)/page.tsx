@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { MessageCircle, Phone, FlaskConical } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
+import { FloatingShapes } from '@/components/ui/FloatingShapes';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { whatsappLink, telLink } from '@/lib/contact-links';
 import { getHomeSections, getSiteSettings } from '@/lib/data/cms';
@@ -135,13 +136,15 @@ export default async function HomePage() {
               // Product photography is mostly grey metal and reads poorly on a
               // dark band; the dark footer still anchors the page.
               <section key={key} className="relative overflow-hidden border-b border-border bg-surface">
+                <FloatingShapes />
                 <Container className="relative grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-                  <div>
+                  <div className="va-stagger">
                     <p className="font-mono text-xs uppercase tracking-[0.14em] text-primary dark:text-secondary">
                       {hero.eyebrow}
                     </p>
                     <h1 className="mt-4 max-w-[16ch] font-display text-4xl font-semibold leading-[1.06] tracking-tight text-foreground text-balance sm:text-5xl lg:text-6xl">
-                      {hero.headingPrefix} <span className="text-primary dark:text-secondary">{hero.headingHighlight}</span>{' '}
+                      {hero.headingPrefix}{' '}
+                      <span className="va-sheen text-primary dark:text-secondary">{hero.headingHighlight}</span>{' '}
                       {hero.headingSuffix}
                     </h1>
                     <p className="mt-6 max-w-[60ch] text-lg text-muted">{hero.subheading}</p>

@@ -106,10 +106,18 @@ for header in Permissions-Policy Cache-Control X-Content-Type-Options; do
 done
 
 say "5. What is actually running?"
+# PROJECT must match the compose project the site was started under, or this
+# reports a different stack's containers — which is worse than reporting none,
+# because it looks like an answer.
 if command -v docker >/dev/null 2>&1; then
-  docker compose -f deploy/docker-compose.yml ps --format '        {{.Service}}  {{.Image}}  {{.Status}}' 2>/dev/null \
+  proj_args=""
+  [ -n "${PROJECT:-}" ] && proj_args="-p ${PROJECT}"
+  info "compose project: ${PROJECT:-<default>}"
+  # shellcheck disable=SC2086
+  docker compose $proj_args -f deploy/docker-compose.yml ps --format '        {{.Service}}  {{.Image}}  {{.Status}}' 2>/dev/null \
     || info "(compose not reachable from here)"
-  built=$(docker inspect --format '{{.Created}}' "$(docker compose -f deploy/docker-compose.yml images -q app 2>/dev/null | head -1)" 2>/dev/null || true)
+  # shellcheck disable=SC2086
+  built=$(docker inspect --format '{{.Created}}' "$(docker compose $proj_args -f deploy/docker-compose.yml images -q app 2>/dev/null | head -1)" 2>/dev/null || true)
   [ -n "$built" ] && info "app image built: $built"
 fi
 

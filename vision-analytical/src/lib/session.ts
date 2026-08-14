@@ -93,3 +93,57 @@ export async function deleteSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE_NAME);
 }
+
+// --- Half-finished sign-in ---------------------------------------------------
+
+const PENDING_COOKIE_NAME = 'pending-2fa';
+// Long enough to find your phone, short enough that walking away from the
+// screen does not leave a usable half-login behind.
+const PENDING_MAX_AGE_SECONDS = 5 * 60;
+
+const pendingPayloadSchema = z.object({ userId: z.string(), stage: z.literal('2fa') });
+
+/**
+ * Marks a password as accepted while the second factor is still outstanding.
+ *
+ * Signed and server-verified rather than a plain "which user is half-logged-in"
+ * cookie: the browser holds this between the two steps, so an unsigned value
+ * would let anyone name a user id and skip straight to the code prompt for an
+ * account they do not have the password for. It grants nothing on its own —
+ * only the right to submit a code.
+ */
+export async function createPendingTwoFactor(userId: string): Promise<void> {
+  const token = await new SignJWT({ userId, stage: '2fa' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(`${PENDING_MAX_AGE_SECONDS}s`)
+    .sign(getSecretKey());
+
+  const cookieStore = await cookies();
+  cookieStore.set(PENDING_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: await shouldUseSecureCookie(),
+    sameSite: 'lax',
+    maxAge: PENDING_MAX_AGE_SECONDS,
+    path: '/',
+  });
+}
+
+export async function readPendingTwoFactor(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(PENDING_COOKIE_NAME)?.value;
+  if (!token) return null;
+
+  try {
+    const { payload } = await jwtVerify(token, getSecretKey(), { algorithms: ['HS256'] });
+    const parsed = pendingPayloadSchema.safeParse(payload);
+    return parsed.success ? parsed.data.userId : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function clearPendingTwoFactor(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(PENDING_COOKIE_NAME);
+}

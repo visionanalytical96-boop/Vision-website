@@ -72,6 +72,7 @@ const NAV_ITEMS: DashboardNavItem[] = [
   { href: '/admin/website/media', label: 'Media Library', icon: <Images className="h-4 w-4" /> },
   { href: '/admin/website/settings', label: 'Business Settings', icon: <Settings className="h-4 w-4" /> },
   { href: '/admin/settings/features', label: 'Feature Flags', icon: <ToggleLeft className="h-4 w-4" /> },
+  { href: '/admin/settings/security', label: 'Security', icon: <ShieldCheck className="h-4 w-4" /> },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {

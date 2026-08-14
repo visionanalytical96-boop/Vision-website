@@ -3,7 +3,15 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { hashPassword, verifyPassword } from '@/lib/password';
-import { createSession, deleteSession } from '@/lib/session';
+import {
+  createSession,
+  deleteSession,
+  createPendingTwoFactor,
+  readPendingTwoFactor,
+  clearPendingTwoFactor,
+} from '@/lib/session';
+import { createHash, timingSafeEqual } from 'node:crypto';
+import { verifyTotp } from '@/lib/totp';
 import { roleHomePath } from '@/lib/roles';
 import { safeRedirectPath } from '@/lib/safe-redirect';
 import { loginSchema, registerSchema } from '@/lib/validation/auth';
@@ -19,6 +27,8 @@ import { Role } from '@/generated/prisma/client';
 export interface AuthFormState {
   errors?: Record<string, string[] | undefined>;
   formError?: string;
+  /** Password accepted; the form should now ask for the authenticator code. */
+  needsTwoFactor?: boolean;
 }
 
 const GENERIC_LOGIN_ERROR = 'Invalid email or password.';
@@ -73,6 +83,83 @@ export async function login(_prevState: AuthFormState | undefined, formData: For
   // entry never leave the account part-way to a lockout.
   clearRateLimit(accountKey);
 
+  // Enrolled but unconfirmed accounts (secret set, never verified) sign in as
+  // before — an abandoned setup must not lock somebody out of their own account.
+  if (user.twoFactorEnabledAt && user.twoFactorSecret) {
+    await createPendingTwoFactor(user.id);
+    return { needsTwoFactor: true };
+  }
+
+  await createSession({ userId: user.id, role: user.role });
+  redirect(safeRedirectPath(formData.get('next')) ?? roleHomePath(user.role));
+}
+
+const TWO_FACTOR_ERROR = 'That code is not right. Check your authenticator app and try again.';
+const TWO_FACTOR_EXPIRED = 'That took too long. Please sign in again.';
+
+/** SHA-256, matching how recovery codes are stored. */
+function hashRecoveryCode(code: string): string {
+  return createHash('sha256').update(code.trim().toLowerCase()).digest('hex');
+}
+
+/**
+ * Second step of sign-in: a code from the authenticator app, or one of the
+ * recovery codes printed at enrolment.
+ *
+ * Rate limited on its own key. Without that, an attacker holding a stolen
+ * password could sit on the code prompt and work through six digits.
+ */
+export async function verifyTwoFactor(
+  _prevState: AuthFormState | undefined,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const userId = await readPendingTwoFactor();
+  if (!userId) {
+    return { formError: TWO_FACTOR_EXPIRED };
+  }
+
+  const key = `2fa:${userId}`;
+  if (!isWithinRateLimit(key, 8, LOGIN_WINDOW_MS)) {
+    return { formError: RATE_LIMIT_ERROR };
+  }
+
+  const submitted = String(formData.get('code') ?? '').trim();
+  if (!submitted) {
+    return { errors: { code: ['Enter the 6-digit code.'] } };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.isActive || !user.twoFactorSecret || !user.twoFactorEnabledAt) {
+    await clearPendingTwoFactor();
+    return { formError: TWO_FACTOR_EXPIRED };
+  }
+
+  let accepted = verifyTotp(user.twoFactorSecret, submitted);
+
+  // Recovery codes are single use: the one that worked is removed before the
+  // session is issued, so the same slip of paper cannot open a second session.
+  if (!accepted && user.twoFactorRecoveryHashes.length > 0) {
+    const candidate = Buffer.from(hashRecoveryCode(submitted));
+    const match = user.twoFactorRecoveryHashes.find((stored) => {
+      const storedBuffer = Buffer.from(stored);
+      return storedBuffer.length === candidate.length && timingSafeEqual(storedBuffer, candidate);
+    });
+    if (match) {
+      accepted = true;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { twoFactorRecoveryHashes: user.twoFactorRecoveryHashes.filter((h) => h !== match) },
+      });
+    }
+  }
+
+  if (!accepted) {
+    recordAttempt(key, LOGIN_WINDOW_MS);
+    return { formError: TWO_FACTOR_ERROR };
+  }
+
+  clearRateLimit(key);
+  await clearPendingTwoFactor();
   await createSession({ userId: user.id, role: user.role });
   redirect(safeRedirectPath(formData.get('next')) ?? roleHomePath(user.role));
 }

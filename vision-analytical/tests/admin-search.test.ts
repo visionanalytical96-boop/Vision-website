@@ -83,3 +83,10 @@ test('results keep a stable order between equal scores', () => {
   const twice = searchAdmin('setting').map((entry) => entry.href);
   assert.deepEqual(once, twice);
 });
+
+test('security settings are found by what people call them', () => {
+  assert.equal(top('two step'), 'Security');
+  assert.equal(top('2fa'), 'Security');
+  assert.equal(top('google authenticator'), 'Security');
+  assert.equal(top('otp'), 'Security');
+});

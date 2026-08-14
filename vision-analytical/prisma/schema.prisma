@@ -177,6 +177,16 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+
+  /// Two-factor: the shared secret an authenticator app holds, base32.
+  /// Present but with no `twoFactorEnabledAt` means enrolment was started and
+  /// never confirmed — that account still signs in with a password alone.
+  twoFactorSecret         String?
+  twoFactorEnabledAt      DateTime?
+  /// SHA-256 of each single-use recovery code. Hashed because a stolen
+  /// database should not hand over a way past the second factor, and not with
+  /// a slow KDF because the codes are already high-entropy random.
+  twoFactorRecoveryHashes String[]
   role         Role     @default(CUSTOMER)
   name         String
   phone        String?

@@ -343,6 +343,25 @@ export const ADMIN_SEARCH_INDEX: AdminSearchEntry[] = [
     description: 'Turn whole modules on or off.',
     keywords: ['enable', 'disable', 'turn off', 'module', 'toggle', 'hide section', 'setting'],
   },
+  {
+    title: 'Security',
+    href: '/admin/settings/security',
+    section: 'Website',
+    description: 'Two-step verification for your own sign-in.',
+    keywords: [
+      'two step',
+      'two factor',
+      '2fa',
+      'otp',
+      'authenticator',
+      'google authenticator',
+      'totp',
+      'verification code',
+      'password',
+      'recovery codes',
+      'login security',
+    ],
+  },
 ];
 
 export interface ScoredEntry extends AdminSearchEntry {

@@ -7,12 +7,14 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-62 commits.
+64 commits.
 
 ## 2026-08-14
 
 ### Features
 
+- motion — floating shapes, sheen, entrance and press feedback (`ee10b897`)
+  Theme Settings has had an "animations" toggle since the theme customizer was built, and it controlled nothing: globals.css contained no keyframes at all, so switching it off disabled a set of animations that did not exist. This adds the motion the switch was always meant to govern.
 - one-command first deployment alongside a live site (`ac1bede6`)
   scripts/first-deploy.sh brings this build up on its own compose project and its own port, so an existing site on the same server keeps serving throughout. Nothing is stopped, removed or overwritten; `down -v` on the project removes only this stack.
 
@@ -29,6 +31,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`4e141585`)
 - update changelog (`285ed5b4`)
 - update changelog (`326b52e2`)
 - update changelog (`fbf4de3d`)

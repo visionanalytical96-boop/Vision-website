@@ -51,16 +51,53 @@ port_in_use() {
   return 1
 }
 
-if port_in_use "$HOST_PORT"; then
-  die "Port ${HOST_PORT} is already in use — something is listening there and this script will not disturb it.
+# Our own stack holding the port is not a conflict — re-running is how you
+# apply a settings change. Only somebody else's listener should stop us.
+ours=$(docker ps --filter "name=${PROJECT}-nginx" --filter "publish=${HOST_PORT}" --format '{{.Names}}' 2>/dev/null | head -1 || true)
+if [ -n "$ours" ]; then
+  ok "port ${HOST_PORT} is held by this stack (${ours}) — re-running to apply changes"
+elif port_in_use "$HOST_PORT"; then
+  die "Port ${HOST_PORT} is already in use by something else, and this script will not disturb it.
    Pick another:  HOST_PORT=8091 ./scripts/first-deploy.sh"
+else
+  ok "port ${HOST_PORT} is free"
 fi
-ok "port ${HOST_PORT} is free"
 
 # --- Settings ---------------------------------------------------------------
 bold "2. Settings (deploy/.env)"
 if [ -f deploy/.env ]; then
   ok "deploy/.env already exists — leaving it untouched"
+
+  # POSTGRES_USER and POSTGRES_DB are read only when Postgres initialises an
+  # empty data directory. Change either afterwards and the database keeps the
+  # old names while everything else starts asking for the new ones, and the
+  # only symptom is Prisma's P1000 — which reads like a wrong password rather
+  # than a user that was never created. Catch it here, where it is still cheap.
+  # Ask the running database whether the configured user can actually log in.
+  # Guessing the old name from the volume is not possible; proving the current
+  # name does not work is, and that is the whole finding.
+  pg=$(docker ps --filter "name=${PROJECT}-postgres" --format '{{.Names}}' 2>/dev/null | head -1 || true)
+  if [ -n "$pg" ]; then
+    env_user=$(grep -E "^POSTGRES_USER=" deploy/.env | cut -d= -f2- | tr -d '"' || true)
+    env_user="${env_user:-vision_analytical}"
+    if ! docker exec "$pg" psql -U "$env_user" -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
+      die "POSTGRES_USER in deploy/.env is '${env_user}', but no such user exists in this stack's database.
+
+   Postgres creates its user only when it first initialises an empty data
+   directory. Renaming POSTGRES_USER or POSTGRES_DB afterwards leaves the old
+   database in place with nothing that can log in — Prisma then reports P1000,
+   which reads like a wrong password rather than a user that was never made.
+
+   Pick one:
+     a) put POSTGRES_USER back to what it was (the default is
+        'vision_analytical') in deploy/.env, then re-run this script; or
+     b) start the database over with the new name — this deletes only this
+        stack's data, and nothing else on the server:
+          docker compose -p ${PROJECT} ${COMPOSE_FILES} --env-file deploy/.env down -v
+          ./scripts/first-deploy.sh"
+    fi
+    ok "database user '${env_user}' can log in"
+  fi
 else
   [ -f deploy/.env.example ] || die "deploy/.env.example is missing; cannot generate deploy/.env."
   cp deploy/.env.example deploy/.env

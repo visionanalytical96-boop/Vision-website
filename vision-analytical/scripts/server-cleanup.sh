@@ -88,6 +88,25 @@ kb_of() {
 }
 human() { numfmt --to=iec --from-unit=1024 "${1:-0}" 2>/dev/null || echo "${1:-0}K"; }
 
+ENV_ARCHIVE="$HOME/env-archive"
+
+# Secrets are the one thing in these folders that is not in git and cannot be
+# regenerated. Copy every .env out before the folder goes, so a wrong call here
+# costs time and not a database password.
+rescue_envs() {
+  local p="$1" n=0
+  [ -d "$p" ] || return 0
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    mkdir -p "$ENV_ARCHIVE"
+    local flat; flat=$(printf '%s' "${f#"$HOME/"}" | tr '/' '_')
+    [ "$EXECUTE" = "1" ] && cp -n "$f" "$ENV_ARCHIVE/$flat" 2>/dev/null
+    n=$((n + 1))
+  done < <(find "$p" -maxdepth 5 -name ".env" -not -path "*/node_modules/*" 2>/dev/null)
+  [ "$n" -gt 0 ] && printf '      %s↳ %s .env saved to ~/env-archive/%s\n' "$DIM" "$n" "$OFF"
+  return 0
+}
+
 remove_path() {
   local p="$1" why="$2"
   [ -e "$p" ] || return 0
@@ -100,6 +119,7 @@ remove_path() {
   local kb; kb=$(kb_of "$p")
   FREED_KB=$((FREED_KB + kb))
   printf '  %-52s %8s   %s\n' "$p" "$(human "$kb")" "$DIM$why$OFF"
+  rescue_envs "$p"
   [ "$EXECUTE" = "1" ] && rm -rf -- "$p"
   return 0
 }

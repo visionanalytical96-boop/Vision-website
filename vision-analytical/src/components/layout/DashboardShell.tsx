@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 import { DashboardMobileNav } from './DashboardMobileNav';
 import { cn } from '@/lib/utils';
+import { AdminSearch } from '@/components/layout/AdminSearch';
 
 export interface DashboardNavItem {
   href: string;
@@ -16,12 +17,14 @@ export interface DashboardNavItem {
 interface DashboardShellProps {
   title: string;
   navItems: DashboardNavItem[];
+  /** Page finder in the header. Admin has enough screens to need one. */
+  showSearch?: boolean;
   userName: string;
   userRoleLabel: string;
   children: ReactNode;
 }
 
-export function DashboardShell({ title, navItems, userName, userRoleLabel, children }: DashboardShellProps) {
+export function DashboardShell({ title, navItems, userName, userRoleLabel, showSearch, children }: DashboardShellProps) {
   return (
     <div className="flex min-h-screen bg-surface-muted">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface md:flex">
@@ -67,6 +70,14 @@ export function DashboardShell({ title, navItems, userName, userRoleLabel, child
         <header className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 md:px-8">
           <DashboardMobileNav navItems={navItems} />
           <h1 className="font-display text-lg font-semibold text-foreground">{title}</h1>
+          {/* Sixty-odd screens across three groups: typing the name beats
+              remembering which group holds it. Admin only — an engineer on a
+              phone has four pages and no use for a page finder. */}
+          {showSearch && (
+            <div className="ml-auto hidden md:block">
+              <AdminSearch />
+            </div>
+          )}
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>

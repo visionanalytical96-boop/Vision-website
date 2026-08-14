@@ -75,7 +75,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const user = await requireUser(Role.ADMIN);
 
   return (
-    <DashboardShell title="Admin" navItems={NAV_ITEMS} userName={user.name} userRoleLabel="Administrator">
+    <DashboardShell title="Admin" navItems={NAV_ITEMS} userName={user.name} userRoleLabel="Administrator" showSearch>
       {children}
     </DashboardShell>
   );

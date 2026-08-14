@@ -7,14 +7,20 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-54 commits.
+56 commits.
 
 ## 2026-08-14
 
 ### Fixes
 
+- let the stack come up without a Cloudflare tunnel (`32061094`)
+  Two things blocked deploying this on a server that is already running something else.
 - stop baking upgrade-insecure-requests into the build (`4857bf6e`)
   The site rendered as plain unstyled HTML in every browser while every server-side check passed. Root cause: upgrade-insecure-requests was written into the CSP at build time, from whether NEXT_PUBLIC_SITE_URL began with https.
+
+### Documentation
+
+- update changelog (`15a04b9a`)
 
 ## 2026-08-13
 

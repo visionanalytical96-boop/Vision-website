@@ -932,36 +932,78 @@ export async function deleteBiometricDevice(formData: FormData): Promise<void> {
  * wrong 90% of the time. Reading punch data needs the vendor's protocol; see
  * `syncBiometricDevice` for where that goes.
  */
+/**
+ * Test a device by actually talking to it.
+ *
+ * This used to open a socket and call that success. It is not: a web server,
+ * a printer, or the wrong device entirely will all accept a connection on
+ * that port, and an admin who sees "Reachable" reasonably assumes syncing
+ * will work. Now it completes the protocol handshake and reads the serial
+ * number back, so a pass means the thing at that address really is a
+ * terminal that will answer commands.
+ */
 export async function testBiometricDevice(formData: FormData): Promise<void> {
   await requireRole(Role.ADMIN);
   const id = String(formData.get('id'));
   const device = await prisma.biometricDevice.findUnique({ where: { id } });
   if (!device) return;
 
-  const { connect } = await import('node:net');
-  const startedAt = Date.now();
-
-  const outcome = await new Promise<{ ok: boolean; note: string }>((resolve) => {
-    const socket = connect({ host: device.host, port: device.port });
-    const finish = (ok: boolean, note: string) => {
-      socket.destroy();
-      resolve({ ok, note });
-    };
-
-    socket.setTimeout(5000);
-    socket.once('connect', () => finish(true, `Reachable in ${Date.now() - startedAt}ms`));
-    socket.once('timeout', () => finish(false, `No response from ${device.host}:${device.port} within 5s`));
-    socket.once('error', (error: NodeJS.ErrnoException) =>
-      finish(false, `${error.code ?? 'Failed'} connecting to ${device.host}:${device.port}`),
-    );
-  });
+  const { probeDevice } = await import('@/lib/biometric/zk-client');
+  const result = await probeDevice({ host: device.host, port: device.port });
 
   await prisma.biometricDevice.update({
     where: { id },
-    data: { lastSyncOk: outcome.ok, lastSyncNote: outcome.note, lastSyncAt: new Date() },
+    data: {
+      lastSyncOk: result.ok,
+      lastSyncNote: result.message,
+      lastSyncAt: new Date(),
+      // The device is the authority on its own serial. Recording what it
+      // reports means a swapped unit shows up as a changed serial rather
+      // than silently syncing somebody else's attendance.
+      ...(result.identity?.serialNumber ? { serialNumber: result.identity.serialNumber } : {}),
+    },
   });
 
   revalidatePath('/admin/team/devices');
+}
+
+export interface DeviceScanState {
+  error?: string;
+  scanned?: string[];
+  found?: Array<{ host: string; port: number; label: string }>;
+}
+
+/**
+ * Sweep the networks this server is on, looking for terminals.
+ *
+ * Asking an admin to type the device address is where this usually goes
+ * wrong: the address they know is the one printed on a sticker or configured
+ * years ago, and the device has since been moved, re-addressed by DHCP, or
+ * left on a subnet the server cannot reach. Scanning what the server is
+ * actually connected to answers the real question — "can this machine see it,
+ * and where".
+ */
+export async function scanForBiometricDevices(
+  _prev: DeviceScanState | undefined,
+  _formData: FormData,
+): Promise<DeviceScanState> {
+  await requireRole(Role.ADMIN);
+
+  const { discoverDevices, localSubnetPrefixes } = await import('@/lib/biometric/zk-client');
+  const prefixes = await localSubnetPrefixes();
+
+  if (prefixes.length === 0) {
+    return { error: 'This server does not appear to be on any network it can scan.' };
+  }
+
+  const results = await Promise.all(prefixes.map((prefix) => discoverDevices(prefix)));
+  const found = results.flat().map((device) => ({
+    host: device.host,
+    port: device.port,
+    label: device.message,
+  }));
+
+  return { scanned: prefixes.map((prefix) => `${prefix}.1-254`), found };
 }
 
 /**

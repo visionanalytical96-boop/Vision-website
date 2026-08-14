@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmSubmitButton } from '@/components/forms/ConfirmSubmitButton';
 import { DeviceForm } from '@/components/team/DeviceForm';
 import { PunchImportForm } from '@/components/team/PunchImportForm';
+import { DeviceScanner } from '@/components/team/DeviceScanner';
 import { getBiometricDevices, getUnprocessedPunches } from '@/lib/data/team';
 import { deleteBiometricDevice, testBiometricDevice, processPendingPunches } from '@/lib/actions/admin-team';
 import { formatDateTime } from '@/lib/format';
@@ -94,6 +95,19 @@ export default async function DevicesPage() {
           </TableBody>
         </Table>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Find devices</CardTitle>
+          <CardDescription>
+            Searches every network this server is connected to and completes the protocol handshake with anything that
+            answers, so a result means the device will actually talk to us — not just that something is listening.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DeviceScanner />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

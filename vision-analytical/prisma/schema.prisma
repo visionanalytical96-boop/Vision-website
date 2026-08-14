@@ -251,8 +251,9 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contacts    User[]               @relation("CompanyContacts")
-  instruments CustomerInstrument[]
+  contacts       User[]               @relation("CompanyContacts")
+  instruments    CustomerInstrument[]
+  serviceReports ServiceReport[]
 
   @@index([isActive])
   @@index([name])
@@ -609,16 +610,53 @@ model ServiceRequest {
 }
 
 model ServiceReport {
-  id                   String         @id @default(cuid())
-  serviceRequestId     String
-  serviceRequest       ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  id                   String          @id @default(cuid())
+  /// Printed on the paper report so a customer and an engineer can refer to the
+  /// same visit by one number. Optional: reports predating the generator have none.
+  reportNumber         String?         @unique
+  /// Optional, because an engineer is often sent to a site on a phone call and
+  /// the request is raised afterwards — or never. The report is still the record.
+  serviceRequestId     String?
+  serviceRequest       ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   engineerId           String
-  engineer             User           @relation("EngineerServiceReports", fields: [engineerId], references: [id])
+  engineer             User            @relation("EngineerServiceReports", fields: [engineerId], references: [id])
   /// Which trip to site produced it. Optional so reports predating the
   /// visit model keep working.
   visitId              String?
   visit                ServiceVisit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
   kind                 ServiceReportKind @default(INSPECTION)
+
+  // --- The printed service report ------------------------------------------
+  // Captured as flat text alongside the relations rather than only derived from
+  // them: the sheet is signed by a customer, so what it said on the day has to
+  // survive a company being renamed or an instrument being re-registered later.
+
+  /// Date at the head of the sheet. Distinct from `reportedAt`, which is when
+  /// the row was written — an engineer files Monday's visit on Tuesday.
+  reportDate           DateTime?
+  companyId            String?
+  company              Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyName          String?
+  companyAddress       String?
+  telephone            String?
+  contactPerson        String?
+  contactDesignation   String?
+  contactDepartment    String?
+  /// "Sunday", "2nd & 4th Saturday" — when not to come back.
+  weekOff              String?
+
+  customerInstrumentId String?
+  customerInstrument   CustomerInstrument? @relation("InstrumentServiceReports", fields: [customerInstrumentId], references: [id], onDelete: SetNull)
+
+  outcome              ServiceOutcome?
+  /// Several boxes are ticked on one visit — an install that also gets
+  /// calibrated is one report, not two.
+  serviceTypes         ServiceCallType[]
+  contractType         ServiceContractType?
+
+  /// "Fault Reported" on the sheet: what the customer said was wrong.
+  faultReported        String?
+  /// "Observation & Action Taken".
   workPerformed        String
   /// Superseded by the ServiceReportPart and ServiceReportPhoto rows.
   /// Kept so existing reports are not rewritten by a migration.
@@ -628,9 +666,17 @@ model ServiceReport {
   correctiveAction     String?
   recommendations      String?
   engineerRemarks      String?
+  /// "Clients Comments" on the sheet.
   customerRemarks      String?
+  /// "Parts Replaced / Required" as written. The ServiceReportPart rows carry
+  /// the same information in a queryable form; this is what was on the paper.
+  partsSummary         String?
   customerName         String?
+  customerDesignation  String?
   customerSignatureUrl String?
+  /// Name the engineer signs with, which is not always their account name.
+  engineerName         String?
+  engineerSignatureUrl String?
   signedAt             DateTime?
   /// Calibration and validation only.
   certificateNumber    String?
@@ -646,10 +692,37 @@ model ServiceReport {
   items       ServiceReportItem[]
   reportPhotos ServiceReportPhoto[]
   reportParts ServiceReportPart[]
+  visitLines  ServiceReportVisitLine[]
 
   @@index([serviceRequestId])
   @@index([visitId])
   @@index([kind])
+  @@index([companyId])
+  @@index([customerInstrumentId])
+  @@index([reportDate])
+}
+
+/// One row of the visit table on the printed sheet.
+///
+/// A row rather than six columns on the report, because one sheet covers
+/// several days on site — an installation runs Monday to Wednesday and each
+/// day has its own in and out time against the same signature.
+model ServiceReportVisitLine {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  visitedOn           DateTime?
+  /// Kept as written ("09:30", "9.30 AM") rather than parsed into a timestamp:
+  /// the sheet records what the engineer wrote, and half of them are approximate.
+  timeIn              String?
+  timeOut             String?
+  systemConfiguration String?
+  modelDescription    String?
+  systemNumber        String?
+  sortOrder           Int      @default(0)
+
+  @@index([reportId, sortOrder])
 }
 
 model AmcContract {
@@ -1822,6 +1895,30 @@ enum ServiceReportKind {
   TRAINING
 }
 
+/// The "Status" box on the printed report: did the instrument leave working.
+enum ServiceOutcome {
+  OK
+  NOT_OK
+}
+
+/// The tick boxes on the printed report. Several apply to one visit.
+enum ServiceCallType {
+  NEW_INSTALLATION
+  CALIBRATION
+  DEMONSTRATION
+  VALIDATION
+  MAINTENANCE
+  REPAIRS
+}
+
+/// Who pays for the visit.
+enum ServiceContractType {
+  UNDER_WARRANTY
+  UNDER_AMC
+  COURTESY
+  PAID_VISIT
+}
+
 /// The outcome of a checklist line or a measurement.
 enum ReportItemResult {
   PASS
@@ -1901,6 +1998,7 @@ model CustomerInstrument {
   updatedAt DateTime @updatedAt
 
   serviceRequests ServiceRequest[]
+  serviceReports  ServiceReport[]  @relation("InstrumentServiceReports")
   visits          ServiceVisit[]
 
   /// Serial numbers repeat across manufacturers, so identity is the serial

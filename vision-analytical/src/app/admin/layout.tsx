@@ -46,6 +46,7 @@ const NAV_ITEMS: DashboardNavItem[] = [
   { href: '/admin/crm', label: 'CRM', icon: <Contact2 className="h-4 w-4" /> },
   { href: '/admin/engineers', label: 'Engineers', icon: <Wrench className="h-4 w-4" /> },
   { href: '/admin/service-requests', label: 'Service Requests', icon: <Headset className="h-4 w-4" /> },
+  { href: '/admin/service-reports', label: 'Service Reports', icon: <ClipboardCheck className="h-4 w-4" /> },
   { href: '/admin/amc', label: 'AMC / CMC', icon: <ShieldCheck className="h-4 w-4" /> },
   { href: '/admin/blog', label: 'Blog', icon: <Newspaper className="h-4 w-4" /> },
   { href: '/admin/reports', label: 'Reports', icon: <BarChart3 className="h-4 w-4" /> },

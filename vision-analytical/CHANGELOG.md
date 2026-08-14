@@ -7,12 +7,14 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-72 commits.
+74 commits.
 
 ## 2026-08-14
 
 ### Features
 
+- bulk import screen — upload CSV/Excel, preview, commit (`4b186393`)
+  Adds Admin → Bulk Import (/admin/import) with a 4-step wizard:
 - find any screen by typing what you call it (`d58f3010`)
   Searching "password reset" returned nothing. The search box was the catalogue search — products, parts, articles — so it was answering a different question correctly and unhelpfully: the thing being looked for is a screen, not a product, and an empty result reads as "this software cannot do that".
 - real connection test and network discovery (`032da327`)
@@ -39,6 +41,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`98a66d2f`)
 - update changelog (`2fef593d`)
 - update changelog (`cc4c1844`)
 - update changelog (`81d17c63`)

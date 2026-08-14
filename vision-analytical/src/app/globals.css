@@ -294,3 +294,45 @@ body {
     transform: none;
   }
 }
+
+/* --- Printed documents ----------------------------------------------------
+   A service report is signed on paper, so the print output is the real
+   deliverable and not a courtesy. `.print-only-sheet` marks a page whose whole
+   job is to be printed: everything outside the sheet is dropped and the sheet
+   itself keeps its own black-on-white styling regardless of the site theme. */
+
+@media print {
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-only-sheet {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .service-sheet {
+    max-width: none;
+    width: 100%;
+    padding: 0;
+    box-shadow: none;
+    /* Keep the tick boxes and the header band filled — browsers strip
+       backgrounds when printing unless told otherwise. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* A signature block orphaned onto its own page makes the report look
+     tampered with. */
+  .service-sheet section,
+  .service-sheet table,
+  .service-sheet tr {
+    break-inside: avoid;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 10mm;
+}

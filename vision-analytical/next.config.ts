@@ -2,15 +2,21 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
-// upgrade-insecure-requests tells the browser to re-request every subresource
-// over https. That's right behind TLS, but fatal on a plain-http deployment
-// (LAN host, no certificate): every CSS/JS/font request is upgraded to a port
-// nothing serves, so the page loads and renders completely unstyled. Browsers
-// exempt localhost as a trustworthy origin, so the breakage only shows up when
-// the site is reached by IP or hostname - which makes it easy to miss locally.
-// Keyed off the configured site URL so it turns itself on for an https deploy
-// and off for http, with no separate flag to remember.
-const servedOverPlainHttp = (process.env.NEXT_PUBLIC_SITE_URL ?? "").startsWith("http://");
+// NOTE: upgrade-insecure-requests is deliberately NOT in this policy.
+//
+// It tells the browser to re-request every subresource over https. On a page
+// actually served over http that is fatal: every CSS/JS/font request is
+// upgraded to a port nothing serves, and the page renders completely
+// unstyled while curl still reports 200 for those same files.
+//
+// It used to be added here based on whether NEXT_PUBLIC_SITE_URL started with
+// https. That is a build-time guess about a runtime fact, and it is baked into
+// the image - so an image built for the public https domain bricks every
+// plain-http route to the same server (LAN IP, direct port, health probe) with
+// no error anywhere except the browser console.
+//
+// The scheme is only known per request, so the directive is added per request,
+// by nginx, from the forwarded scheme. See deploy/nginx/nginx.conf.
 
 // Not nonce-based: that requires forcing every route to render dynamically
 // (no static/ISR pages), which is a bigger tradeoff than this pass takes on.
@@ -28,7 +34,7 @@ const cspHeader = `
   object-src 'none';
   base-uri 'self';
   form-action 'self';
-  frame-ancestors 'none';${!servedOverPlainHttp ? "\n  upgrade-insecure-requests;" : ""}
+  frame-ancestors 'none';
 `
   .replace(/\s{2,}/g, " ")
   .trim();

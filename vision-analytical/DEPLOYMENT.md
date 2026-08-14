@@ -408,7 +408,36 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env run --rm migr
 
 ### The site looks unstyled
 
-Run the diagnostic first. It checks the five things in order and stops at the
+**Known root cause, fixed in this repo — make sure your server has the fix.**
+`upgrade-insecure-requests` used to be written into the CSP at *build* time,
+from whether `NEXT_PUBLIC_SITE_URL` began with `https`. That is a build-time
+guess about a runtime fact. One image has to answer the public https domain,
+the LAN IP over http, and localhost health probes — and on any http route the
+directive made the browser re-fetch every stylesheet, script and font over
+https, against a port with no TLS listener. Every asset failed and the page
+rendered as plain unstyled HTML.
+
+What made it hard to spot: **`curl` ignores CSP.** `curl -I` on the stylesheet
+returns `200 text/css` while the browser refuses to load that exact file. Every
+server-side check passes; only the browser fails.
+
+It is now applied per request by nginx from the forwarded scheme
+(`$csp_upgrade_insecure` in `deploy/nginx/nginx.conf`), so https gets the
+hardening and http is never bricked. If your server predates this, update and
+recreate — see the trap below.
+
+> **Changing an nginx config file needs `--force-recreate`, not `restart`.**
+> `deploy/nginx/*.conf` are single-file bind mounts. Editing one on the host
+> replaces the inode, and the running container keeps the file it started with
+> — so `docker compose restart nginx` and even `nginx -s reload` quietly serve
+> the old config. Verify with
+> `docker exec <nginx> cat /etc/nginx/conf.d/default.conf`.
+>
+> ```bash
+> docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --force-recreate nginx
+> ```
+
+Then run the diagnostic. It checks the five things in order and stops at the
 one that is actually broken:
 
 ```bash

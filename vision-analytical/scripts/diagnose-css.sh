@@ -67,15 +67,43 @@ else
 fi
 
 say "4. Could a header be blocking it?"
-csp=$(curl -sI "$BASE$PAGE" | grep -i '^content-security-policy:' || true)
+headers=$(curl -sI "$BASE$PAGE")
+csp=$(printf '%s' "$headers" | grep -i '^content-security-policy:' || true)
+
+# The one that actually broke this site. upgrade-insecure-requests makes the
+# browser re-fetch every stylesheet, script and font over https. On a page
+# served over http those requests go to a port with no TLS listener and every
+# asset fails — while curl still reports 200 for the same files, because curl
+# ignores CSP entirely. That is why "the CSS returns 200" and "the page is
+# unstyled" can both be true at once.
+if printf '%s' "$headers" | grep -qi 'upgrade-insecure-requests' && [ "${BASE#https://}" = "$BASE" ]; then
+  bad "upgrade-insecure-requests is set on a page served over plain http"
+  info "Every asset is being re-requested over https, against a port that"
+  info "serves none. This renders the page completely unstyled."
+  info ""
+  info "It must be applied per request from the forwarded scheme, never baked"
+  info "into the build. Confirm deploy/nginx/ is current on this server and"
+  info "that the container actually picked it up:"
+  info "  docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --force-recreate nginx"
+  exit 1
+fi
+
 if [ -z "$csp" ]; then
   ok "no CSP header (nothing to block it)"
 elif printf '%s' "$csp" | grep -q "style-src[^;]*'self'"; then
   ok "CSP allows stylesheets from this origin"
+  ok "no upgrade-insecure-requests on a plain-http page"
 else
   bad "CSP may be blocking the stylesheet"
   info "$csp"
 fi
+
+# Two copies with different values resolve restrictively, which silently
+# disables whatever the stricter one forbids.
+for header in Permissions-Policy Cache-Control X-Content-Type-Options; do
+  count=$(printf '%s' "$headers" | grep -ci "^$header:" || true)
+  [ "$count" -gt 1 ] && bad "$header sent $count times — nginx is appending to the app's copy instead of replacing it"
+done
 
 say "5. What is actually running?"
 if command -v docker >/dev/null 2>&1; then

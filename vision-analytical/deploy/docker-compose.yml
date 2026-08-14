@@ -65,6 +65,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Included by every location block in default.conf. Mounted separately
+      # because nginx resolves `include` at load time inside the container.
+      - ./nginx/security-headers.conf:/etc/nginx/snippets/security-headers.conf:ro
     depends_on:
       - app
     expose:

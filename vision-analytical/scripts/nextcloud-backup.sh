@@ -19,7 +19,17 @@
 #
 set -uo pipefail
 
-DEST="${1:-$HOME/backups}"
+DEST=""
+KEEP=0
+for arg in "$@"; do
+  case "$arg" in
+    --keep=*) KEEP="${arg#--keep=}" ;;
+    -*) echo "Unknown option: $arg" >&2; exit 2 ;;
+    *) DEST="$arg" ;;
+  esac
+done
+DEST="${DEST:-$HOME/backups}"
+
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT="$DEST/nextcloud-$STAMP"
 
@@ -257,7 +267,31 @@ if [ "$BAD" = "0" ] && [ "${FAILED:-0}" = "0" ]; then
   printf '  %s  (%s)\n' "$OUT" "$TOTAL"
   say ""
   say "  Every archive was read back and checksummed. Nextcloud is live again."
-  say "  ${BOLD}Keep a second copy on a different disk before any cleanup.${OFF}"
+
+  # Rotation happens here and nowhere else: only once THIS backup has been read
+  # back and checksummed. Deleting the old copy first — and then having the new
+  # one fail — leaves nothing, which is the one outcome a backup must never have.
+  if [ "$KEEP" -gt 0 ]; then
+    say ""
+    say "${BOLD}  Rotation: keeping the newest $KEEP${OFF}"
+    old=$(ls -1d "$DEST"/nextcloud-* 2>/dev/null | sort | head -n -"$KEEP")
+    if [ -n "$old" ]; then
+      printf '%s\n' "$old" | while read -r d; do
+        [ -d "$d" ] || continue
+        [ "$d" = "$OUT" ] && continue          # never the one just made
+        [ -f "$d/SHA256SUMS" ] || { warn "$d has no SHA256SUMS — leaving it alone"; continue; }
+        printf '    removing %s (%s)\n' "$d" "$(du -sh "$d" 2>/dev/null | cut -f1)"
+        rm -rf -- "$d"
+      done
+    else
+      say "    nothing older to remove"
+    fi
+  else
+    say "  ${DIM}Old backups kept. Pass --keep=2 to rotate automatically.${OFF}"
+  fi
+
+  say ""
+  say "  ${BOLD}Keep a second copy on a different disk.${OFF}"
 else
   printf '  %s%sBACKUP INCOMPLETE — DO NOT DELETE ANYTHING%s\n' "$RED" "$BOLD" "$OFF"
   printf '  Check %s and send me the output.\n' "$OUT/manifest.txt"

@@ -7,7 +7,14 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-51 commits.
+54 commits.
+
+## 2026-08-14
+
+### Fixes
+
+- stop baking upgrade-insecure-requests into the build (`4857bf6e`)
+  The site rendered as plain unstyled HTML in every browser while every server-side check passed. Root cause: upgrade-insecure-requests was written into the CSP at build time, from whether NEXT_PUBLIC_SITE_URL began with https.
 
 ## 2026-08-13
 
@@ -26,6 +33,9 @@ type within each date.
 
 ### Documentation
 
+- add a CSS diagnostic and correct the stylesheet path (`96c1afe0`)
+  The obvious check for "is the CSS there" gives a false negative: `grep _next/static/css` finds nothing on a healthy site. That path is webpack's; this app builds with Turbopack, which emits the stylesheet to /_next/static/chunks/<hash>.css. There is no .next/static/css/ directory and there should not be one.
+- update changelog for the field service work (`ffc6e071`)
 - correct the repository name after it was renamed (`550b726d`)
   The repository was created as `n8n` and is now `Vision-website`. The docs named the old one.
 - changelog, backup, recovery and health check runbooks (`ade1f12b`)

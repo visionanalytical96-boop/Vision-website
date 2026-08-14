@@ -54,6 +54,16 @@ export const ADMIN_SEARCH_INDEX: AdminSearchEntry[] = [
     description: 'Sales and service figures.',
     keywords: ['analytics', 'numbers', 'statistics', 'revenue', 'export'],
   },
+  {
+    title: 'Bulk Import',
+    href: '/admin/import',
+    section: 'Overview',
+    description: 'Upload a CSV or Excel file to add products, customers, companies and more in bulk.',
+    keywords: [
+      'import', 'upload', 'csv', 'excel', 'xlsx', 'spreadsheet', 'bulk',
+      'data entry', 'migrate', 'fill data', 'template', 'mass upload',
+    ],
+  },
 
   // --- Business -----------------------------------------------------------
   {

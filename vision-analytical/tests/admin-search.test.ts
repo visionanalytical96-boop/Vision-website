@@ -38,6 +38,10 @@ test('people find pages by what they call them, not what we called them', () => 
   assert.equal(top('vendor'), 'Suppliers');
   assert.equal(top('whatsapp'), 'Business settings');
   assert.equal(top('who changed'), 'Activity log');
+  assert.equal(top('csv'), 'Bulk Import');
+  assert.equal(top('excel'), 'Bulk Import');
+  assert.equal(top('spreadsheet'), 'Bulk Import');
+  assert.equal(top('fill data'), 'Bulk Import');
 });
 
 test('an exact title wins over a mention elsewhere', () => {

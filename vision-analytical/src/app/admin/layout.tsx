@@ -30,6 +30,7 @@ import {
   Fingerprint,
   SlidersHorizontal,
   History,
+  FileUp,
 } from 'lucide-react';
 import { requireUser } from '@/lib/dal';
 import { Role } from '@/generated/prisma/client';
@@ -48,6 +49,7 @@ const NAV_ITEMS: DashboardNavItem[] = [
   { href: '/admin/amc', label: 'AMC / CMC', icon: <ShieldCheck className="h-4 w-4" /> },
   { href: '/admin/blog', label: 'Blog', icon: <Newspaper className="h-4 w-4" /> },
   { href: '/admin/reports', label: 'Reports', icon: <BarChart3 className="h-4 w-4" /> },
+  { href: '/admin/import', label: 'Bulk Import', icon: <FileUp className="h-4 w-4" /> },
   { href: '/admin/quality', label: 'Data Quality', icon: <ClipboardCheck className="h-4 w-4" /> },
   // Everything about employees lives under Team. Keeping it one section stops
   // the main nav growing a row every time HR gains a feature.

@@ -124,8 +124,24 @@ while IFS= read -r pkg; do
   fi
   printf '    last touched %s\n' "$(date -r "$root" '+%Y-%m-%d %H:%M' 2>/dev/null)"
   [ -f "$root/deploy/.env" ] && printf '    %shas deploy/.env — check before removing%s\n' "$YEL" "$OFF"
-done < <(find "$HOME" -maxdepth 5 -name package.json -path "*vision-analytical*" \
-           -not -path "*/node_modules/*" 2>/dev/null | sort)
+done < <(find "$HOME" /opt /srv -maxdepth 6 -name package.json \
+           \( -path "*vision-analytical*" -o -path "*bharat*" \) \
+           -not -path "*/node_modules/*" 2>/dev/null | sort -u)
+
+# --- 8b. Anything else carrying a company name ----------------------------
+head1 "8b. EVERY FOLDER NAMED AFTER A COMPANY  ${YEL}[keep one each]${OFF}"
+echo "${DIM}  One copy per company is the target. The rest are duplicates.${OFF}"
+found_any=0
+while IFS= read -r d; do
+  [ -d "$d" ] || continue
+  case "$d" in *"/node_modules/"*|*"/.git/"*) continue;; esac
+  found_any=1
+  live=""
+  case "$live_dir" in "$d"*) live="  ${GRN}${BOLD}<- LIVE${OFF}";; esac
+  printf '  %-58s %8s%b\n' "$d" "$(size_of "$d")" "$live"
+done < <(find "$HOME" /opt /srv -maxdepth 3 \
+           \( -iname "*bharat*" -o -iname "*vision*" \) -type d 2>/dev/null | sort -u)
+[ "$found_any" = "0" ] && echo "  none"
 
 # --- 9. Summary ------------------------------------------------------------
 head1 "9. READ THIS BEFORE REMOVING ANYTHING"

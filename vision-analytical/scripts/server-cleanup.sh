@@ -73,7 +73,19 @@ is_protected() {
   return 1
 }
 
-kb_of() { [ -e "$1" ] && du -sk --one-file-system "$1" 2>/dev/null | cut -f1 || echo 0; }
+# Always one integer on stdout. `du` exits non-zero when it hits a directory it
+# cannot read, and the earlier `&& ... || echo 0` form let both the partial
+# total and the fallback through, producing "4\n0" and breaking the arithmetic
+# that consumed it.
+kb_of() {
+  [ -e "$1" ] || { echo 0; return; }
+  local out
+  out=$(du -sk --one-file-system "$1" 2>/dev/null | tail -1 | cut -f1)
+  case "$out" in
+    ''|*[!0-9]*) echo 0 ;;
+    *) echo "$out" ;;
+  esac
+}
 human() { numfmt --to=iec --from-unit=1024 "${1:-0}" 2>/dev/null || echo "${1:-0}K"; }
 
 remove_path() {
@@ -170,7 +182,7 @@ fi
 # --- 5. Docker build cache -------------------------------------------------
 step "5. Docker build cache"
 echo "${DIM}  Speeds up rebuilds only. Holds no images, volumes or data.${OFF}"
-docker system df 2>/dev/null | awk '/Build Cache/ {printf "  current: %s (reclaimable %s)\n", $3, $4}'
+docker system df 2>/dev/null | awk '/Build Cache/ {printf "  %s entries, %s on disk\n", $3, $5}'
 if [ "$EXECUTE" = "1" ]; then
   docker builder prune -a -f 2>/dev/null | tail -2 | sed 's/^/  /'
 else
@@ -199,9 +211,10 @@ cat <<KEEP
     ~/iphone-import, ~/Downloads       your files
 
   ${YEL}Needs a decision from you before anything happens:${OFF}
-    vaultwarden          password manager, stopped 2 days ago.
-                         Find its data first:
-                           docker inspect vaultwarden --format '{{json .Mounts}}'
+    vaultwarden          password manager, stopped. Its vault lives at
+                         /opt/vision/vaultwarden/data — already protected by
+                         the /opt/vision rule above, so this script cannot
+                         touch it. Restart it or leave it; do not delete.
     portainer            Docker web UI, stopped. Volume portainer_data.
     bharatstey-*         Kiran's website, stopped but its data is intact.
                          Restart it rather than delete it.

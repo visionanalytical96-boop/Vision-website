@@ -7,12 +7,14 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-70 commits.
+72 commits.
 
 ## 2026-08-14
 
 ### Features
 
+- find any screen by typing what you call it (`d58f3010`)
+  Searching "password reset" returned nothing. The search box was the catalogue search — products, parts, articles — so it was answering a different question correctly and unhelpfully: the thing being looked for is a screen, not a product, and an empty result reads as "this software cannot do that".
 - real connection test and network discovery (`032da327`)
   "Test connection" opened a TCP socket and reported success. That is not a test: a web server, a printer, or an entirely different device will all accept a connection on port 4370, and an admin who sees "Reachable" reasonably concludes syncing will work. It now completes the protocol handshake and reads the serial number back, so a pass means the thing at that address is a terminal that will answer commands. The serial it reports is recorded, so a swapped unit shows up as a changed serial rather than quietly syncing somebody else's attendance.
 - ZKTeco wire protocol, with tests (`6ce7eeae`)
@@ -37,6 +39,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`2fef593d`)
 - update changelog (`cc4c1844`)
 - update changelog (`81d17c63`)
 - update changelog (`4eac327a`)

@@ -47,6 +47,24 @@ const nextConfig: NextConfig = {
   // app lives inside n8n/) and nests the standalone output under an extra
   // vision-analytical/ folder, breaking the Dockerfile's COPY paths.
   outputFileTracingRoot: process.cwd(),
+  // sharp is a native module. Bundling it produces a standalone build whose
+  // `await import('sharp')` fails at runtime with "Failed to load external
+  // module sharp-<hash>", so every image upload 500s while the rest of the
+  // app looks fine. Listing it here makes Next resolve it with a plain
+  // require from node_modules instead.
+  serverExternalPackages: ["sharp"],
+  experimental: {
+    serverActions: {
+      // Server Actions cap request bodies at 1MB by default, and every image
+      // upload goes through one. The form offers 8MB (MAX_UPLOAD_BYTES in
+      // src/lib/upload-image.ts), so anything between the two was rejected
+      // with a 413 before our own size check ever ran - the UI promised a
+      // limit the server would not honour. 10mb leaves room for the
+      // multipart overhead around an 8MB file, and matches
+      // client_max_body_size in deploy/nginx/nginx.conf.
+      bodySizeLimit: "10mb",
+    },
+  },
   async headers() {
     return [
       {

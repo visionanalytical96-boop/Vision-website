@@ -7,7 +7,7 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-60 commits.
+62 commits.
 
 ## 2026-08-14
 
@@ -18,6 +18,8 @@ type within each date.
 
 ### Fixes
 
+- make image upload work in the production build (`80192797`)
+  Two separate faults, both reported from the server log of a real deployment, both of which made every photo upload fail with "A server error occurred" while the rest of the admin worked.
 - catch a renamed database user before Prisma does (`426cf356`)
   Renaming POSTGRES_USER after the first run breaks the stack in a way the error does not explain. Postgres creates its user only when it initialises an empty data directory, so a later rename leaves the old database in place with nothing that can log in, and Prisma reports "P1000: Authentication failed ... credentials for `x` are not valid" — which reads like a wrong password rather than a user that was never created. Hit for real on a server while setting the admin password.
 - let the stack come up without a Cloudflare tunnel (`32061094`)
@@ -27,6 +29,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`285ed5b4`)
 - update changelog (`326b52e2`)
 - update changelog (`fbf4de3d`)
 - update changelog (`15a04b9a`)

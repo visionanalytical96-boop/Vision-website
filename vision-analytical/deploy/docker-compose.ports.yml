@@ -1,0 +1,18 @@
+# Publishes the site on a host port, for reaching it without Cloudflare.
+#
+# Use this to try a deployment on a server that is already running something
+# else: a different port and a different compose project name mean the two
+# stacks cannot collide, and nothing has to be taken down first.
+#
+#   docker compose -p vision-new \
+#     -f deploy/docker-compose.yml -f deploy/docker-compose.ports.yml \
+#     --env-file deploy/.env up -d --build
+#
+# Set HOST_PORT in deploy/.env (or inline) to move it. Whatever you choose,
+# NEXT_PUBLIC_SITE_URL must match the address people actually type — it is
+# what canonical URLs and the sitemap are built from.
+
+services:
+  nginx:
+    ports:
+      - "${HOST_PORT:-8090}:80"

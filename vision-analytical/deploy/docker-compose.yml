@@ -73,12 +73,21 @@ services:
     expose:
       - "80"
 
+  # Opt-in: only starts with `--profile tunnel`. Without the profile the stack
+  # comes up on the host port from docker-compose.ports.yml instead, which is
+  # how you try a new deployment without pointing a live domain at it.
+  #
+  # The token is interpolated with :- rather than :? because compose evaluates
+  # every service's variables at parse time — a required-variable guard here
+  # aborted `up` for the whole stack, including people who never wanted the
+  # tunnel. cloudflared reports a missing token clearly enough on its own.
   cloudflared:
     image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
     restart: unless-stopped
     command: tunnel run
     environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN in deploy/.env}
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     depends_on:
       - nginx
 

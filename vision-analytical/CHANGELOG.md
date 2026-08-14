@@ -7,9 +7,14 @@ Every commit that touched this project, newest first. Grouped by the date
 it landed, and by [conventional commit](https://www.conventionalcommits.org)
 type within each date.
 
-56 commits.
+58 commits.
 
 ## 2026-08-14
+
+### Features
+
+- one-command first deployment alongside a live site (`ac1bede6`)
+  scripts/first-deploy.sh brings this build up on its own compose project and its own port, so an existing site on the same server keeps serving throughout. Nothing is stopped, removed or overwritten; `down -v` on the project removes only this stack.
 
 ### Fixes
 
@@ -20,6 +25,7 @@ type within each date.
 
 ### Documentation
 
+- update changelog (`fbf4de3d`)
 - update changelog (`15a04b9a`)
 
 ## 2026-08-13

@@ -1,0 +1,66 @@
+{
+  "name": "vision-analytical",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "mkdir -p public/uploads .next/standalone/public .next/standalone/.next/static && rm -rf .next/standalone/public/uploads && cp -r public/. .next/standalone/public/ && cp -r .next/static/. .next/standalone/.next/static/ && rm -rf .next/standalone/public/uploads && ln -sfn ../../../public/uploads .next/standalone/public/uploads && node .next/standalone/server.js",
+    "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts",
+    "postinstall": "prisma generate",
+    "changelog": "node scripts/changelog.mjs",
+    "changelog:check": "node scripts/changelog.mjs --check",
+    "backup": "./scripts/backup.sh",
+    "restore": "./scripts/restore.sh",
+    "healthcheck": "./scripts/healthcheck.sh"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.7.1",
+    "@img/sharp-wasm32": "0.35.3",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@types/nodemailer": "^8.0.1",
+    "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "exceljs": "^4.4.0",
+    "jose": "^6.2.8",
+    "lucide-react": "^1.28.0",
+    "nanoid": "^6.0.1",
+    "next": "16.3.0",
+    "nodemailer": "^9.0.5",
+    "pg": "^8.22.0",
+    "prisma": "^7.9.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-hook-form": "^7.84.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.3",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.20",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/pg": "^8.20.4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.6",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}

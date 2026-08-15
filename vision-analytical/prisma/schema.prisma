@@ -1,0 +1,2230 @@
+// Prisma schema for the Vision Analytical platform.
+// See prisma.config.ts for CLI/config wiring (Prisma 7 config format).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  ENGINEER
+  CUSTOMER
+}
+
+enum CategoryKind {
+  INSTRUMENT
+  SPARE_PART
+  REFURBISHED
+}
+
+enum ProductKind {
+  INSTRUMENT
+  SPARE_PART
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  MADE_TO_ORDER
+}
+
+enum RefurbishedCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum QuoteStatus {
+  REQUESTED
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+enum ServiceRequestType {
+  INSTALLATION
+  PREVENTIVE_MAINTENANCE
+  BREAKDOWN
+  CALIBRATION
+  IQ
+  OQ
+  PQ
+  VALIDATION
+  SOFTWARE_INSTALL
+  TRAINING
+  OTHER
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ServiceRequestStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+  CANCELLED
+}
+
+enum AmcType {
+  AMC
+  CMC
+}
+
+enum AmcStatus {
+  ACTIVE
+  EXPIRING_SOON
+  EXPIRED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum CrmLeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+
+enum CrmActivityType {
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+  NOTE
+}
+
+/// The topic a knowledge article sits under. Separate from ArticleKind: kind
+/// is the *shape* of the content (a FAQ, an error code, a video), category is
+/// what it is about.
+/// What kind of thing an article is. Drives how it's presented and where it
+/// surfaces - an ERROR_CODE article is reachable from the error-code lookup, a
+/// VIDEO renders its player, a FAQ is short-form.
+enum ArticleKind {
+  ARTICLE
+  GUIDE
+  FAQ
+  TROUBLESHOOTING
+  ERROR_CODE
+  CASE_STUDY
+  VIDEO
+  APPLICATION_NOTE
+  INSTALLATION_GUIDE
+  MAINTENANCE_GUIDE
+  CALIBRATION_GUIDE
+  TRAINING_GUIDE
+  BEST_PRACTICE
+  RELEASE_NOTE
+  PRODUCT_UPDATE
+}
+
+/// How badly an error stops work. Drives ordering in the code library: an
+/// instrument that won't run outranks a warning you can finish the batch with.
+enum ErrorSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum StockMovementType {
+  PURCHASE_IN
+  SALE_OUT
+  ADJUSTMENT
+  RETURN
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+
+  /// Two-factor: the shared secret an authenticator app holds, base32.
+  /// Present but with no `twoFactorEnabledAt` means enrolment was started and
+  /// never confirmed — that account still signs in with a password alone.
+  passwordResetTokens PasswordResetToken[]
+
+  twoFactorSecret         String?
+  twoFactorEnabledAt      DateTime?
+  /// SHA-256 of each single-use recovery code. Hashed because a stolen
+  /// database should not hand over a way past the second factor, and not with
+  /// a slow KDF because the codes are already high-entropy random.
+  twoFactorRecoveryHashes String[]
+  role         Role     @default(CUSTOMER)
+  name         String
+  phone        String?
+  /// Free-text company name. Superseded by `companyId`; kept so nothing that
+  /// reads it breaks while records are linked to real Company rows.
+  companyName  String?
+  companyId    String?
+  company      Company? @relation("CompanyContacts", fields: [companyId], references: [id], onDelete: SetNull)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  addresses           Address[]
+  orders              Order[]          @relation("CustomerOrders")
+  quotes              Quote[]          @relation("CustomerQuotes")
+  serviceRequests     ServiceRequest[] @relation("CustomerServiceRequests")
+  assignedServiceJobs ServiceRequest[] @relation("EngineerServiceRequests")
+  serviceReports      ServiceReport[]  @relation("EngineerServiceReports")
+  amcContracts        AmcContract[]    @relation("CustomerAmcContracts")
+  invoices            Invoice[]        @relation("CustomerInvoices")
+  assignedLeads       CrmLead[]        @relation("AssignedLeads")
+  crmActivities       CrmActivity[]    @relation("CreatedActivities")
+  articles            KnowledgeArticle[] @relation("AuthoredArticles")
+  reviewedArticles    KnowledgeArticle[] @relation("ReviewedArticles")
+  articleRevisions    ArticleRevision[]  @relation("ArticleRevisions")
+  searchQueries       SearchQuery[]      @relation("SearchQueries")
+  importJobs          ImportJob[]        @relation("ImportJobs")
+  ownedInstruments    CustomerInstrument[] @relation("OwnedInstruments")
+  engineerVisits      ServiceVisit[]     @relation("EngineerVisits")
+  visitEvents         VisitEvent[]       @relation("VisitEventActor")
+  requestedParts      PartRequest[]      @relation("RequestedParts")
+  decidedParts        PartRequest[]      @relation("DecidedParts")
+  notifications       Notification[]     @relation("UserNotifications")
+  employeeProfile     Employee?        @relation("EmployeeAccount")
+  auditEntries        AuditLog[]       @relation("AuditActor")
+  stockMovements      StockMovement[]  @relation("RecordedMovements")
+
+  @@index([role])
+  @@index([companyId])
+}
+
+/// A customer organisation — a laboratory, hospital, plant or institute.
+///
+/// A real entity rather than the free-text `User.companyName` it replaces: one
+/// lab has a QC manager, a purchase officer and a lab head, all of whom need
+/// their own login while sharing one account, one GSTIN and one address.
+/// A string on each user cannot express that, and cannot be corrected in one
+/// place when the name is spelled three ways.
+///
+/// `User.companyName` is kept alongside `companyId` during the transition, so
+/// nothing that reads it breaks while records are gradually linked up.
+model Company {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  /// GST identification number, for invoicing.
+  gstin    String?
+  industry String?
+
+  addressLine String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String  @default("India")
+
+  phone   String?
+  email   String?
+  website String?
+  notes   String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contacts       User[]               @relation("CompanyContacts")
+  instruments    CustomerInstrument[]
+  serviceReports ServiceReport[]
+
+  @@index([isActive])
+  @@index([name])
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+/// Manufacturers whose instruments Vision Analytical sells and services.
+/// A real entity rather than a free-text field so brands can carry logos, copy
+/// and SEO, own a hub page, and be filtered on across the catalogue.
+model Brand {
+  id             String  @id @default(cuid())
+  name           String  @unique
+  slug           String  @unique
+  logoUrl        String?
+  description    String?
+  website        String?
+  sortOrder      Int     @default(0)
+  isPublished    Boolean @default(true)
+  seoTitle       String?
+  seoDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products               Product[]
+  refurbishedInstruments RefurbishedInstrument[]
+  downloads              Download[]
+  instrumentModels       InstrumentModel[]
+  compatibility          ProductCompatibility[]
+  articleLinks           KnowledgeArticleLink[]
+  errorCodes             ErrorCode[]
+  serviceCases           ServiceCase[]
+  symptoms               TroubleshootingSymptom[]
+
+  @@index([sortOrder])
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String
+  // Unique per kind, not globally: "HPLC" is a valid slug for both an
+  // instrument category and a refurbished-instrument category.
+  slug        String
+  kind        CategoryKind
+  description String?
+  parentId    String?
+  parent      Category?    @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  children    Category[]   @relation("CategoryToSubcategory")
+  sortOrder   Int          @default(0)
+
+  products               Product[]
+  refurbishedInstruments RefurbishedInstrument[]
+  downloads              Download[]
+  instrumentModels       InstrumentModel[]
+  knowledgeTopics        KnowledgeTopic[]
+
+  @@unique([slug, kind])
+  @@index([kind])
+}
+
+model Product {
+  id               String      @id @default(cuid())
+  sku              String      @unique
+  slug             String      @unique
+  name             String
+  kind             ProductKind
+  categoryId       String
+  category         Category    @relation(fields: [categoryId], references: [id])
+  brandId          String?
+  brand            Brand?      @relation(fields: [brandId], references: [id])
+  description      String
+  images           Json
+  priceMinor       Int?
+  stockStatus      StockStatus @default(IN_STOCK)
+  stockQuantity    Int         @default(0)
+  isPublished      Boolean     @default(true)
+  seoTitle         String?
+  seoDescription   String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  orderItems      OrderItem[]
+  quoteItems      QuoteItem[]
+  stockMovements  StockMovement[]
+  specifications  ProductSpecification[]
+  compatibility   ProductCompatibility[]
+  documents       Download[]
+  articleLinks    KnowledgeArticleLink[]
+  errorCodeParts  ErrorCodePart[]
+  serviceCaseParts ServiceCasePart[]
+  troubleshootingParts TroubleshootingCausePart[]
+  customerInstruments CustomerInstrument[]
+  servicePartsUsed ServiceReportPart[] @relation("ServicePartsUsed")
+  requestedParts  PartRequest[]      @relation("RequestedPartProduct")
+
+  @@index([kind])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([stockStatus])
+}
+
+// ---------------------------------------------------------------------------
+// Compatibility: which parts fit which instruments
+// ---------------------------------------------------------------------------
+
+/// A specific instrument a customer owns, e.g. "Alliance e2695". Spare parts
+/// hang off this, and so will customer-owned instruments, calibration records
+/// and service history when those modules land.
+model InstrumentModel {
+  id          String    @id @default(cuid())
+  brandId     String
+  brand       Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  // The technique it belongs to, so a model can be browsed like a product.
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  description String?
+  isPublished Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  compatibility ProductCompatibility[]
+  articleLinks  KnowledgeArticleLink[]
+  errorCodes    ErrorCode[]
+  serviceCases  ServiceCase[]
+  symptoms      TroubleshootingSymptom[]
+  customerInstruments CustomerInstrument[]
+
+  @@unique([brandId, slug])
+  @@index([brandId])
+  @@index([categoryId])
+}
+
+/// One compatibility claim: this part fits this brand, optionally narrowed to
+/// one model. A row with no model is a universal fitting ("fits Waters HPLC
+/// systems generally"), which is how a lot of consumables are actually sold -
+/// so the parts finder returns both model-specific and brand-wide matches.
+model ProductCompatibility {
+  id                String           @id @default(cuid())
+  productId         String
+  product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  brandId           String
+  brand             Brand            @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: Cascade)
+  note              String?
+
+  @@index([productId])
+  @@index([brandId])
+  @@index([instrumentModelId])
+}
+
+/// Structured specs rather than prose, so they can be tabulated, compared and
+/// later filtered on. `group` lets a long sheet break into sections.
+model ProductSpecification {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  group     String?
+  label     String
+  value     String
+  unit      String?
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+model RefurbishedInstrument {
+  id                  String               @id @default(cuid())
+  slug                String               @unique
+  name                String
+  categoryId          String
+  category            Category             @relation(fields: [categoryId], references: [id])
+  brandId             String
+  brand               Brand                @relation(fields: [brandId], references: [id])
+  model               String?
+  condition           RefurbishedCondition
+  includedAccessories String[]
+  warrantyMonths      Int
+  demoVideoUrl        String?
+  description         String
+  images              Json
+  priceMinor          Int?
+  stockStatus         StockStatus          @default(IN_STOCK)
+  isPublished         Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  orderItems OrderItem[]
+  quoteItems QuoteItem[]
+
+  @@index([categoryId])
+  @@index([brandId])
+}
+
+// ---------------------------------------------------------------------------
+// Commerce: quotes -> orders -> invoices
+// ---------------------------------------------------------------------------
+
+model Quote {
+  id            String      @id @default(cuid())
+  quoteNumber   String      @unique
+  customerId    String?
+  customer      User?       @relation("CustomerQuotes", fields: [customerId], references: [id])
+  contactName   String
+  contactEmail  String
+  contactPhone  String?
+  status        QuoteStatus @default(REQUESTED)
+  validUntil    DateTime?
+  totalMinor    Int?
+  notes         String?
+  poNumber      String?
+  poDocumentUrl String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items QuoteItem[]
+  order Order?
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model QuoteItem {
+  id                      String                 @id @default(cuid())
+  quoteId                 String
+  quote                   Quote                  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId               String?
+  product                 Product?               @relation(fields: [productId], references: [id], onDelete: SetNull)
+  refurbishedInstrumentId String?
+  refurbishedInstrument   RefurbishedInstrument? @relation(fields: [refurbishedInstrumentId], references: [id], onDelete: SetNull)
+  description             String
+  quantity                Int
+  unitPriceMinor          Int?
+
+  @@index([quoteId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerId      String
+  customer        User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  status          OrderStatus @default(PENDING)
+  subtotalMinor   Int
+  totalMinor      Int
+  shippingAddress Json
+  billingAddress  Json
+  poNumber        String?
+  poDocumentUrl   String?
+  notes           String?
+  sourceQuoteId   String?     @unique
+  sourceQuote     Quote?      @relation(fields: [sourceQuoteId], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items    OrderItem[]
+  invoices Invoice[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model OrderItem {
+  id                      String                 @id @default(cuid())
+  orderId                 String
+  order                   Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId               String?
+  product                 Product?               @relation(fields: [productId], references: [id], onDelete: SetNull)
+  refurbishedInstrumentId String?
+  refurbishedInstrument   RefurbishedInstrument? @relation(fields: [refurbishedInstrumentId], references: [id], onDelete: SetNull)
+  nameSnapshot            String
+  skuSnapshot             String?
+  unitPriceMinor          Int
+  quantity                Int
+  lineTotalMinor          Int
+
+  @@index([orderId])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  customerId    String
+  customer      User          @relation("CustomerInvoices", fields: [customerId], references: [id])
+  orderId       String?
+  order         Order?        @relation(fields: [orderId], references: [id])
+  amcContractId String?
+  amcContract   AmcContract?  @relation(fields: [amcContractId], references: [id])
+  amountMinor   Int
+  status        InvoiceStatus @default(UNPAID)
+  issuedAt      DateTime      @default(now())
+  dueAt         DateTime?
+  pdfUrl        String?
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Service: requests -> reports, AMC/CMC contracts
+// ---------------------------------------------------------------------------
+
+model ServiceRequest {
+  id                    String               @id @default(cuid())
+  ticketNumber          String               @unique
+  customerId            String
+  customer              User                 @relation("CustomerServiceRequests", fields: [customerId], references: [id])
+  type                  ServiceRequestType
+  priority              Priority             @default(NORMAL)
+  status                ServiceRequestStatus @default(OPEN)
+  instrumentDescription String
+  description           String
+  assignedEngineerId    String?
+  assignedEngineer      User?                @relation("EngineerServiceRequests", fields: [assignedEngineerId], references: [id])
+  amcContractId         String?
+  amcContract           AmcContract?         @relation(fields: [amcContractId], references: [id])
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  resolvedAt            DateTime?
+
+  reports ServiceReport[]
+  visits  ServiceVisit[]
+
+  customerInstrumentId String?
+  customerInstrument   CustomerInstrument? @relation(fields: [customerInstrumentId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([customerInstrumentId])
+  @@index([assignedEngineerId])
+  @@index([status])
+}
+
+model ServiceReport {
+  id                   String          @id @default(cuid())
+  /// Printed on the paper report so a customer and an engineer can refer to the
+  /// same visit by one number. Optional: reports predating the generator have none.
+  reportNumber         String?         @unique
+  /// Optional, because an engineer is often sent to a site on a phone call and
+  /// the request is raised afterwards — or never. The report is still the record.
+  serviceRequestId     String?
+  serviceRequest       ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  engineerId           String
+  engineer             User            @relation("EngineerServiceReports", fields: [engineerId], references: [id])
+  /// Which trip to site produced it. Optional so reports predating the
+  /// visit model keep working.
+  visitId              String?
+  visit                ServiceVisit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  kind                 ServiceReportKind @default(INSPECTION)
+
+  // --- The printed service report ------------------------------------------
+  // Captured as flat text alongside the relations rather than only derived from
+  // them: the sheet is signed by a customer, so what it said on the day has to
+  // survive a company being renamed or an instrument being re-registered later.
+
+  /// Date at the head of the sheet. Distinct from `reportedAt`, which is when
+  /// the row was written — an engineer files Monday's visit on Tuesday.
+  reportDate           DateTime?
+  companyId            String?
+  company              Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyName          String?
+  companyAddress       String?
+  telephone            String?
+  contactPerson        String?
+  contactDesignation   String?
+  contactDepartment    String?
+  /// "Sunday", "2nd & 4th Saturday" — when not to come back.
+  weekOff              String?
+
+  customerInstrumentId String?
+  customerInstrument   CustomerInstrument? @relation("InstrumentServiceReports", fields: [customerInstrumentId], references: [id], onDelete: SetNull)
+
+  outcome              ServiceOutcome?
+  /// Several boxes are ticked on one visit — an install that also gets
+  /// calibrated is one report, not two.
+  serviceTypes         ServiceCallType[]
+  contractType         ServiceContractType?
+
+  /// "Fault Reported" on the sheet: what the customer said was wrong.
+  faultReported        String?
+  /// "Observation & Action Taken".
+  workPerformed        String
+  /// Superseded by the ServiceReportPart and ServiceReportPhoto rows.
+  /// Kept so existing reports are not rewritten by a migration.
+  partsUsed            Json
+  photos               Json
+  rootCause            String?
+  correctiveAction     String?
+  recommendations      String?
+  engineerRemarks      String?
+  /// "Clients Comments" on the sheet.
+  customerRemarks      String?
+  /// "Parts Replaced / Required" as written. The ServiceReportPart rows carry
+  /// the same information in a queryable form; this is what was on the paper.
+  partsSummary         String?
+  customerName         String?
+  customerDesignation  String?
+  customerSignatureUrl String?
+  /// Name the engineer signs with, which is not always their account name.
+  engineerName         String?
+  engineerSignatureUrl String?
+  signedAt             DateTime?
+  /// Calibration and validation only.
+  certificateNumber    String?
+  standardUsed         String?
+  /// When the next calibration or PM falls due, copied onto the instrument.
+  nextDueOn            DateTime?
+  approvedById         String?
+  approvedAt           DateTime?
+  reportedAt           DateTime       @default(now())
+
+  /// A write-up of this job, once it is worth publishing.
+  serviceCase ServiceCase?
+  items       ServiceReportItem[]
+  reportPhotos ServiceReportPhoto[]
+  reportParts ServiceReportPart[]
+  visitLines  ServiceReportVisitLine[]
+
+  @@index([serviceRequestId])
+  @@index([visitId])
+  @@index([kind])
+  @@index([companyId])
+  @@index([customerInstrumentId])
+  @@index([reportDate])
+}
+
+/// One row of the visit table on the printed sheet.
+///
+/// A row rather than six columns on the report, because one sheet covers
+/// several days on site — an installation runs Monday to Wednesday and each
+/// day has its own in and out time against the same signature.
+model ServiceReportVisitLine {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  visitedOn           DateTime?
+  /// Kept as written ("09:30", "9.30 AM") rather than parsed into a timestamp:
+  /// the sheet records what the engineer wrote, and half of them are approximate.
+  timeIn              String?
+  timeOut             String?
+  systemConfiguration String?
+  modelDescription    String?
+  systemNumber        String?
+  sortOrder           Int      @default(0)
+
+  @@index([reportId, sortOrder])
+}
+
+model AmcContract {
+  id                    String    @id @default(cuid())
+  contractNumber        String    @unique
+  customerId            String
+  customer              User      @relation("CustomerAmcContracts", fields: [customerId], references: [id])
+  type                  AmcType
+  instrumentDescription String
+  startDate             DateTime
+  endDate               DateTime
+  visitsIncluded        Int
+  visitsUsed            Int       @default(0)
+  priceMinor            Int?
+  status                AmcStatus @default(ACTIVE)
+  createdAt             DateTime  @default(now())
+
+  serviceRequests ServiceRequest[]
+  invoices        Invoice[]
+  instruments     CustomerInstrument[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// CRM
+// ---------------------------------------------------------------------------
+
+model CrmLead {
+  id                  String        @id @default(cuid())
+  name                String
+  company             String?
+  email               String?
+  phone               String?
+  source              String?
+  status              CrmLeadStatus @default(NEW)
+  assignedToId        String?
+  assignedTo          User?         @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  notes               String?
+  convertedCustomerId String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  activities CrmActivity[]
+
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model CrmActivity {
+  id          String          @id @default(cuid())
+  leadId      String
+  lead        CrmLead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type        CrmActivityType
+  notes       String
+  createdById String
+  createdBy   User            @relation("CreatedActivities", fields: [createdById], references: [id])
+  createdAt   DateTime        @default(now())
+
+  @@index([leadId])
+}
+
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+
+/// The editorial lifecycle every piece of knowledge content moves through.
+/// A two-state boolean can't express review or archival, and "archived" is not
+/// the same as "never published" - the difference matters for an audit trail.
+enum ContentStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+/// A piece of knowledge: article, guide, FAQ, troubleshooting note, error code,
+/// case study or video. Mapped to the original `BlogPost` table - the name was
+/// outgrown, not the data, so this is a code-level rename with no migration.
+model KnowledgeArticle {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  excerpt        String
+  content        String
+  kind           ArticleKind   @default(ARTICLE)
+  /// What the article is *about* - HPLC, GC-MS, Balances. Separate from `kind`,
+  /// which is what it *is*. The two were one field once, which left no way to
+  /// say "a troubleshooting guide about HPLC".
+  topicId        String?
+  topic          KnowledgeTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  coverImage     String?
+  /// VIDEO articles embed this; any article may also link one.
+  videoUrl       String?
+  /// The manufacturer's code this article explains, e.g. "E-1201". Kept for
+  /// articles that predate the ErrorCode entity; new codes belong there.
+  errorCode      String?
+  authorId       String
+  author         User          @relation("AuthoredArticles", fields: [authorId], references: [id])
+  /// Who checked it. Technical content that nobody signed off on is a liability
+  /// in a lab, so the reviewer is recorded rather than implied by the status.
+  reviewerId     String?
+  reviewer       User?         @relation("ReviewedArticles", fields: [reviewerId], references: [id], onDelete: SetNull)
+  /// Bumped on every published edit, and stamped onto each revision.
+  version        Int           @default(1)
+  status         ContentStatus @default(DRAFT)
+  /// When set in the future, the article stays hidden until that moment even at
+  /// status PUBLISHED - which is what makes scheduling possible without a job
+  /// runner: visibility is a query condition, not a timer.
+  publishAt      DateTime?
+  publishedAt    DateTime?
+  reviewNote     String?
+  seoTitle       String?
+  seoDescription String?
+  /// Feeds "popular articles". Incremented best-effort on read.
+  viewCount      Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  links       KnowledgeArticleLink[]
+  tags        KnowledgeArticleTag[]
+  revisions   ArticleRevision[]
+  errorCodes  ErrorCode[]
+  serviceCases ServiceCase[]
+  troubleshootingCauses TroubleshootingCause[] @relation("CauseArticle")
+
+  @@index([topicId])
+  @@index([kind])
+  @@index([status])
+  @@index([publishAt])
+  @@index([errorCode])
+  @@index([viewCount])
+  @@map("BlogPost")
+}
+
+/// What an article is about. One row per target so an article can cover a
+/// brand, one of its models and a specific part at once - the same shape as
+/// ProductCompatibility, for the same reason.
+model KnowledgeArticleLink {
+  id                String           @id @default(cuid())
+  articleId         String
+  article           KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: Cascade)
+  productId         String?
+  product           Product?         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([productId])
+}
+
+/// A subject area: HPLC, GC-MS, Balances, Water Purification.
+///
+/// A separate taxonomy from the product `Category` tree on purpose - "Software"
+/// and "General Laboratory" are things people need to read about but not things
+/// we sell, and putting them in the catalogue's categories would list them on
+/// shop pages. `categoryId` bridges the two where they genuinely coincide, so
+/// an HPLC topic can offer "browse HPLC instruments" without duplicating it.
+model KnowledgeTopic {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  /// Lucide icon name, so the hub can show a topic without an image upload.
+  icon        String?
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  articles     KnowledgeArticle[]
+  errorCodes   ErrorCode[]
+  serviceCases ServiceCase[]
+  downloads    Download[]
+  symptoms     TroubleshootingSymptom[]
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+/// Free-form labels. Kept as rows rather than a string array so a tag can be
+/// renamed once, counted, and browsed - which is what makes it useful for
+/// retrieval later rather than just decoration.
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  articles KnowledgeArticleTag[]
+
+  @@index([slug])
+}
+
+model KnowledgeArticleTag {
+  articleId String
+  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+}
+
+/// A snapshot of an article as it stood before an edit.
+///
+/// Stored as full content rather than a diff: the point is to be able to read
+/// and restore an old version months later without a patch algorithm, and
+/// technical articles are small next to the cost of getting one wrong.
+model ArticleRevision {
+  id          String           @id @default(cuid())
+  articleId   String
+  article     KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  version     Int
+  title       String
+  excerpt     String
+  content     String
+  status      ContentStatus
+  editedById  String?
+  editedBy    User?            @relation("ArticleRevisions", fields: [editedById], references: [id], onDelete: SetNull)
+  /// Who made the change, kept as text so the history survives the account.
+  editorLabel String
+  changeNote  String?
+  createdAt   DateTime         @default(now())
+
+  @@unique([articleId, version])
+  @@index([articleId])
+}
+
+// ---------------------------------------------------------------------------
+// Error code library
+// ---------------------------------------------------------------------------
+
+/// One manufacturer error code, with what it means and what to do about it.
+///
+/// An entity rather than a string on an article because an engineer standing at
+/// an instrument needs the cause, the fix and the part number - not an essay.
+/// The same printed code means different things on different instruments, so
+/// identity is the code plus the brand and model it applies to.
+model ErrorCode {
+  id   String @id @default(cuid())
+  /// As printed on the instrument, e.g. "E-1201".
+  code String
+  /// Punctuation and case stripped, so "E1201", "E-1201" and "e 1201" all
+  /// match what the customer is reading off the screen.
+  normalisedCode String
+
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: SetNull)
+  topicId           String?
+  topic             KnowledgeTopic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  title               String
+  description         String?
+  possibleCauses      String?
+  recommendedSolution String?
+  severity            ErrorSeverity @default(MEDIUM)
+
+  /// The deep-dive article, when one exists.
+  articleId String?
+  article   KnowledgeArticle? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  videoUrl  String?
+
+  status    ContentStatus @default(PUBLISHED)
+  viewCount Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  parts     ErrorCodePart[]
+  documents ErrorCodeDocument[]
+  troubleshootingCauses TroubleshootingCause[] @relation("CauseErrorCode")
+
+  @@index([normalisedCode])
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([status])
+  @@index([severity])
+}
+
+/// The spare parts a fix usually needs. A code that tells you what is wrong but
+/// not what to order sends the engineer back to the office.
+model ErrorCodePart {
+  id          String    @id @default(cuid())
+  errorCodeId String
+  errorCode   ErrorCode @relation(fields: [errorCodeId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  note        String?
+
+  @@unique([errorCodeId, productId])
+  @@index([productId])
+}
+
+model ErrorCodeDocument {
+  id          String    @id @default(cuid())
+  errorCodeId String
+  errorCode   ErrorCode @relation(fields: [errorCodeId], references: [id], onDelete: Cascade)
+  downloadId  String
+  download    Download  @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+
+  @@unique([errorCodeId, downloadId])
+  @@index([downloadId])
+}
+
+// ---------------------------------------------------------------------------
+// Service case library
+// ---------------------------------------------------------------------------
+
+/// A real job, written up so the next person doesn't rediscover it.
+///
+/// Optionally anchored to the ServiceReport it came from, which is what keeps
+/// the library honest: a case is a published account of work that happened, not
+/// a hypothetical.
+model ServiceCase {
+  id        String @id @default(cuid())
+  reference String @unique
+  slug      String @unique
+  title     String
+
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: SetNull)
+  topicId           String?
+  topic             KnowledgeTopic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  serviceReportId   String?          @unique
+  serviceReport     ServiceReport?   @relation(fields: [serviceReportId], references: [id], onDelete: SetNull)
+  articleId         String?
+  article           KnowledgeArticle? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  problem       String
+  rootCause     String
+  solution      String
+  engineerNotes String?
+  /// How long it actually took, which is what a customer asking "how long will
+  /// this take" wants and what a planner needs.
+  timeTakenMinutes Int?
+  customerIndustry String?
+  beforeImageUrl   String?
+  afterImageUrl    String?
+  occurredOn       DateTime?
+
+  status    ContentStatus @default(DRAFT)
+  viewCount Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  parts ServiceCasePart[]
+
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([topicId])
+  @@index([status])
+}
+
+model ServiceCasePart {
+  id            String      @id @default(cuid())
+  serviceCaseId String
+  serviceCase   ServiceCase @relation(fields: [serviceCaseId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity      Int         @default(1)
+
+  @@unique([serviceCaseId, productId])
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Troubleshooting wizard
+// ---------------------------------------------------------------------------
+
+/// A problem in the customer's words - "baseline drift", "no flow", "leak at
+/// the pump head". The wizard walks brand → instrument → symptom, so symptoms
+/// are rows an admin can add rather than branches in code.
+model TroubleshootingSymptom {
+  id          String @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+
+  brandId           String?
+  brand             Brand?           @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: Cascade)
+  topicId           String?
+  topic             KnowledgeTopic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  causes TroubleshootingCause[]
+
+  @@index([brandId])
+  @@index([instrumentModelId])
+  @@index([topicId])
+  @@index([isActive])
+}
+
+/// One possible cause of a symptom, with the check that confirms it and the fix.
+/// Ordered by likelihood so the wizard suggests the common case first.
+model TroubleshootingCause {
+  id        String                 @id @default(cuid())
+  symptomId String
+  symptom   TroubleshootingSymptom @relation(fields: [symptomId], references: [id], onDelete: Cascade)
+
+  cause      String
+  howToCheck String?
+  solution   String
+  /// Lower is more likely, so the first suggestion is the usual answer.
+  sortOrder  Int    @default(0)
+
+  articleId   String?
+  article     KnowledgeArticle? @relation("CauseArticle", fields: [articleId], references: [id], onDelete: SetNull)
+  errorCodeId String?
+  errorCodeRef ErrorCode?       @relation("CauseErrorCode", fields: [errorCodeId], references: [id], onDelete: SetNull)
+
+  parts TroubleshootingCausePart[]
+
+  @@index([symptomId])
+}
+
+model TroubleshootingCausePart {
+  id      String               @id @default(cuid())
+  causeId String
+  cause   TroubleshootingCause @relation(fields: [causeId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([causeId, productId])
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Search analytics
+// ---------------------------------------------------------------------------
+
+/// Every search, with how many results it got.
+///
+/// The zero-result rows are the valuable ones: they are a list, written by
+/// customers, of the content the knowledge base is missing.
+model SearchQuery {
+  id             String   @id @default(cuid())
+  term           String
+  /// Trimmed and lowercased, so "HPLC leak" and "hplc  leak" group together.
+  normalisedTerm String
+  resultCount    Int
+  /// Which search box it came from: global, knowledge, error-codes, documents.
+  source         String
+  userId         String?
+  user           User?    @relation("SearchQueries", fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([normalisedTerm])
+  @@index([createdAt])
+  @@index([resultCount])
+  @@index([source])
+}
+
+// ---------------------------------------------------------------------------
+// Data import
+// ---------------------------------------------------------------------------
+
+enum ImportStatus {
+  /// Parsed and validated; waiting for someone to look at the preview.
+  VALIDATED
+  COMPLETED
+  /// The transaction rolled back. Nothing was written.
+  FAILED
+  CANCELLED
+}
+
+/// What the importer decided to do with one row.
+enum ImportRowAction {
+  CREATE
+  UPDATE
+  /// A duplicate whose values already match — writing it would change nothing.
+  SKIP
+  /// Failed validation. Never written, and always explained.
+  ERROR
+}
+
+/// One upload, from parse through to commit.
+///
+/// Parsed rows are persisted rather than held in memory between the preview and
+/// the confirmation: the two are separate requests, and a preview that has to
+/// re-parse the file is a preview that can disagree with what gets written.
+model ImportJob {
+  id       String @id @default(cuid())
+  /// Which import definition this used, e.g. "products".
+  entity   String
+  fileName String
+  fileType String
+
+  status ImportStatus @default(VALIDATED)
+  /// "create" refuses to touch existing rows; "upsert" updates them.
+  mode   String       @default("upsert")
+
+  totalRows   Int @default(0)
+  createRows  Int @default(0)
+  updateRows  Int @default(0)
+  skipRows    Int @default(0)
+  errorRows   Int @default(0)
+
+  startedById String?
+  startedBy   User?   @relation("ImportJobs", fields: [startedById], references: [id], onDelete: SetNull)
+  /// Kept as text so the log survives the account being removed.
+  actorLabel  String
+
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  rows ImportJobRow[]
+
+  @@index([entity])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ImportJobRow {
+  id    String    @id @default(cuid())
+  jobId String
+  job   ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  /// Line number in the uploaded file, so an error can be found and fixed there.
+  rowNumber Int
+  action    ImportRowAction
+  message   String?
+  /// The parsed row as it was read, so the preview and the error report show
+  /// what the file actually said rather than what we hoped it said.
+  data      Json
+  /// What this row created or updated, once committed.
+  entityId  String?
+
+  @@unique([jobId, rowNumber])
+  @@index([jobId, action])
+}
+
+/// Everything the demo seed created, so all of it can be removed exactly.
+///
+/// A pointer table rather than an `isDemo` column on twenty models: it needs no
+/// migration when a new module is added, and it cannot be forgotten on one
+/// table and leave fake customers behind after a purge.
+model DemoRecord {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  /// Which seed run created it, so a partial purge is possible if ever needed.
+  batch      String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, entityId])
+  @@index([entityType])
+  @@index([batch])
+}
+
+// ---------------------------------------------------------------------------
+// Feature flags - the admin turns modules on and off without a deploy
+// ---------------------------------------------------------------------------
+
+/// Keyed by a stable string rather than an enum: a flag is configuration, and
+/// adding one should never need a migration. Unknown keys resolve to their
+/// coded default, so a flag row that hasn't been seeded yet is not an outage.
+model FeatureFlag {
+  key         String   @id
+  label       String
+  description String?
+  group       String
+  isEnabled   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([group, sortOrder])
+}
+
+// ---------------------------------------------------------------------------
+// Site CMS - homepage sections, other page content, and site-wide settings
+// editable from the admin panel without a code change. `content` fields are
+// Json validated with Zod on read (see src/lib/cms/*) since Prisma can't
+// express their shape at the schema level.
+// ---------------------------------------------------------------------------
+
+enum HomeSectionKey {
+  HERO
+  CATEGORIES
+  LIFECYCLE
+  WHY_US
+  CTA
+  COMPANY_OVERVIEW
+  FEATURED_PRODUCTS
+  BRANDS
+  INDUSTRIES
+  KNOWLEDGE
+  TESTIMONIALS
+  CONTACT_BAND
+}
+
+model HomeSection {
+  id        String         @id @default(cuid())
+  key       HomeSectionKey @unique
+  isVisible Boolean        @default(true)
+  sortOrder Int            @default(0)
+  content   Json
+  updatedAt DateTime       @updatedAt
+
+  @@index([sortOrder])
+}
+
+enum ContentPageKey {
+  ABOUT
+  SERVICES
+  CONTACT
+  HEADER
+  FOOTER
+  ANNOUNCEMENT
+}
+
+model PageContent {
+  id        String         @id @default(cuid())
+  page      ContentPageKey @unique
+  content   Json
+  updatedAt DateTime       @updatedAt
+}
+
+// Singleton row (id is always the literal string "singleton").
+model SiteSettings {
+  id                    String   @id @default("singleton")
+  companyName           String   @default("Vision Analytical")
+  addressLine           String?
+  city                  String?
+  state                 String?
+  country               String   @default("India")
+  phone                 String?
+  whatsappNumber        String?
+  email                 String?
+  facebookUrl           String?
+  instagramUrl          String?
+  linkedinUrl           String?
+  youtubeUrl            String?
+  seoDefaultTitle       String?
+  seoDefaultDescription String?
+  logoUrl               String?
+  faviconUrl            String?
+  updatedAt             DateTime @updatedAt
+}
+
+// Singleton row (id is always the literal string "singleton").
+model ThemeSettings {
+  id                String   @id @default("singleton")
+  primaryColor      String   @default("#2563eb")
+  secondaryColor    String   @default("#0891b2")
+  fontHeading       String   @default("space-grotesk")
+  fontBody          String   @default("inter")
+  buttonStyle       String   @default("rounded")
+  animationsEnabled Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Inventory
+// ---------------------------------------------------------------------------
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  createdAt   DateTime @default(now())
+}
+
+model StockMovement {
+  id          String            @id @default(cuid())
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id])
+  type        StockMovementType
+  quantity    Int
+  reference   String?
+  note        String?
+  createdById String
+  createdBy   User              @relation("RecordedMovements", fields: [createdById], references: [id])
+  createdAt   DateTime          @default(now())
+
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge assets: downloadable datasheets, manuals and certificates
+// ---------------------------------------------------------------------------
+
+enum DownloadKind {
+  DATASHEET
+  MANUAL
+  BROCHURE
+  CATALOGUE
+  APPLICATION_NOTE
+  CERTIFICATE
+  SOFTWARE
+}
+
+model Download {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  title       String
+  description String?
+  kind        DownloadKind
+  fileUrl     String
+  // Null when the file is hosted off-site and we can't measure it.
+  fileSizeBytes Int?
+  fileType    String?
+  brandId     String?
+  brand       Brand?       @relation(fields: [brandId], references: [id])
+  categoryId  String?
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  // Attaching a document to a product puts it on that product's page as well
+  // as in the downloads centre.
+  productId   String?
+  product     Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // The subject area, so the document library can be browsed by technique.
+  topicId     String?
+  topic       KnowledgeTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  // Some manufacturer documents may only be released to known customers.
+  requiresLogin Boolean    @default(false)
+  downloadCount Int        @default(0)
+  isPublished Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  errorCodeLinks ErrorCodeDocument[]
+
+  @@index([kind])
+  @@index([brandId])
+  @@index([categoryId])
+  @@index([productId])
+  @@index([topicId])
+  @@index([isPublished])
+}
+
+// ---------------------------------------------------------------------------
+// Misc
+// ---------------------------------------------------------------------------
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  quote       String
+  authorName  String
+  authorTitle String?
+  company     String?
+  logoUrl     String?
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model ContactMessage {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  subject    String?
+  message    String
+  isResolved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Team: employees, attendance, leave
+//
+// Designed as the base for HRMS, payroll and asset tracking rather than a
+// standalone attendance page. Two rules shape it:
+//
+//  1. An Employee is not a User. Field staff often have no login, and most
+//     Users (customers) are not employees, so the link is optional on both
+//     sides rather than folding HR data onto the account.
+//  2. Device punches and attendance are separate tables. Punches are raw,
+//     append-only and high-volume; a day's attendance is one derived row.
+//     Keeping them apart is what makes duplicate detection, re-processing and
+//     large logs tractable.
+// ---------------------------------------------------------------------------
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+/// Office staff and field engineers are counted separately on the dashboard
+/// and have different attendance expectations.
+enum StaffCategory {
+  OFFICE_STAFF
+  FIELD_ENGINEER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  HALF_DAY
+  ABSENT
+  ON_LEAVE
+  WEEKLY_OFF
+  HOLIDAY
+}
+
+/// Where an attendance row came from. Manual rows are the ones an audit will
+/// ask about, which is why every edit is logged.
+enum AttendanceSource {
+  BIOMETRIC
+  MANUAL
+  IMPORT
+}
+
+enum PunchDirection {
+  IN
+  OUT
+  UNKNOWN
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum EmployeeDocumentKind {
+  ID_PROOF
+  OFFER_LETTER
+  EXPERIENCE
+  CERTIFICATE
+  CONTRACT
+  OTHER
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  headId      String?
+  head        Employee? @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees    Employee[]   @relation("DepartmentMembers")
+  designations Designation[]
+
+  @@index([sortOrder])
+}
+
+model Designation {
+  id           String      @id @default(cuid())
+  name         String
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  sortOrder    Int         @default(0)
+  isActive     Boolean     @default(true)
+
+  employees Employee[]
+
+  @@unique([name, departmentId])
+  @@index([departmentId])
+}
+
+model Employee {
+  id           String  @id @default(cuid())
+  employeeCode String  @unique
+  /// Present only when the person has a login. Field staff often don't.
+  userId       String? @unique
+  user         User?   @relation("EmployeeAccount", fields: [userId], references: [id], onDelete: SetNull)
+
+  name            String
+  photoUrl        String?
+  departmentId    String?
+  department      Department?  @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: SetNull)
+  designationId   String?
+  designation     Designation? @relation(fields: [designationId], references: [id], onDelete: SetNull)
+  reportingToId   String?
+  reportingTo     Employee?    @relation("ReportingLine", fields: [reportingToId], references: [id], onDelete: SetNull)
+  directReports   Employee[]   @relation("ReportingLine")
+  headsDepartments Department[] @relation("DepartmentHead")
+
+  employmentType EmploymentType @default(FULL_TIME)
+  category       StaffCategory  @default(OFFICE_STAFF)
+  joiningDate    DateTime
+  exitDate       DateTime?
+  dateOfBirth    DateTime?
+
+  mobile                String?
+  email                 String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  addressLine           String?
+  city                  String?
+  state                 String?
+  postalCode            String?
+
+  /// The user id programmed into the biometric device. Unique because a punch
+  /// is matched back to an employee by this and nothing else.
+  biometricId String? @unique
+  skills      String[]
+  notes       String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendance    AttendanceRecord[]
+  punches       AttendancePunch[]
+  leaveRequests LeaveRequest[]     @relation("LeaveRequester")
+  decidedLeave  LeaveRequest[]     @relation("LeaveDecider")
+  documents     EmployeeDocument[]
+
+  @@index([departmentId])
+  @@index([category])
+  @@index([isActive])
+}
+
+model EmployeeDocument {
+  id         String               @id @default(cuid())
+  employeeId String
+  employee   Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  kind       EmployeeDocumentKind
+  title      String
+  fileUrl    String
+  issuedOn   DateTime?
+  expiresOn  DateTime?
+  createdAt  DateTime             @default(now())
+
+  @@index([employeeId])
+}
+
+/// One row per employee per day. `date` is midnight UTC so a day is a single
+/// comparable value regardless of when punches landed.
+model AttendanceRecord {
+  id         String           @id @default(cuid())
+  employeeId String
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime         @db.Date
+  checkInAt  DateTime?
+  checkOutAt DateTime?
+  status     AttendanceStatus
+  /// Derived from the rules at write time and stored, so a later rule change
+  /// never silently rewrites history that payroll has already used.
+  workedMinutes   Int @default(0)
+  lateMinutes     Int @default(0)
+  overtimeMinutes Int @default(0)
+  source     AttendanceSource @default(MANUAL)
+  notes      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([date])
+  @@index([status])
+  @@index([employeeId, date])
+}
+
+model BiometricDevice {
+  id            String   @id @default(cuid())
+  name          String
+  model         String   @default("Team Office Z900")
+  host          String
+  port          Int      @default(4370)
+  serialNumber  String?
+  isActive      Boolean  @default(true)
+  lastSyncAt    DateTime?
+  lastSyncOk    Boolean?
+  lastSyncNote  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  punches AttendancePunch[]
+
+  @@index([isActive])
+}
+
+/// Raw device reads, append-only. The unique constraint is the duplicate
+/// detection: a device that re-sends a window of punches cannot create two rows.
+model AttendancePunch {
+  id          String           @id @default(cuid())
+  deviceId    String?
+  device      BiometricDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  biometricId String
+  punchedAt   DateTime
+  direction   PunchDirection   @default(UNKNOWN)
+  /// Set once the punch has been folded into an AttendanceRecord. Null means
+  /// it still needs processing, which is also how failed rows stay visible.
+  processedAt DateTime?
+  employeeId  String?
+  employee    Employee?        @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  importNote  String?
+  createdAt   DateTime         @default(now())
+
+  @@unique([biometricId, punchedAt])
+  @@index([punchedAt])
+  @@index([processedAt])
+  @@index([employeeId])
+}
+
+/// Attendance policy. A single active row today; the table shape leaves room
+/// for per-department or shift-specific rules without a migration.
+model AttendanceRule {
+  id                    String   @id @default(cuid())
+  name                  String   @default("Default")
+  /// IANA zone the office times are written in. Stored rather than assumed:
+  /// the server runs UTC, so without it "09:30" has no fixed meaning and a
+  /// punch after midnight local lands on the wrong day.
+  timezone              String   @default("Asia/Kolkata")
+  /// "HH:mm" local time - a wall-clock policy, not an instant.
+  officeStartTime       String   @default("09:30")
+  officeEndTime         String   @default("18:30")
+  graceMinutes          Int      @default(10)
+  halfDayAfterMinutes   Int      @default(120)
+  fullDayMinutes        Int      @default(480)
+  halfDayMinutes        Int      @default(240)
+  overtimeAfterMinutes  Int      @default(540)
+  /// 0 = Sunday, matching JavaScript's getDay().
+  weeklyOffDays         Int[]    @default([0])
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Holiday {
+  id         String   @id @default(cuid())
+  date       DateTime @db.Date
+  name       String
+  isOptional Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([date, name])
+  @@index([date])
+}
+
+model LeaveType {
+  id           String  @id @default(cuid())
+  name         String  @unique
+  code         String  @unique
+  /// Days granted per calendar year. Null means uncapped (e.g. unpaid leave).
+  annualQuota  Int?
+  isPaid       Boolean @default(true)
+  requiresAttachment Boolean @default(false)
+  sortOrder    Int     @default(0)
+  isActive     Boolean @default(true)
+
+  requests LeaveRequest[]
+
+  @@index([sortOrder])
+}
+
+model LeaveRequest {
+  id          String             @id @default(cuid())
+  employeeId  String
+  employee    Employee           @relation("LeaveRequester", fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId String
+  leaveType   LeaveType          @relation(fields: [leaveTypeId], references: [id])
+  startDate   DateTime           @db.Date
+  endDate     DateTime           @db.Date
+  /// Stored rather than derived: half-days and holidays mean the span alone
+  /// doesn't tell you how much leave was actually consumed.
+  days        Float
+  reason      String
+  status      LeaveRequestStatus @default(PENDING)
+  attachmentUrl String?
+  decidedById String?
+  decidedBy   Employee?          @relation("LeaveDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt   DateTime?
+  decisionNote String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+}
+
+// ---------------------------------------------------------------------------
+// Audit trail
+// ---------------------------------------------------------------------------
+
+/// Who changed what, when. Platform-wide rather than attendance-only: every
+/// module that grows into the ERP needs the same record, and one table means
+/// one place to look during an audit.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String
+  action     String
+  entityType String
+  entityId   String
+  summary    String
+  /// Only the fields that changed, so the log stays readable and small.
+  changes    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorId])
+}
+
+// ---------------------------------------------------------------------------
+// Field service: the install base, visits, and what happened on them
+//
+// Three ideas shape this section:
+//
+//  1. A CustomerInstrument is not a Product. A catalogue product is a thing we
+//     sell; a customer instrument is a specific serial number standing in a
+//     specific lab, with its own warranty, AMC and service history. This is the
+//     extension point CONVENTIONS.md reserved.
+//  2. A ServiceRequest is a ticket; a ServiceVisit is one trip to site. One
+//     ticket often needs several visits - "waiting for parts" means coming back
+//     - so the field lifecycle lives on the visit, not the ticket. Putting it
+//     on the ticket makes a second visit impossible to record.
+//  3. Reports carry structured rows, not JSON blobs. A calibration reading and
+//     a PM checklist tick are the same shape: label, expected, actual, result.
+// ---------------------------------------------------------------------------
+
+enum InstrumentStatus {
+  ACTIVE
+  UNDER_REPAIR
+  STANDBY
+  DECOMMISSIONED
+}
+
+/// The field lifecycle of one visit, in the order it happens.
+enum VisitStatus {
+  ASSIGNED
+  ACCEPTED
+  REJECTED
+  TRAVELLING
+  REACHED_SITE
+  WORK_STARTED
+  WAITING_FOR_PARTS
+  WORK_COMPLETED
+  AWAITING_CUSTOMER_APPROVAL
+  CLOSED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum ServiceReportKind {
+  INSPECTION
+  INSTALLATION
+  CALIBRATION
+  PREVENTIVE_MAINTENANCE
+  BREAKDOWN
+  REPAIR
+  VALIDATION
+  TRAINING
+}
+
+/// A single-use link for setting a new password.
+///
+/// The token itself is never stored — only its SHA-256 — so a leaked database
+/// cannot be used to take over accounts. Rows are kept after use rather than
+/// deleted, because "this link was already used" is a different message from
+/// "this link never existed", and a support call goes very differently
+/// depending on which one it was.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  /// Where the request came from, for spotting someone working through a list.
+  requestIp String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// The "Status" box on the printed report: did the instrument leave working.
+enum ServiceOutcome {
+  OK
+  NOT_OK
+}
+
+/// The tick boxes on the printed report. Several apply to one visit.
+enum ServiceCallType {
+  NEW_INSTALLATION
+  CALIBRATION
+  DEMONSTRATION
+  VALIDATION
+  MAINTENANCE
+  REPAIRS
+}
+
+/// Who pays for the visit.
+enum ServiceContractType {
+  UNDER_WARRANTY
+  UNDER_AMC
+  COURTESY
+  PAID_VISIT
+}
+
+/// The outcome of a checklist line or a measurement.
+enum ReportItemResult {
+  PASS
+  FAIL
+  NOT_APPLICABLE
+  OBSERVATION
+}
+
+enum PartRequestStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  DISPATCHED
+  RECEIVED
+  CANCELLED
+}
+
+enum NotificationKind {
+  JOB_ASSIGNED
+  JOB_UPDATED
+  SCHEDULE_CHANGED
+  REPORT_PENDING
+  REPORT_APPROVED
+  PART_REQUEST_UPDATED
+  REMINDER
+}
+
+/// A specific instrument a customer owns, identified by its serial number.
+///
+/// Warranty, AMC, calibration due dates and service history hang off this and
+/// not off the catalogue Product: two labs can own the same model and have
+/// entirely different histories, and the one being serviced is the one with
+/// that serial number on the panel.
+model CustomerInstrument {
+  id           String @id @default(cuid())
+  serialNumber String
+
+  /// The lab that owns it. Preferred over `owner`, which is one contact person.
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  ownerId   String?
+  owner     User?    @relation("OwnedInstruments", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  instrumentModelId String?
+  instrumentModel   InstrumentModel? @relation(fields: [instrumentModelId], references: [id], onDelete: SetNull)
+  /// Set when we sold it, so the sale and the install base are one record.
+  productId         String?
+  product           Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  /// What the customer calls it — "QC Lab HPLC 2" — which is how an engineer
+  /// is told which instrument to look at.
+  nickname String?
+  siteName String?
+
+  addressLine String?
+  city        String?
+  state       String?
+  postalCode  String?
+
+  installedOn      DateTime?
+  warrantyEndsOn   DateTime?
+  calibrationDueOn DateTime?
+  nextPmDueOn      DateTime?
+
+  amcContractId String?
+  amcContract   AmcContract? @relation(fields: [amcContractId], references: [id], onDelete: SetNull)
+
+  status InstrumentStatus @default(ACTIVE)
+
+  /// Random token behind the QR sticker on the instrument. Not the id: a QR
+  /// code is photographed, shared and left on a bench, so it gets an
+  /// identifier that can be rotated without touching foreign keys.
+  qrToken String @unique @default(cuid())
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  serviceRequests ServiceRequest[]
+  serviceReports  ServiceReport[]  @relation("InstrumentServiceReports")
+  visits          ServiceVisit[]
+
+  /// Serial numbers repeat across manufacturers, so identity is the serial
+  /// plus the model. Enforced by a COALESCE index in the migration, because
+  /// Postgres treats NULLs as distinct.
+  @@index([companyId])
+  @@index([serialNumber])
+  @@index([status])
+  @@index([warrantyEndsOn])
+}
+
+/// One trip to site.
+model ServiceVisit {
+  id               String         @id @default(cuid())
+  visitNumber      String         @unique
+  serviceRequestId String
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+
+  engineerId String
+  engineer   User   @relation("EngineerVisits", fields: [engineerId], references: [id])
+
+  customerInstrumentId String?
+  customerInstrument   CustomerInstrument? @relation(fields: [customerInstrumentId], references: [id], onDelete: SetNull)
+
+  status       VisitStatus @default(ASSIGNED)
+  scheduledFor DateTime?
+  /// Why an engineer declined or rescheduled. Required by the action, because
+  /// a rejected job with no reason cannot be re-assigned sensibly.
+  statusNote   String?
+
+  acceptedAt       DateTime?
+  travelStartedAt  DateTime?
+  checkInAt        DateTime?
+  checkOutAt       DateTime?
+  workStartedAt    DateTime?
+  workCompletedAt  DateTime?
+  closedAt         DateTime?
+
+  /// Where the engineer was when they checked in and out. Stored as the raw
+  /// fix plus its accuracy: a reading good to 2km is not evidence of anything,
+  /// and pretending otherwise is worse than having no reading.
+  checkInLatitude   Float?
+  checkInLongitude  Float?
+  checkInAccuracyM  Float?
+  checkOutLatitude  Float?
+  checkOutLongitude Float?
+  checkOutAccuracyM Float?
+  /// Entered by the engineer, not derived from GPS - a straight-line distance
+  /// between two fixes is not what anyone gets reimbursed for.
+  travelDistanceKm  Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events       VisitEvent[]
+  reports      ServiceReport[]
+  partRequests PartRequest[]
+
+  @@index([engineerId, status])
+  @@index([serviceRequestId])
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+/// Every status change on a visit, with where and when it happened.
+///
+/// Append-only. The visit carries the current state for querying; this is the
+/// trail that answers "when did the engineer actually arrive" months later.
+model VisitEvent {
+  id      String       @id @default(cuid())
+  visitId String
+  visit   ServiceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  status    VisitStatus
+  note      String?
+  latitude  Float?
+  longitude Float?
+  accuracyM Float?
+
+  actorId    String?
+  actor      User?    @relation("VisitEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String
+  createdAt  DateTime @default(now())
+
+  @@index([visitId, createdAt])
+}
+
+/// A structured line in a report: a checklist tick or a measurement.
+///
+/// One shape for both, because they are the same thing — a calibration reading
+/// is a checklist line that happens to carry numbers. Separate tables for
+/// calibration, PM and installation checklists would be three copies of this.
+model ServiceReportItem {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  /// "Pump pressure at 1.0 mL/min", "Lamp hours", "Door interlock".
+  label     String
+  /// The specification, where there is one.
+  expected  String?
+  actual    String?
+  unit      String?
+  result    ReportItemResult @default(PASS)
+  notes     String?
+  sortOrder Int              @default(0)
+
+  @@index([reportId, sortOrder])
+}
+
+/// A photo attached to a report, with what it is a photo of.
+///
+/// Rows rather than the JSON array this replaces: "before" and "after" have to
+/// be distinguishable to be worth taking, and a blob cannot be queried or
+/// counted for the data-quality report.
+model ServiceReportPhoto {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  url       String
+  stage     String  @default("DURING")
+  caption   String?
+  sortOrder Int     @default(0)
+
+  @@index([reportId, sortOrder])
+}
+
+/// A part used on a visit. Replaces the JSON array, so stock and history can
+/// actually be traced back to the job that consumed the part.
+model ServiceReportPart {
+  id       String        @id @default(cuid())
+  reportId String
+  report   ServiceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation("ServicePartsUsed", fields: [productId], references: [id], onDelete: SetNull)
+  /// Free text for a part not in the catalogue, so a report is never blocked
+  /// by the parts list being incomplete.
+  partName  String
+  quantity  Int      @default(1)
+  notes     String?
+
+  @@index([reportId])
+  @@index([productId])
+}
+
+/// A part an engineer needs and does not have, and what happened to the ask.
+model PartRequest {
+  id      String        @id @default(cuid())
+  visitId String?
+  visit   ServiceVisit? @relation(fields: [visitId], references: [id], onDelete: SetNull)
+
+  requestedById String
+  requestedBy   User   @relation("RequestedParts", fields: [requestedById], references: [id])
+
+  productId String?
+  product   Product? @relation("RequestedPartProduct", fields: [productId], references: [id], onDelete: SetNull)
+  partName  String
+  quantity  Int      @default(1)
+  reason    String?
+
+  status       PartRequestStatus @default(REQUESTED)
+  decidedById  String?
+  decidedBy    User?             @relation("DecidedParts", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt    DateTime?
+  decisionNote String?
+  dispatchedAt DateTime?
+  receivedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([requestedById])
+  @@index([visitId])
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  kind    NotificationKind
+  title   String
+  body    String?
+  /// Where clicking it goes. Relative, so it survives a domain change.
+  linkUrl String?
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  /// Unread-first is the only ordering this table is ever read in.
+  @@index([userId, readAt, createdAt])
+}

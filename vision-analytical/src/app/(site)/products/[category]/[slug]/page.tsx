@@ -1,0 +1,158 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
+import { MessageCircle } from 'lucide-react';
+import { Container } from '@/components/ui/Container';
+import { ProductImage } from '@/components/product/ProductImage';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { AddToCartButton } from '@/components/forms/AddToCartButton';
+import { buttonVariants } from '@/components/ui/Button';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { getPublishedProductBySlug, getRelatedSpareParts } from '@/lib/data/products';
+import { ProductCard } from '@/components/product/ProductCard';
+import { BlogPostCard } from '@/components/blog/BlogPostCard';
+import { getArticlesForProduct } from '@/lib/data/knowledge';
+import { SpecificationTable } from '@/components/product/SpecificationTable';
+import { CompatibilityList } from '@/components/product/CompatibilityList';
+import { DocumentList } from '@/components/product/DocumentList';
+import { getSiteSettings } from '@/lib/data/cms';
+import { stockStatusMeta } from '@/lib/status';
+import { formatMinorAmount } from '@/lib/format';
+import { whatsappLink } from '@/lib/contact-links';
+import { toImageList } from '@/lib/image-list';
+import { buildProductSchema } from '@/lib/seo/product-schema';
+import { StockStatus } from '@/generated/prisma/enums';
+
+export async function generateMetadata(props: PageProps<'/products/[category]/[slug]'>): Promise<Metadata> {
+  const { slug } = await props.params;
+  const product = await getPublishedProductBySlug(slug);
+  if (!product) return {};
+  return { title: product.seoTitle ?? product.name, description: product.seoDescription ?? product.description };
+}
+
+export default async function ProductDetailPage(props: PageProps<'/products/[category]/[slug]'>) {
+  const { category: categorySlug, slug } = await props.params;
+  const [product, settings] = await Promise.all([getPublishedProductBySlug(slug), getSiteSettings()]);
+  if (!product) notFound();
+  if (product.category.slug !== categorySlug) {
+    redirect(`/products/${product.category.slug}/${product.slug}`);
+  }
+
+  const [relatedParts, articles] = await Promise.all([
+    getRelatedSpareParts(product.id),
+    getArticlesForProduct(product.id),
+  ]);
+
+  const schema = buildProductSchema({
+    name: product.name,
+    description: product.description,
+    path: `/products/${categorySlug}/${product.slug}`,
+    images: toImageList(product.images),
+    priceMinor: product.priceMinor,
+    inStock: product.stockStatus !== StockStatus.OUT_OF_STOCK,
+    sku: product.sku,
+    brand: product.brand?.name ?? undefined,
+  });
+
+  return (
+    <Container className="py-12 sm:py-16">
+      <JsonLd data={schema} />
+      <div className="grid gap-10 lg:grid-cols-2">
+        <ProductImage images={toImageList(product.images)} alt={product.name} className="aspect-square w-full rounded-2xl" />
+
+        <div>
+          <p className="text-sm text-muted">
+            <Link href={`/products/${categorySlug}`} className="hover:text-foreground">
+              {product.category.name}
+            </Link>
+          </p>
+          <h1 className="mt-1 font-display text-3xl font-bold text-foreground">{product.name}</h1>
+          {product.brand && (
+            <Link href={`/brands/${product.brand.slug}`} className="mt-1 inline-block text-muted hover:text-primary hover:underline">
+              {product.brand.name}
+            </Link>
+          )}
+
+          <div className="mt-4 flex items-center gap-3">
+            <StatusBadge meta={stockStatusMeta[product.stockStatus]} />
+            <span className="font-medium text-foreground">
+              {product.priceMinor ? formatMinorAmount(product.priceMinor) : 'Contact for pricing'}
+            </span>
+          </div>
+
+          <p className="mt-6 leading-relaxed text-muted">{product.description}</p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href={`/request-quote?product=${product.slug}`} className={buttonVariants({ variant: 'primary' })}>
+              Request Quote
+            </Link>
+            <AddToCartButton kind="PRODUCT" id={product.id} slug={product.slug} name={product.name} sku={product.sku} />
+            <a
+              href={whatsappLink(settings?.whatsappNumber, `Hi, I'm interested in the ${product.name}.`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {product.specifications.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Specifications</h2>
+          <div className="mt-4">
+            <SpecificationTable specifications={product.specifications} />
+          </div>
+        </section>
+      )}
+
+      {product.compatibility.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Compatible with</h2>
+          <div className="mt-4">
+            <CompatibilityList rows={product.compatibility} />
+          </div>
+        </section>
+      )}
+
+      {product.documents.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Documents</h2>
+          <div className="mt-4">
+            <DocumentList documents={product.documents} />
+          </div>
+        </section>
+      )}
+
+      {relatedParts.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">Spare parts &amp; consumables</h2>
+          <p className="mt-1 text-sm text-muted">Parts we stock for this instrument and others like it.</p>
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedParts.map((part) => (
+              <li key={part.id}>
+                <ProductCard product={part} basePath="/spare-parts" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {articles.length > 0 && (
+        <section className="mt-14">
+          <h2 className="font-display text-xl font-semibold text-foreground">From the Knowledge Center</h2>
+          <p className="mt-1 text-sm text-muted">Guides and troubleshooting notes that cover this and related instruments.</p>
+          <ul className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {articles.map((article) => (
+              <li key={article.id}>
+                <BlogPostCard post={article} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </Container>
+  );
+}

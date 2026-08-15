@@ -16,8 +16,27 @@ export default async function LoginPage(props: PageProps<'/login'>) {
         <CardDescription>Access your orders, quotes, AMC contracts and service history.</CardDescription>
       </CardHeader>
       <CardContent>
+        {searchParams.reset === 'done' && (
+          <p
+            role="status"
+            className="mb-4 rounded-lg bg-success-bg px-3 py-2 text-sm text-success"
+          >
+            Your password has been changed. Sign in with the new one.
+          </p>
+        )}
+
         <LoginForm next={nextParam} />
-        <p className="mt-6 text-center text-sm text-muted">
+
+        <p className="mt-4 text-center text-sm">
+          <Link
+            href="/forgot-password"
+            className="font-medium text-primary hover:underline dark:text-secondary"
+          >
+            Forgot your password?
+          </Link>
+        </p>
+
+        <p className="mt-4 text-center text-sm text-muted">
           New customer?{' '}
           <Link href="/register" className="font-medium text-primary hover:underline dark:text-secondary">
             Create an account

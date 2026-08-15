@@ -181,6 +181,8 @@ model User {
   /// Two-factor: the shared secret an authenticator app holds, base32.
   /// Present but with no `twoFactorEnabledAt` means enrolment was started and
   /// never confirmed — that account still signs in with a password alone.
+  passwordResetTokens PasswordResetToken[]
+
   twoFactorSecret         String?
   twoFactorEnabledAt      DateTime?
   /// SHA-256 of each single-use recovery code. Hashed because a stolen
@@ -1903,6 +1905,28 @@ enum ServiceReportKind {
   REPAIR
   VALIDATION
   TRAINING
+}
+
+/// A single-use link for setting a new password.
+///
+/// The token itself is never stored — only its SHA-256 — so a leaked database
+/// cannot be used to take over accounts. Rows are kept after use rather than
+/// deleted, because "this link was already used" is a different message from
+/// "this link never existed", and a support call goes very differently
+/// depending on which one it was.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  /// Where the request came from, for spotting someone working through a list.
+  requestIp String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 /// The "Status" box on the printed report: did the instrument leave working.

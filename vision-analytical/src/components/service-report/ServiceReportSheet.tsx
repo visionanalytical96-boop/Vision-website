@@ -64,8 +64,13 @@ export interface ServiceReportSheetData {
   engineerName: string | null;
 }
 
-/** At least four ruled rows, so the table looks like the printed form even when one visit is logged. */
-const MIN_VISIT_ROWS = 4;
+/**
+ * Ruled rows shown even when fewer visits are logged, so the table reads as the
+ * printed form. Three rather than four: the sheet has to finish on one A4 page,
+ * and the signature blocks are what fall off the bottom when it does not. Extra
+ * visits still print — this is a floor, not a cap.
+ */
+const MIN_VISIT_ROWS = 3;
 
 function Tick({ on, label }: { on: boolean; label: string }) {
   return (
@@ -140,9 +145,9 @@ export function ServiceReportSheet({
   const chosenTypes = new Set(data.serviceTypes);
 
   return (
-    <article className="service-sheet mx-auto w-full max-w-[820px] bg-white p-6 text-[11px] leading-snug text-black">
-      <header className="flex items-start justify-between gap-4 border-b-2 border-black pb-2">
-        <div className="flex items-start gap-3">
+    <article className="service-sheet mx-auto w-full max-w-[820px] bg-white p-5 text-[11px] leading-snug text-black">
+      <header className="flex items-center justify-between gap-5 border-b-[2.5px] border-black pb-2.5">
+        <div className="flex items-center gap-3.5">
           {letterhead.logoUrl && (
             // Plain <img>: next/image rewrites to an optimiser URL that a
             // print-to-PDF of a saved page cannot resolve.
@@ -150,26 +155,29 @@ export function ServiceReportSheet({
             <img
               src={letterhead.logoUrl}
               alt=""
-              className="h-12 w-auto object-contain"
+              className="h-[52px] w-auto max-w-[150px] shrink-0 object-contain"
             />
           )}
-          <div>
-            <h1 className="font-display text-[20px] leading-tight font-bold tracking-tight">
+          <div className="min-w-0">
+            <h1 className="font-display text-[21px] leading-none font-bold tracking-tight">
               {letterhead.companyName}
             </h1>
-            <p className="text-[10px] tracking-[0.14em] uppercase">
+            <p className="mt-1 text-[9px] font-semibold tracking-[0.2em] uppercase">
               Precision &middot; Performance &middot; Reliability
             </p>
             <p className="mt-0.5 text-[10px]">Lab Instruments Services &amp; Sales</p>
           </div>
         </div>
-        <div className="max-w-[38%] text-right text-[10px] leading-[1.5]">
+
+        <address className="max-w-[42%] text-right text-[9.5px] leading-[1.45] not-italic">
           {letterhead.addressLines.map((line) => (
-            <p key={line}>{line}</p>
+            <span key={line} className="block">
+              {line}
+            </span>
           ))}
-          {letterhead.email && <p>{letterhead.email}</p>}
-          {letterhead.phone && <p>{letterhead.phone}</p>}
-        </div>
+          {letterhead.email && <span className="mt-0.5 block">{letterhead.email}</span>}
+          {letterhead.phone && <span className="block font-semibold">{letterhead.phone}</span>}
+        </address>
       </header>
 
       <div className="mt-2 flex items-center justify-between border border-black bg-[#eef2f7] px-2 py-1">
@@ -256,36 +264,36 @@ export function ServiceReportSheet({
         </div>
       </div>
 
-      <div className="mt-2 space-y-2">
-        <Block title="Fault Reported" value={data.faultReported ?? ''} minHeight="46px" />
-        <Block title="Observation &amp; Action Taken" value={data.workPerformed} minHeight="104px" />
-        <Block title="Parts Replaced / Required" value={data.partsSummary ?? ''} minHeight="46px" />
-        <Block title="Clients Comments" value={data.customerRemarks ?? ''} minHeight="46px" />
+      <div className="mt-2 space-y-1.5">
+        <Block title="Fault Reported" value={data.faultReported ?? ''} minHeight="38px" />
+        <Block title="Observation &amp; Action Taken" value={data.workPerformed} minHeight="88px" />
+        <Block title="Parts Replaced / Required" value={data.partsSummary ?? ''} minHeight="38px" />
+        <Block title="Clients Comments" value={data.customerRemarks ?? ''} minHeight="38px" />
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-4">
-        <div className="border border-black px-2 pt-1 pb-2">
-          <p className="text-[10px] font-bold tracking-wide uppercase">
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        <div className="border border-black px-2 pt-1 pb-1.5">
+          <p className="text-[9.5px] font-bold tracking-wide uppercase">
             Customer&rsquo;s Name, Signature, Date &amp; Stamp
           </p>
-          <p className="mt-1 min-h-[14px] font-semibold">{data.customerName ?? ' '}</p>
-          <p className="min-h-[13px] text-[10px]">{data.customerDesignation ?? ' '}</p>
-          <div className="mt-6 border-t border-black pt-0.5 text-[10px]">
+          <p className="mt-1 min-h-[13px] font-semibold">{data.customerName ?? ' '}</p>
+          <p className="min-h-[12px] text-[10px]">{data.customerDesignation ?? ' '}</p>
+          <div className="mt-5 border-t border-black pt-0.5 text-[9.5px]">
             Signature &amp; Stamp
             {data.signedAt && ` — ${formatSheetDate(data.signedAt)}`}
           </div>
         </div>
-        <div className="border border-black px-2 pt-1 pb-2">
-          <p className="text-[10px] font-bold tracking-wide uppercase">
+        <div className="border border-black px-2 pt-1 pb-1.5">
+          <p className="text-[9.5px] font-bold tracking-wide uppercase">
             Service Engineer&rsquo;s Name &amp; Signature
           </p>
-          <p className="mt-1 min-h-[14px] font-semibold">{data.engineerName ?? ' '}</p>
-          <p className="min-h-[13px] text-[10px]">&nbsp;</p>
-          <div className="mt-6 border-t border-black pt-0.5 text-[10px]">Signature</div>
+          <p className="mt-1 min-h-[13px] font-semibold">{data.engineerName ?? ' '}</p>
+          <p className="min-h-[12px] text-[10px]">&nbsp;</p>
+          <div className="mt-5 border-t border-black pt-0.5 text-[9.5px]">Signature</div>
         </div>
       </div>
 
-      <p className="mt-2 text-center text-[9px]">
+      <p className="mt-1.5 text-center text-[8.5px]">
         This report is issued by {letterhead.companyName}. Please retain a copy for your records.
       </p>
     </article>

@@ -59,16 +59,18 @@ export async function listServiceReports(limit = 100) {
 export async function getSheetLetterhead(): Promise<SheetLetterhead> {
   const settings = await getSiteSettings();
 
-  const composed = joinAddress([
-    settings?.addressLine,
-    settings?.city,
-    settings?.state,
-    settings?.country,
-  ]);
+  // Two lines, the way an address is written on a letterhead: street on the
+  // first, then town and state together. Splitting the joined string on every
+  // comma instead gave one line per fragment, so a long street address became
+  // four ragged lines in the corner of the page.
+  const street = settings?.addressLine?.trim();
+  const region = joinAddress([settings?.city, settings?.state, settings?.country]);
+
+  const addressLines = [street, region].filter((line): line is string => Boolean(line));
 
   return {
     companyName: settings?.companyName ?? 'Vision Analytical',
-    addressLines: composed ? composed.split(', ') : [],
+    addressLines,
     email: settings?.email ?? null,
     phone: settings?.phone ?? null,
     logoUrl: settings?.logoUrl ?? null,

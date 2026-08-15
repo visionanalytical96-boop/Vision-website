@@ -306,15 +306,27 @@ body {
     display: none !important;
   }
 
-  .print-only-sheet {
-    margin: 0;
-    padding: 0;
-    background: #fff;
+  /* Hide everything, then bring back only the sheet.
+     `display: none` on wrappers cannot work here — the sheet lives inside the
+     admin shell, so hiding its ancestors hides it too. Toggling visibility
+     leaves the ancestor boxes in the layout but blank, and lifting the sheet
+     out with position keeps the shell's sidebar and header from reserving the
+     space that was pushing the signatures onto a second page. */
+  body * {
+    visibility: hidden;
+  }
+
+  .service-sheet,
+  .service-sheet * {
+    visibility: visible;
   }
 
   .service-sheet {
-    max-width: none;
+    position: absolute;
+    inset: 0 auto auto 0;
     width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 0;
     box-shadow: none;
     /* Keep the tick boxes and the header band filled — browsers strip
@@ -327,12 +339,15 @@ body {
      tampered with. */
   .service-sheet section,
   .service-sheet table,
-  .service-sheet tr {
+  .service-sheet tr,
+  .service-sheet header {
     break-inside: avoid;
   }
 }
 
 @page {
   size: A4;
-  margin: 10mm;
+  /* 8mm rather than 10: the sheet is sized to fill one page, and the extra
+     4mm across the height is what keeps the signature blocks on it. */
+  margin: 8mm;
 }

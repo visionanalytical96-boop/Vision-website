@@ -18,9 +18,26 @@ from pathlib import Path
 from typing import Any
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
-BUNDLE_ROOT = PACKAGE_ROOT.parents[1]  # <...>/vision-ai
-BUNDLED_PACK = BUNDLE_ROOT / "creative-pack"
+BUNDLE_ROOT = PACKAGE_ROOT.parents[1]  # <...>/vision-ai (repo) or <...>/brain (vendored)
 INSTALLED_PACK = Path("/srv/vision-workspace/vision-ai/creative-pack")
+
+
+def _find_bundled_pack() -> Path:
+    """The library defaults travel with the engine, wherever it is vendored."""
+    candidates = []
+    if os.environ.get("VISION_AI_BUNDLED_PACK"):
+        candidates.append(Path(os.environ["VISION_AI_BUNDLED_PACK"]))
+    candidates += [
+        PACKAGE_ROOT.parent / "creative-pack",   # vendored: <...>/brain/creative-pack
+        BUNDLE_ROOT / "creative-pack",           # repo:     <...>/vision-ai/creative-pack
+    ]
+    for candidate in candidates:
+        if (candidate / "config" / "engine.json").is_file():
+            return candidate
+    return BUNDLE_ROOT / "creative-pack"
+
+
+BUNDLED_PACK = _find_bundled_pack()
 
 _PATH_ENV = {
     "creative_pack": "VISION_AI_CREATIVE_PACK",

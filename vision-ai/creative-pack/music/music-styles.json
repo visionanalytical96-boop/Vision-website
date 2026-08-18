@@ -1,0 +1,17 @@
+{
+  "_comment": "Music is NEVER downloaded. A style is matched against filenames in INPUT/MUSIC; if nothing matches, any supplied track is used, and with no tracks at all the reel is rendered with a silent AAC track.",
+  "styles": [
+    {"id": "cinematic",         "label": "Cinematic",          "keywords": ["cinematic", "epic", "trailer"]},
+    {"id": "premium_corporate", "label": "Premium Corporate",  "keywords": ["corporate", "premium", "business"]},
+    {"id": "ambient_science",   "label": "Ambient Science",    "keywords": ["ambient", "science", "lab"]},
+    {"id": "technology",        "label": "Technology",         "keywords": ["tech", "technology", "digital"]},
+    {"id": "minimal_electronic","label": "Minimal Electronic", "keywords": ["minimal", "electronic", "pulse"]},
+    {"id": "pharmaceutical",    "label": "Pharmaceutical",     "keywords": ["pharma", "clean", "medical"]},
+    {"id": "luxury",            "label": "Luxury",             "keywords": ["luxury", "elegant", "lux"]},
+    {"id": "modern_editorial",  "label": "Modern Editorial",   "keywords": ["editorial", "modern", "fashion"]},
+    {"id": "soft_piano",        "label": "Soft Piano",         "keywords": ["piano", "soft", "calm"]},
+    {"id": "future_tech",       "label": "Future Tech",        "keywords": ["future", "synth", "neo"]},
+    {"id": "deep_ambient",      "label": "Deep Ambient",       "keywords": ["deep", "drone", "atmos"]},
+    {"id": "clean_corporate",   "label": "Clean Corporate",    "keywords": ["clean", "uplift", "bright"]}
+  ]
+}

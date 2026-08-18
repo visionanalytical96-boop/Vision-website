@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Vision Analytical creative engine launcher.
+# Installed to /usr/local/bin/vision-ai-content by vision-ai/install.sh.
+# Generation only ever happens when this command is run by hand.
+set -euo pipefail
+
+ENGINE_DIR="${VISION_AI_ENGINE:-/srv/vision-workspace/vision-ai/engine}"
+PYTHON_BIN="${VISION_AI_PYTHON:-}"
+
+if [[ ! -d "$ENGINE_DIR/vision_ai" ]]; then
+  # running straight from a checkout
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  ENGINE_DIR="$SCRIPT_DIR/../engine"
+fi
+
+if [[ -z "$PYTHON_BIN" ]]; then
+  if [[ -x "$ENGINE_DIR/../venv/bin/python" ]]; then
+    PYTHON_BIN="$ENGINE_DIR/../venv/bin/python"
+  else
+    PYTHON_BIN="$(command -v python3)"
+  fi
+fi
+
+export PYTHONPATH="$ENGINE_DIR${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PYTHON_BIN" -m vision_ai.cli "$@"

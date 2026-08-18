@@ -1,0 +1,91 @@
+VISION ANALYTICAL - GENERATION INFO
+====================================================
+Generated           : 2026-08-18T23:04:48+00:00
+Request             : Shimadzu Nexera X3 HPLC calibration
+Manufacturer        : Shimadzu
+Instrument          : Nexera X3
+Technique           : High Performance Liquid Chromatography
+Service             : Calibration
+Design Family       : Metallic Technical (metallic_technical)
+Background          : Futuristic Glass Lab (futuristic_glass_lab)
+Composition         : Macro Detail (macro_detail)
+Palette             : Gold on Black (gold_black)
+Layout              : Minimal Bottom (L11_minimal_bottom)
+Typography          : Editorial Serif (editorial_serif)
+Camera              : Module Detail (detail_module)
+Animation 1         : Push In (push_in)
+Animation 2         : Diagonal Movement (diagonal_move)
+Transition          : Zoom Transition (zoom_transition)
+Effect              : Particle Dust (particle_dust)
+Music               : Soft Piano | track: Vision-Premium-Test-Music.mp3
+Voice               : Premium Documentary | track: (none)
+Image Search Query  : Shimadzu Nexera X3 HPLC system - close view of detector or pump module
+Image Asset         : (none) [none-typographic]
+Image Exact Match   : NO - no photograph of Shimadzu Nexera X3 found - rendered as a typographic design rather than showing a different instrument
+Layout ID           : L11_minimal_bottom
+Design Fingerprint  : 046cd9dc2ba07451410cb5dfc5ca33ae8e36ce1cf4ad461c2bad7304db657e79
+Anti-Repetition     : unique fingerprint + unused recent structure (attempt 1, history 3)
+Copy Source         : local
+AI Model            : qwen2.5:1.5b (short copy only, optional)
+GPU                 : none - CPU pipeline (x86_64, 4 cores)
+Video Codec         : libx264 / high / yuv420p
+Audio Codec         : aac 192k @ 48000 Hz
+Resolution          : 1080x1920
+FPS                 : 30
+Duration            : 14.966667
+
+TIMINGS (seconds)
+----------------------------------------------------
+identify            : 0.001
+select_design       : 0.0009
+resolve_image       : 0.0003
+copy                : 0.0022
+render_posts        : 0.6537
+render_reel         : 24.6047
+
+OUTPUT FILES
+----------------------------------------------------
+POST                : /srv/vision-mobile/OUTPUT/READY/Vision-Analytical-20260818-230423-POST.png
+SQUARE              : /srv/vision-mobile/OUTPUT/READY/Vision-Analytical-20260818-230423-SQUARE.png
+STORY               : /srv/vision-mobile/OUTPUT/READY/Vision-Analytical-20260818-230423-STORY.png
+Reel                : /srv/vision-mobile/OUTPUT/READY/Vision-Analytical-20260818-230423-Reel.mp4
+Caption             : /srv/vision-mobile/OUTPUT/READY/Vision-Analytical-20260818-230423-Caption.txt
+
+VALIDATION
+----------------------------------------------------
+POST:
+  [PASS] file exists: Vision-Analytical-20260818-230423-POST.png (74 KB)
+  [PASS] file size: 75973 bytes
+  [PASS] dimensions: 1080x1350 (expected 1080x1350)
+SQUARE:
+  [PASS] file exists: Vision-Analytical-20260818-230423-SQUARE.png (76 KB)
+  [PASS] file size: 77763 bytes
+  [PASS] dimensions: 1080x1080 (expected 1080x1080)
+STORY:
+  [PASS] file exists: Vision-Analytical-20260818-230423-STORY.png (74 KB)
+  [PASS] file size: 75862 bytes
+  [PASS] dimensions: 1080x1920 (expected 1080x1920)
+Reel:
+  [PASS] file exists: Vision-Analytical-20260818-230423-Reel.mp4 (61.21 MB)
+  [PASS] file size: 64183311 bytes (minimum 300000)
+  [PASS] video stream: 1 video stream(s)
+  [PASS] audio stream: 1 audio stream(s)
+  [PASS] video codec: h264
+  [PASS] profile: High
+  [PASS] pixel format: yuv420p
+  [PASS] width: 1080
+  [PASS] height: 1920
+  [PASS] frame rate: 30.00 fps
+  [PASS] audio codec: aac
+  [PASS] sample rate: 48000
+  [PASS] duration: 14.97s (target 15.0s +/-0.75)
+
+WARNINGS
+----------------------------------------------------
+- no photograph of Shimadzu Nexera X3 found - rendered as a typographic design rather than showing a different instrument
+
+NOTES
+----------------------------------------------------
+- Ollama unavailable or rejected - local copy templates used
+
+Automatic generation is disabled - this run was started manually.

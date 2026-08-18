@@ -1,0 +1,19 @@
+{
+  "backgrounds": [
+    {"id": "premium_laboratory",       "label": "Premium Laboratory",            "style": "soft_gradient",   "vignette": 0.25},
+    {"id": "dark_cinematic_lab",       "label": "Dark Cinematic Lab",            "style": "spot_gradient",   "vignette": 0.55},
+    {"id": "clean_pharma_lab",         "label": "Clean Pharma Lab",              "style": "soft_gradient",   "vignette": 0.12},
+    {"id": "futuristic_glass_lab",     "label": "Futuristic Glass Lab",          "style": "glass_panels",    "vignette": 0.30},
+    {"id": "graphite_technical_env",   "label": "Graphite Technical Environment","style": "technical_grid",  "vignette": 0.40},
+    {"id": "black_luxury_env",         "label": "Black Luxury Environment",      "style": "spot_gradient",   "vignette": 0.60},
+    {"id": "stainless_laboratory",     "label": "Stainless Laboratory",          "style": "brushed_metal",   "vignette": 0.35},
+    {"id": "macro_scientific_env",     "label": "Macro Scientific Environment",  "style": "depth_blur",      "vignette": 0.45},
+    {"id": "editorial_laboratory",     "label": "Editorial Laboratory",          "style": "split_field",     "vignette": 0.18},
+    {"id": "dark_technical_env",       "label": "Dark Technical Environment",    "style": "technical_grid",  "vignette": 0.50},
+    {"id": "clinical_white_room",      "label": "Clinical White Room",           "style": "soft_gradient",   "vignette": 0.08},
+    {"id": "deep_field_laboratory",    "label": "Deep Field Laboratory",         "style": "depth_blur",      "vignette": 0.38},
+    {"id": "layered_glass_env",        "label": "Layered Glass Environment",     "style": "glass_panels",    "vignette": 0.28},
+    {"id": "precision_metal_env",      "label": "Precision Metal Environment",   "style": "brushed_metal",   "vignette": 0.42},
+    {"id": "editorial_split_field",    "label": "Editorial Split Field",         "style": "split_field",     "vignette": 0.20}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "_comment": "Voice-over is optional and OFF by default (--voice to enable). rate/pitch are passed to whichever CPU TTS is present (piper preferred, espeak-ng fallback).",
+  "styles": [
+    {"id": "neutral_corporate",  "label": "Neutral Corporate",  "rate": 150, "pitch": 42, "tone": "measured, factual"},
+    {"id": "premium_documentary","label": "Premium Documentary","rate": 138, "pitch": 34, "tone": "slow, cinematic"},
+    {"id": "technical",          "label": "Technical",          "rate": 158, "pitch": 45, "tone": "precise, informative"},
+    {"id": "confident_commercial","label": "Confident Commercial","rate": 165,"pitch": 50, "tone": "energetic, direct"},
+    {"id": "clinical_calm",      "label": "Clinical Calm",      "rate": 145, "pitch": 40, "tone": "calm, reassuring"},
+    {"id": "expert_advisor",     "label": "Expert Advisor",     "rate": 152, "pitch": 38, "tone": "consultative"}
+  ]
+}

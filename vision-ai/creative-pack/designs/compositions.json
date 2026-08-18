@@ -1,0 +1,19 @@
+{
+  "compositions": [
+    {"id": "center_hero",           "label": "Center Hero",                     "subject": {"x": 0.50, "y": 0.44, "scale": 0.86}, "text_block": "lower"},
+    {"id": "left_instrument",       "label": "Left Instrument / Right Text",    "subject": {"x": 0.32, "y": 0.46, "scale": 0.78}, "text_block": "lower"},
+    {"id": "right_instrument",      "label": "Right Instrument / Left Text",    "subject": {"x": 0.68, "y": 0.46, "scale": 0.78}, "text_block": "lower"},
+    {"id": "diagonal",              "label": "Diagonal",                        "subject": {"x": 0.58, "y": 0.40, "scale": 0.84}, "text_block": "lower", "rotate": -4},
+    {"id": "floating_instrument",   "label": "Floating Instrument",             "subject": {"x": 0.50, "y": 0.40, "scale": 0.72}, "text_block": "lower", "float": true},
+    {"id": "close_up_crop",         "label": "Close-Up Crop",                   "subject": {"x": 0.50, "y": 0.42, "scale": 1.10}, "text_block": "lower"},
+    {"id": "wide_lab_scene",        "label": "Wide Laboratory Scene",           "subject": {"x": 0.50, "y": 0.46, "scale": 1.00}, "text_block": "lower"},
+    {"id": "emerging_from_dark",    "label": "Instrument Emerging From Darkness","subject": {"x": 0.50, "y": 0.43, "scale": 0.92}, "text_block": "lower", "shadow": 0.7},
+    {"id": "layered_glass_cards",   "label": "Layered Glass Cards",             "subject": {"x": 0.50, "y": 0.40, "scale": 0.74}, "text_block": "cards"},
+    {"id": "full_bleed_editorial",  "label": "Full-Bleed Editorial",            "subject": {"x": 0.50, "y": 0.40, "scale": 1.18}, "text_block": "banner"},
+    {"id": "macro_detail",          "label": "Macro Detail",                    "subject": {"x": 0.46, "y": 0.40, "scale": 1.24}, "text_block": "lower"},
+    {"id": "technical_blueprint",   "label": "Technical Blueprint",             "subject": {"x": 0.50, "y": 0.44, "scale": 0.80}, "text_block": "cards"},
+    {"id": "asymmetric_premium",    "label": "Asymmetric Premium",              "subject": {"x": 0.62, "y": 0.38, "scale": 0.82}, "text_block": "lower"},
+    {"id": "split_screen",          "label": "Split Screen",                    "subject": {"x": 0.50, "y": 0.33, "scale": 0.88}, "text_block": "banner"},
+    {"id": "depth_composition",     "label": "Depth Composition",               "subject": {"x": 0.50, "y": 0.42, "scale": 0.96}, "text_block": "lower", "shadow": 0.5}
+  ]
+}

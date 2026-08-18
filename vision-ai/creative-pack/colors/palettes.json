@@ -1,0 +1,23 @@
+{
+  "_comment": "Colours are hex. bg1/bg2 = background gradient, accent = highlight, text/text_dim = typography, panel = glass card fill.",
+  "palettes": [
+    {"id": "pharma_white",   "label": "Pharmaceutical White", "bg1": "#FFFFFF", "bg2": "#E8EEF4", "accent": "#0E7C86", "text": "#0B1A24", "text_dim": "#4A5C68", "panel": "#FFFFFF", "dark": false},
+    {"id": "clinical_white", "label": "Clinical White",       "bg1": "#FAFCFD", "bg2": "#DCE6EC", "accent": "#1B6AA5", "text": "#101C24", "text_dim": "#51636E", "panel": "#FFFFFF", "dark": false},
+    {"id": "deep_navy",      "label": "Deep Navy",            "bg1": "#0B2038", "bg2": "#123152", "accent": "#4FC3F7", "text": "#F2F7FB", "text_dim": "#A8BECF", "panel": "#12304E", "dark": true},
+    {"id": "graphite_cyan",  "label": "Graphite Cyan",        "bg1": "#15191D", "bg2": "#232B31", "accent": "#22D3EE", "text": "#F4F7F9", "text_dim": "#9FB0BA", "panel": "#1D252B", "dark": true},
+    {"id": "black_luxury",   "label": "Black Luxury",         "bg1": "#05070A", "bg2": "#14181F", "accent": "#C9D6E2", "text": "#FFFFFF", "text_dim": "#9AA6B3", "panel": "#10141A", "dark": true},
+    {"id": "gold_black",     "label": "Gold on Black",        "bg1": "#07070A", "bg2": "#1A1712", "accent": "#D9B168", "text": "#FBF7F0", "text_dim": "#A99A82", "panel": "#141210", "dark": true},
+    {"id": "silver_steel",   "label": "Silver Steel",         "bg1": "#D9DEE3", "bg2": "#9BA6B0", "accent": "#0F4C75", "text": "#111820", "text_dim": "#3F4B57", "panel": "#EFF2F5", "dark": false},
+    {"id": "soft_emerald",   "label": "Soft Emerald",         "bg1": "#F2FBF7", "bg2": "#CDE9DC", "accent": "#0F8A5F", "text": "#0A1F17", "text_dim": "#456156", "panel": "#FFFFFF", "dark": false},
+    {"id": "glass_cyan",     "label": "Glass Cyan",           "bg1": "#0A1A24", "bg2": "#0F3B4A", "accent": "#5EEAD4", "text": "#EFFAFB", "text_dim": "#93B7C1", "panel": "#0F2C38", "dark": true},
+    {"id": "violet_tech",    "label": "Violet Tech",          "bg1": "#120C22", "bg2": "#241640", "accent": "#A78BFA", "text": "#F5F2FF", "text_dim": "#B0A3CC", "panel": "#1B1233", "dark": true},
+    {"id": "neutral_slate",  "label": "Neutral Slate",        "bg1": "#EDEFF1", "bg2": "#B9C2C9", "accent": "#37474F", "text": "#151B20", "text_dim": "#4C5860", "panel": "#FFFFFF", "dark": false},
+    {"id": "dark_premium",   "label": "Dark Premium",         "bg1": "#090C10", "bg2": "#1B242C", "accent": "#7DD3FC", "text": "#F7FAFC", "text_dim": "#9BA9B4", "panel": "#121A21", "dark": true},
+    {"id": "steel_copper",   "label": "Steel Copper",         "bg1": "#1A1D21", "bg2": "#2B2118", "accent": "#E08A4E", "text": "#FAF6F2", "text_dim": "#B4A395", "panel": "#20242A", "dark": true},
+    {"id": "ice_blue",       "label": "Ice Blue",             "bg1": "#F4F9FD", "bg2": "#C9DEEE", "accent": "#0369A1", "text": "#0C1B26", "text_dim": "#48606F", "panel": "#FFFFFF", "dark": false},
+    {"id": "carbon_lime",    "label": "Carbon Lime",          "bg1": "#101314", "bg2": "#1E2422", "accent": "#A3E635", "text": "#F6F9F4", "text_dim": "#9CAA96", "panel": "#171C1D", "dark": true},
+    {"id": "midnight_steel", "label": "Midnight Steel",       "bg1": "#0C1116", "bg2": "#223040", "accent": "#94A3B8", "text": "#F4F7FA", "text_dim": "#94A3B8", "panel": "#141C24", "dark": true},
+    {"id": "warm_neutral",   "label": "Warm Neutral",         "bg1": "#F7F5F2", "bg2": "#DED7CD", "accent": "#8A5A2B", "text": "#1C1815", "text_dim": "#5A5147", "panel": "#FFFFFF", "dark": false},
+    {"id": "teal_graphite",  "label": "Teal Graphite",        "bg1": "#0E1719", "bg2": "#12363A", "accent": "#2DD4BF", "text": "#EFFAF9", "text_dim": "#8FB2AF", "panel": "#122326", "dark": true}
+  ]
+}

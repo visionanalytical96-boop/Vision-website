@@ -1,0 +1,13 @@
+{
+  "_comment": "Font families are resolved against the host font stack with fallbacks; see engine/vision_ai/skills/render_still.py",
+  "typography": [
+    {"id": "swiss_grotesk",     "label": "Swiss Grotesk",        "headline": ["Inter", "Helvetica", "DejaVu Sans"], "weight": "bold",   "tracking": -0.5, "case": "upper"},
+    {"id": "editorial_serif",   "label": "Editorial Serif",      "headline": ["Noto Serif", "DejaVu Serif"],        "weight": "bold",   "tracking": 0.0,  "case": "title"},
+    {"id": "technical_mono",    "label": "Technical Mono",       "headline": ["DejaVu Sans Mono", "Liberation Mono"],"weight": "bold",  "tracking": 1.5,  "case": "upper"},
+    {"id": "corporate_sans",    "label": "Corporate Sans",       "headline": ["Liberation Sans", "DejaVu Sans"],    "weight": "bold",   "tracking": 0.0,  "case": "title"},
+    {"id": "condensed_impact",  "label": "Condensed Impact",     "headline": ["Liberation Sans Narrow", "DejaVu Sans Condensed"], "weight": "bold", "tracking": -1.0, "case": "upper"},
+    {"id": "clean_humanist",    "label": "Clean Humanist",       "headline": ["Noto Sans", "DejaVu Sans"],          "weight": "bold",   "tracking": 0.2,  "case": "title"},
+    {"id": "precision_grotesk", "label": "Precision Grotesk",    "headline": ["DejaVu Sans", "Liberation Sans"],    "weight": "bold",   "tracking": 2.0,  "case": "upper"},
+    {"id": "pharma_light",      "label": "Pharmaceutical Light", "headline": ["Noto Sans", "DejaVu Sans"],          "weight": "normal", "tracking": 1.0,  "case": "title"}
+  ]
+}

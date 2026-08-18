@@ -1,0 +1,47 @@
+{
+  "_comment": "Runtime configuration. Every path can also be overridden with an env var (VISION_AI_<KEY>). Installed to /srv/vision-workspace/vision-ai/creative-pack/config/engine.json - the installer never overwrites an existing copy.",
+  "paths": {
+    "creative_pack": "/srv/vision-workspace/vision-ai/creative-pack",
+    "input_photos":  "/srv/vision-mobile/INPUT/PHOTOS",
+    "input_videos":  "/srv/vision-mobile/INPUT/VIDEOS",
+    "input_music":   "/srv/vision-mobile/INPUT/MUSIC",
+    "output_ready":  "/srv/vision-mobile/OUTPUT/READY",
+    "work_dir":      "/srv/vision-workspace/vision-media-studio/tmp",
+    "audio_dir":     "/srv/vision-workspace/vision-media-studio/audio",
+    "asset_cache":   "/srv/vision-workspace/vision-ai/creative-pack/images"
+  },
+  "video": {
+    "width": 1080, "height": 1920, "fps": 30, "duration": 15.0,
+    "transition_duration": 0.6,
+    "vcodec": "libx264", "profile": "high", "preset": "veryfast", "crf": 20,
+    "pix_fmt": "yuv420p", "acodec": "aac", "abitrate": "192k",
+    "sample_rate": 48000, "channels": 2, "faststart": true,
+    "maxrate": "8M", "bufsize": "16M",
+    "render_scale": 1.5
+  },
+  "ollama": {
+    "enabled": true,
+    "url": "http://127.0.0.1:11434",
+    "model": "qwen2.5:1.5b",
+    "timeout_seconds": 8,
+    "num_predict": 40,
+    "temperature": 0.75
+  },
+  "voice": { "enabled": false, "engine": "auto" },
+  "music": { "enabled": true, "volume": 0.55, "fade_in": 1.0, "fade_out": 1.5 },
+  "anti_repetition": {
+    "history_window": 1000,
+    "structure_block_window": 10,
+    "max_attempts": 400
+  },
+  "validation": {
+    "min_video_bytes": 300000,
+    "max_video_bytes": 26214400,
+    "min_image_bytes": 40000,
+    "duration_tolerance": 0.75
+  },
+  "automation": {
+    "_comment": "Hard guard. The engine refuses to run non-interactively from a systemd timer / cron unless VISION_AI_ALLOW_AUTOMATION=1 is set explicitly. Automatic generation stays OFF.",
+    "allow_timer_execution": false
+  }
+}

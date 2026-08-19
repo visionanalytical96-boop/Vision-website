@@ -1,15 +1,131 @@
 {
-  "_comment": "Voice roster. Each entry is a piper voice plus a character setting. Models download on first use into brain/piper-voices/ and are checked before being trusted. Rotation avoids the last few voices, so the same ad never sounds the same twice. Add or remove freely - names come from rhasspy/piper-voices.",
+  "_comment": "Voice roster. lang 'hi' voices are real Indian voices speaking Hindi - piper has no Indian English voice, so Hindi is how narration actually sounds Indian. VOICE_LANG=hi in config.env selects them. Models download on first use into brain/piper-voices/ and are verified.",
   "voices": [
-    {"id": "amy",       "piper": "en_US-amy-medium",       "character": "warm female, US",        "length_scale": 1.04, "noise_scale": 0.667, "noise_w": 0.8},
-    {"id": "amy_slow",  "piper": "en_US-amy-medium",       "character": "female, documentary pace","length_scale": 1.16, "noise_scale": 0.6,   "noise_w": 0.7},
-    {"id": "ryan",      "piper": "en_US-ryan-high",        "character": "confident male, US",     "length_scale": 1.0,  "noise_scale": 0.667, "noise_w": 0.8},
-    {"id": "ryan_calm", "piper": "en_US-ryan-high",        "character": "male, calm and technical","length_scale": 1.12, "noise_scale": 0.6,   "noise_w": 0.7},
-    {"id": "joe",       "piper": "en_US-joe-medium",       "character": "younger male, US",       "length_scale": 1.02, "noise_scale": 0.7,   "noise_w": 0.85},
-    {"id": "kristin",   "piper": "en_US-kristin-medium",   "character": "bright female, US",      "length_scale": 1.0,  "noise_scale": 0.68,  "noise_w": 0.8},
-    {"id": "hfc_female","piper": "en_US-hfc_female-medium","character": "clear female, corporate","length_scale": 1.06, "noise_scale": 0.65,  "noise_w": 0.8},
-    {"id": "hfc_male",  "piper": "en_US-hfc_male-medium",  "character": "clear male, corporate",  "length_scale": 1.04, "noise_scale": 0.65,  "noise_w": 0.8},
-    {"id": "alba",      "piper": "en_GB-alba-medium",      "character": "female, UK",             "length_scale": 1.05, "noise_scale": 0.667, "noise_w": 0.8},
-    {"id": "northern",  "piper": "en_GB-northern_english_male-medium", "character": "male, UK",   "length_scale": 1.03, "noise_scale": 0.667, "noise_w": 0.8}
+    {
+      "id": "amy",
+      "piper": "en_US-amy-medium",
+      "character": "warm female, US",
+      "length_scale": 1.04,
+      "noise_scale": 0.667,
+      "noise_w": 0.8,
+      "lang": "en"
+    },
+    {
+      "id": "amy_slow",
+      "piper": "en_US-amy-medium",
+      "character": "female, documentary pace",
+      "length_scale": 1.16,
+      "noise_scale": 0.6,
+      "noise_w": 0.7,
+      "lang": "en"
+    },
+    {
+      "id": "ryan",
+      "piper": "en_US-ryan-high",
+      "character": "confident male, US",
+      "length_scale": 1.0,
+      "noise_scale": 0.667,
+      "noise_w": 0.8,
+      "lang": "en"
+    },
+    {
+      "id": "ryan_calm",
+      "piper": "en_US-ryan-high",
+      "character": "male, calm and technical",
+      "length_scale": 1.12,
+      "noise_scale": 0.6,
+      "noise_w": 0.7,
+      "lang": "en"
+    },
+    {
+      "id": "joe",
+      "piper": "en_US-joe-medium",
+      "character": "younger male, US",
+      "length_scale": 1.02,
+      "noise_scale": 0.7,
+      "noise_w": 0.85,
+      "lang": "en"
+    },
+    {
+      "id": "kristin",
+      "piper": "en_US-kristin-medium",
+      "character": "bright female, US",
+      "length_scale": 1.0,
+      "noise_scale": 0.68,
+      "noise_w": 0.8,
+      "lang": "en"
+    },
+    {
+      "id": "hfc_female",
+      "piper": "en_US-hfc_female-medium",
+      "character": "clear female, corporate",
+      "length_scale": 1.06,
+      "noise_scale": 0.65,
+      "noise_w": 0.8,
+      "lang": "en"
+    },
+    {
+      "id": "hfc_male",
+      "piper": "en_US-hfc_male-medium",
+      "character": "clear male, corporate",
+      "length_scale": 1.04,
+      "noise_scale": 0.65,
+      "noise_w": 0.8,
+      "lang": "en"
+    },
+    {
+      "id": "alba",
+      "piper": "en_GB-alba-medium",
+      "character": "female, UK",
+      "length_scale": 1.05,
+      "noise_scale": 0.667,
+      "noise_w": 0.8,
+      "lang": "en"
+    },
+    {
+      "id": "northern",
+      "piper": "en_GB-northern_english_male-medium",
+      "character": "male, UK",
+      "length_scale": 1.03,
+      "noise_scale": 0.667,
+      "noise_w": 0.8,
+      "lang": "en"
+    },
+    {
+      "id": "priyamvada",
+      "piper": "hi_IN-priyamvada-medium",
+      "character": "Indian female, Hindi",
+      "lang": "hi",
+      "length_scale": 1.05,
+      "noise_scale": 0.667,
+      "noise_w": 0.8
+    },
+    {
+      "id": "priyamvada_slow",
+      "piper": "hi_IN-priyamvada-medium",
+      "character": "Indian female, Hindi, unhurried",
+      "lang": "hi",
+      "length_scale": 1.16,
+      "noise_scale": 0.6,
+      "noise_w": 0.7
+    },
+    {
+      "id": "pratham",
+      "piper": "hi_IN-pratham-medium",
+      "character": "Indian male, Hindi",
+      "lang": "hi",
+      "length_scale": 1.03,
+      "noise_scale": 0.667,
+      "noise_w": 0.8
+    },
+    {
+      "id": "rohan",
+      "piper": "hi_IN-rohan-medium",
+      "character": "Indian male, Hindi, warm",
+      "lang": "hi",
+      "length_scale": 1.06,
+      "noise_scale": 0.667,
+      "noise_w": 0.8
+    }
   ]
 }

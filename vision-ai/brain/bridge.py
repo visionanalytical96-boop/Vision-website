@@ -87,13 +87,14 @@ def decide(argv: list[str] | None = None) -> dict:
     # Cut the instrument out of its background when the operator wants that
     # look and the optional dependency is installed.
     if asset.path and config_env.flag(env, "PHOTO_STUDIO", True):
-        prepared, note = photo_studio.prepare(Path(asset.path))
+        prepared, note = photo_studio.prepare(Path(asset.path), env.get("CUTOUT_MODEL", "u2net"))
         if prepared is not None:
             asset.path = prepared
             design["image_prepared"] = True
         design["photo_note"] = note
         print(f"[brain] photo studio: {note}")
 
+    _STATE["campaign_copy"] = campaign_copy
     _STATE.update(env=env, config=config, library=library, history=history,
                   instrument=instrument, design=design, asset=asset, copy=pack)
 
@@ -301,13 +302,16 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     # Voice-over: the campaign script, spoken by whatever CPU TTS is installed.
     if config_env.flag(env, "VOICE", False):
         roster = voices.roster(library)
+        lang = env.get("VOICE_LANG", "en").strip().lower()
         usable = voices.available(roster) or roster   # never shadow `ready`, the output dir
         voice = voices.choose(usable, _STATE["history"].recent_values("voice_name", 3),
-                              seed=design["design_fingerprint"])
+                              seed=design["design_fingerprint"], lang=lang)
         design["voice_name"] = voice["id"]
         design["voice_character"] = voice["character"]
+        script = (_STATE.get("campaign_copy", {}).get("voice_hi") if voice.get("lang") == "hi"
+                  else pack.voice_script) or pack.voice_script
         voice_path, voice_note = voices.speak(
-            pack.voice_script, voice, config.path("audio_dir") / f"{stamp}-voice.wav")
+            script, voice, config.path("audio_dir") / f"{stamp}-voice.wav")
         if voice_path is None:
             print("[brain] piper voice not ready - falling back to espeak, which sounds robotic")
             print("[brain] for a human voice run once:  sudo python3 "

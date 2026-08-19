@@ -101,9 +101,14 @@ _REMBG_SCRIPT = """
 import sys
 from rembg import new_session, remove
 from PIL import Image
-source, target, model = sys.argv[1], sys.argv[2], sys.argv[3]
+source, target, model, matting = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1"
 with Image.open(source) as image:
-    remove(image.convert("RGBA"), session=new_session(model)).save(target, "PNG")
+    kwargs = {}
+    if matting:
+        # alpha matting cleans up the edge - hair-thin tubing, cable, glass
+        kwargs = dict(alpha_matting=True, alpha_matting_foreground_threshold=250,
+                      alpha_matting_background_threshold=15, alpha_matting_erode_size=8)
+    remove(image.convert("RGBA"), session=new_session(model), **kwargs).save(target, "PNG")
 """
 
 
@@ -117,20 +122,22 @@ def rembg_python() -> str | None:
     return None
 
 
-def _rembg_via_venv(image: Image.Image, python: str, model: str) -> tuple[Image.Image, str] | None:
+def _rembg_via_venv(image: Image.Image, python: str, model: str,
+                    matting: bool = True) -> tuple[Image.Image, str] | None:
     import tempfile
     with tempfile.TemporaryDirectory() as work:
         source, target = Path(work) / "in.png", Path(work) / "out.png"
         image.convert("RGBA").save(source, "PNG")
-        result = subprocess.run([python, "-c", _REMBG_SCRIPT, str(source), str(target), model],
-                                capture_output=True, text=True, timeout=600)
+        result = subprocess.run([python, "-c", _REMBG_SCRIPT, str(source), str(target), model,
+                                 "1" if matting else "0"],
+                                capture_output=True, text=True, timeout=900)
         if result.returncode != 0 or not target.is_file():
             return None
         with Image.open(target) as done:
             return done.copy(), f"background removed ({model}, rembg venv)"
 
 
-def remove_background(image: Image.Image, model: str = "u2netp") -> tuple[Image.Image, str]:
+def remove_background(image: Image.Image, model: str = "u2net") -> tuple[Image.Image, str]:
     try:
         from rembg import new_session, remove
         result = remove(image.convert("RGBA"), session=new_session(model))
@@ -173,7 +180,7 @@ def trim(image: Image.Image, padding: int = 12) -> Image.Image:
     return image.crop((left, top, right, bottom))
 
 
-def prepare(source: Path, model: str = "u2netp") -> tuple[Path | None, str]:
+def prepare(source: Path, model: str = "u2net") -> tuple[Path | None, str]:
     source = Path(source)
     if source.name.endswith(SUFFIX):
         return source, "already prepared"

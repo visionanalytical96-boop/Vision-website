@@ -5,111 +5,407 @@
       "id": "website_help",
       "label": "Website / Self-Help",
       "eyebrow": "TROUBLESHOOTING GUIDE",
-      "keywords": ["website", "help", "guide", "troubleshoot", "support portal", "faq"],
-      "headlines": ["Stuck? Start here", "Answers before the service call", "Troubleshooting, step by step", "Find the fault faster", "Your first stop when it stops"],
-      "subheads": ["Troubleshooting guides, checklists and service requests at {website}", "Common faults, causes and fixes - written by engineers", "Diagnose it yourself, or raise a call in one click"],
-      "chips": ["Fault-finding guides", "Maintenance checklists", "Raise a service call"],
-      "ctas": ["Visit {website}", "Read the guide", "Find your fix"],
-      "voice": ["Instrument down? Before you call anyone, visit {website}. Vision Analytical's troubleshooting guides walk you through the common faults on {instrument}, step by step, and you can raise a service call from the same page.", "Not sure what the error means? {website} has engineer-written checklists for {instrument}. Find the cause in minutes, and if you still need us, we are one click away."]
+      "keywords": [
+        "website",
+        "help",
+        "guide",
+        "troubleshoot",
+        "support portal",
+        "faq"
+      ],
+      "headlines": [
+        "Stuck? Start here",
+        "Answers before the service call",
+        "Troubleshooting, step by step",
+        "Find the fault faster",
+        "Your first stop when it stops"
+      ],
+      "subheads": [
+        "Troubleshooting guides, checklists and service requests at {website}",
+        "Common faults, causes and fixes - written by engineers",
+        "Diagnose it yourself, or raise a call in one click"
+      ],
+      "chips": [
+        "Fault-finding guides",
+        "Maintenance checklists",
+        "Raise a service call"
+      ],
+      "ctas": [
+        "Visit {website}",
+        "Read the guide",
+        "Find your fix"
+      ],
+      "voice": [
+        "Instrument down? Before you call anyone, visit {website}. Vision Analytical's troubleshooting guides walk you through the common faults on {instrument}, step by step, and you can raise a service call from the same page.",
+        "Not sure what the error means? {website} has engineer-written checklists for {instrument}. Find the cause in minutes, and if you still need us, we are one click away."
+      ],
+      "voice_hi": [
+        "{instrument} में दिक्कत आ रही है? किसी को फ़ोन करने से पहले {website} देखिए। विज़न एनालिटिकल की ट्रबलशूटिंग गाइड आम खराबियाँ एक-एक करके समझाती है, और वहीं से सर्विस कॉल भी दर्ज कर सकते हैं।",
+        "एरर समझ नहीं आ रहा? {website} पर इंजीनियरों की लिखी चेकलिस्ट मौजूद है। कारण मिनटों में पकड़िए, और ज़रूरत पड़े तो हम एक क्लिक दूर हैं।"
+      ]
     },
     {
       "id": "instrument_sales",
       "label": "Instrument Sales",
       "eyebrow": "AVAILABLE NOW",
-      "keywords": ["sale", "sales", "buy", "purchase", "new system", "quote"],
-      "headlines": ["Ready for your bench", "Available, installed, supported", "The system your method needs", "Supplied and qualified by us", "In stock, ready to install"],
-      "subheads": ["{instrument} supplied, installed and qualified by Vision Analytical", "Delivered, installed and handed over running", "Complete with installation, qualification and training"],
-      "chips": ["Installation included", "Qualification support", "Operator training"],
-      "ctas": ["Request a quotation", "Check availability", "Talk to our team"],
-      "voice": ["Looking for {instrument}? Vision Analytical supplies, installs and qualifies it - and supports it long after the handover. Request a quotation at {website}."]
+      "keywords": [
+        "sale",
+        "sales",
+        "buy",
+        "purchase",
+        "new system",
+        "quote"
+      ],
+      "headlines": [
+        "Ready for your bench",
+        "Available, installed, supported",
+        "The system your method needs",
+        "Supplied and qualified by us",
+        "In stock, ready to install"
+      ],
+      "subheads": [
+        "{instrument} supplied, installed and qualified by Vision Analytical",
+        "Delivered, installed and handed over running",
+        "Complete with installation, qualification and training"
+      ],
+      "chips": [
+        "Installation included",
+        "Qualification support",
+        "Operator training"
+      ],
+      "ctas": [
+        "Request a quotation",
+        "Check availability",
+        "Talk to our team"
+      ],
+      "voice": [
+        "Looking for {instrument}? Vision Analytical supplies, installs and qualifies it - and supports it long after the handover. Request a quotation at {website}."
+      ],
+      "voice_hi": [
+        "{instrument} चाहिए? विज़न एनालिटिकल इसे सप्लाई करता है, इंस्टॉल करता है, क्वालिफ़ाई करता है — और हैंडओवर के बाद भी सपोर्ट देता है। कोटेशन के लिए {website} पर संपर्क कीजिए।"
+      ]
     },
     {
       "id": "refurbished",
       "label": "Refurbished / Recovery",
       "eyebrow": "REFURBISHED",
-      "keywords": ["refurbish", "refurbished", "recovery", "reconditioned", "second hand", "used"],
-      "headlines": ["Rebuilt to specification", "A second life, fully tested", "Reconditioned. Verified. Delivered.", "Same performance, better budget", "Recovered, not compromised"],
-      "subheads": ["Every module stripped, serviced and tested against original specification", "Refurbished {manufacturer} systems with documented test results", "Fully reconditioned and qualification-ready"],
-      "chips": ["Module-level service", "Performance tested", "Documented results"],
-      "ctas": ["See what is available", "Ask for test reports", "Request a quotation"],
-      "voice": ["A refurbished {instrument} from Vision Analytical is not a gamble. Every module is stripped, serviced and tested against original specification, and you get the documented results with it. See what is available at {website}."]
+      "keywords": [
+        "refurbish",
+        "refurbished",
+        "recovery",
+        "reconditioned",
+        "second hand",
+        "used"
+      ],
+      "headlines": [
+        "Rebuilt to specification",
+        "A second life, fully tested",
+        "Reconditioned. Verified. Delivered.",
+        "Same performance, better budget",
+        "Recovered, not compromised"
+      ],
+      "subheads": [
+        "Every module stripped, serviced and tested against original specification",
+        "Refurbished {manufacturer} systems with documented test results",
+        "Fully reconditioned and qualification-ready"
+      ],
+      "chips": [
+        "Module-level service",
+        "Performance tested",
+        "Documented results"
+      ],
+      "ctas": [
+        "See what is available",
+        "Ask for test reports",
+        "Request a quotation"
+      ],
+      "voice": [
+        "A refurbished {instrument} from Vision Analytical is not a gamble. Every module is stripped, serviced and tested against original specification, and you get the documented results with it. See what is available at {website}."
+      ],
+      "voice_hi": [
+        "विज़न एनालिटिकल का रिफर्बिश्ड {instrument} जुआ नहीं है। हर मॉड्यूल खोलकर सर्विस होता है, ओरिजिनल स्पेसिफ़िकेशन पर टेस्ट होता है, और रिपोर्ट आपके साथ जाती है। उपलब्धता {website} पर देखिए।"
+      ]
     },
     {
       "id": "service_support",
       "label": "Breakdown / Service",
       "eyebrow": "SERVICE & SUPPORT",
-      "keywords": ["service", "breakdown", "repair", "engineer", "down", "not working"],
-      "headlines": ["Down today, running tomorrow", "Engineer-led fault resolution", "Fast diagnosis, real repair", "Back to your batch", "We fix it properly"],
-      "subheads": ["Engineer visits, spare parts and documented repairs", "Diagnosis, repair and performance verification", "Support for {manufacturer} systems across the country"],
-      "chips": ["Engineer visit", "Genuine spares", "Performance check"],
-      "ctas": ["Raise a service call", "Call our engineers", "Book a visit"],
-      "voice": ["When {instrument} stops, your batch stops. Vision Analytical engineers diagnose, repair and verify performance - and document what was done. Raise a service call at {website}."]
+      "keywords": [
+        "service",
+        "breakdown",
+        "repair",
+        "engineer",
+        "down",
+        "not working"
+      ],
+      "headlines": [
+        "Down today, running tomorrow",
+        "Engineer-led fault resolution",
+        "Fast diagnosis, real repair",
+        "Back to your batch",
+        "We fix it properly"
+      ],
+      "subheads": [
+        "Engineer visits, spare parts and documented repairs",
+        "Diagnosis, repair and performance verification",
+        "Support for {manufacturer} systems across the country"
+      ],
+      "chips": [
+        "Engineer visit",
+        "Genuine spares",
+        "Performance check"
+      ],
+      "ctas": [
+        "Raise a service call",
+        "Call our engineers",
+        "Book a visit"
+      ],
+      "voice": [
+        "When {instrument} stops, your batch stops. Vision Analytical engineers diagnose, repair and verify performance - and document what was done. Raise a service call at {website}."
+      ],
+      "voice_hi": [
+        "{instrument} रुकता है तो आपका बैच रुकता है। विज़न एनालिटिकल के इंजीनियर जाँच करते हैं, मरम्मत करते हैं, परफ़ॉर्मेंस वेरिफ़ाई करते हैं — और सब कुछ लिखकर देते हैं। सर्विस कॉल {website} पर दर्ज कीजिए।"
+      ]
     },
     {
       "id": "amc_cmc",
       "label": "AMC / CMC",
       "eyebrow": "AMC / CMC",
-      "keywords": ["amc", "cmc", "annual maintenance", "contract"],
-      "headlines": ["Maintenance that keeps you running", "Cover the instrument, protect the schedule", "One contract, no surprises", "Downtime, budgeted away", "Planned service, predictable uptime"],
-      "subheads": ["Planned visits, priority response and parts cover", "Scheduled maintenance that keeps {instrument} qualified", "Comprehensive or annual cover, your choice"],
-      "chips": ["Planned visits", "Priority response", "Parts cover"],
-      "ctas": ["Ask for an AMC quotation", "Compare AMC and CMC", "Talk to us"],
-      "voice": ["An AMC from Vision Analytical turns unplanned downtime into planned visits. Your {instrument} stays qualified, your parts are covered, and your response is priority. Ask for a quotation at {website}."]
+      "keywords": [
+        "amc",
+        "cmc",
+        "annual maintenance",
+        "contract"
+      ],
+      "headlines": [
+        "Maintenance that keeps you running",
+        "Cover the instrument, protect the schedule",
+        "One contract, no surprises",
+        "Downtime, budgeted away",
+        "Planned service, predictable uptime"
+      ],
+      "subheads": [
+        "Planned visits, priority response and parts cover",
+        "Scheduled maintenance that keeps {instrument} qualified",
+        "Comprehensive or annual cover, your choice"
+      ],
+      "chips": [
+        "Planned visits",
+        "Priority response",
+        "Parts cover"
+      ],
+      "ctas": [
+        "Ask for an AMC quotation",
+        "Compare AMC and CMC",
+        "Talk to us"
+      ],
+      "voice": [
+        "An AMC from Vision Analytical turns unplanned downtime into planned visits. Your {instrument} stays qualified, your parts are covered, and your response is priority. Ask for a quotation at {website}."
+      ],
+      "voice_hi": [
+        "विज़न एनालिटिकल का ए एम सी अनियोजित डाउनटाइम को नियोजित विज़िट में बदल देता है। आपका {instrument} क्वालिफ़ाइड रहता है, पार्ट्स कवर होते हैं, और रिस्पॉन्स प्रायोरिटी पर मिलता है। कोटेशन {website} पर।"
+      ]
     },
     {
       "id": "qualification",
       "label": "IQ / OQ / PQ",
       "eyebrow": "IQ / OQ / PQ",
-      "keywords": ["iq", "oq", "pq", "qualification", "validation", "audit"],
-      "headlines": ["Qualified and audit-ready", "Documentation your auditor expects", "IQ, OQ, PQ - completed properly", "Evidence, not assumptions", "Ready for inspection"],
-      "subheads": ["Full qualification protocols and reports for {instrument}", "Executed by engineers, documented for auditors", "Installation, operational and performance qualification"],
-      "chips": ["Protocols supplied", "Executed on site", "Reports delivered"],
-      "ctas": ["Request the protocol", "Book qualification", "Talk to our team"],
-      "voice": ["Qualification is only useful if it stands up to an audit. Vision Analytical executes IQ, OQ and PQ on {instrument} and hands you the documentation your auditor expects. Book it at {website}."]
+      "keywords": [
+        "iq",
+        "oq",
+        "pq",
+        "qualification",
+        "validation",
+        "audit"
+      ],
+      "headlines": [
+        "Qualified and audit-ready",
+        "Documentation your auditor expects",
+        "IQ, OQ, PQ - completed properly",
+        "Evidence, not assumptions",
+        "Ready for inspection"
+      ],
+      "subheads": [
+        "Full qualification protocols and reports for {instrument}",
+        "Executed by engineers, documented for auditors",
+        "Installation, operational and performance qualification"
+      ],
+      "chips": [
+        "Protocols supplied",
+        "Executed on site",
+        "Reports delivered"
+      ],
+      "ctas": [
+        "Request the protocol",
+        "Book qualification",
+        "Talk to our team"
+      ],
+      "voice": [
+        "Qualification is only useful if it stands up to an audit. Vision Analytical executes IQ, OQ and PQ on {instrument} and hands you the documentation your auditor expects. Book it at {website}."
+      ],
+      "voice_hi": [
+        "क्वालिफ़िकेशन तभी काम का है जब ऑडिट में टिके। विज़न एनालिटिकल {instrument} पर आई क्यू, ओ क्यू और पी क्यू करता है और वही दस्तावेज़ देता है जो ऑडिटर माँगता है। बुकिंग {website} पर।"
+      ]
     },
     {
       "id": "spare_parts",
       "label": "Spare Parts & Consumables",
       "eyebrow": "SPARES & CONSUMABLES",
-      "keywords": ["spare", "spares", "part", "parts", "consumable", "column", "lamp", "seal"],
-      "headlines": ["The part you need, when you need it", "Parts in stock, dispatched fast", "Spares that keep the run going", "One part number away", "Held in stock for you"],
-      "subheads": ["Genuine and compatible parts for {manufacturer} systems", "Columns, lamps, seals, filters and fittings", "Send us the part number - we will confirm the same day"],
-      "chips": ["Genuine & compatible", "Fast dispatch", "Same-day confirmation"],
-      "ctas": ["Send your part number", "Check availability", "Request a quotation"],
-      "voice": ["A missing seal should not stop a batch. Vision Analytical holds spares and consumables for {manufacturer} systems and dispatches fast. Send your part number through {website}."]
+      "keywords": [
+        "spare",
+        "spares",
+        "part",
+        "parts",
+        "consumable",
+        "column",
+        "lamp",
+        "seal"
+      ],
+      "headlines": [
+        "The part you need, when you need it",
+        "Parts in stock, dispatched fast",
+        "Spares that keep the run going",
+        "One part number away",
+        "Held in stock for you"
+      ],
+      "subheads": [
+        "Genuine and compatible parts for {manufacturer} systems",
+        "Columns, lamps, seals, filters and fittings",
+        "Send us the part number - we will confirm the same day"
+      ],
+      "chips": [
+        "Genuine & compatible",
+        "Fast dispatch",
+        "Same-day confirmation"
+      ],
+      "ctas": [
+        "Send your part number",
+        "Check availability",
+        "Request a quotation"
+      ],
+      "voice": [
+        "A missing seal should not stop a batch. Vision Analytical holds spares and consumables for {manufacturer} systems and dispatches fast. Send your part number through {website}."
+      ],
+      "voice_hi": [
+        "एक सील की कमी से बैच नहीं रुकना चाहिए। विज़न एनालिटिकल {manufacturer} सिस्टम के स्पेयर और कंज़्यूमेबल स्टॉक में रखता है और तेज़ी से भेजता है। अपना पार्ट नंबर {website} पर भेजिए।"
+      ]
     },
     {
       "id": "calibration",
       "label": "Calibration",
       "eyebrow": "CALIBRATION",
-      "keywords": ["calibration", "calibrate", "traceable"],
-      "headlines": ["Calibrated. Documented. Ready.", "Accuracy you can evidence", "Traceable, on schedule", "Numbers you can sign off", "Calibration that stands up to audit"],
-      "subheads": ["Traceable calibration with documented results for {instrument}", "On-site calibration, reports the same visit", "Scheduled so it never lapses"],
-      "chips": ["Traceable standards", "On-site visit", "Reports issued"],
-      "ctas": ["Book a calibration slot", "Ask for the schedule", "Talk to our team"],
-      "voice": ["Calibration is not paperwork, it is evidence. Vision Analytical calibrates {instrument} against traceable standards and issues the report on the same visit. Book a slot at {website}."]
+      "keywords": [
+        "calibration",
+        "calibrate",
+        "traceable"
+      ],
+      "headlines": [
+        "Calibrated. Documented. Ready.",
+        "Accuracy you can evidence",
+        "Traceable, on schedule",
+        "Numbers you can sign off",
+        "Calibration that stands up to audit"
+      ],
+      "subheads": [
+        "Traceable calibration with documented results for {instrument}",
+        "On-site calibration, reports the same visit",
+        "Scheduled so it never lapses"
+      ],
+      "chips": [
+        "Traceable standards",
+        "On-site visit",
+        "Reports issued"
+      ],
+      "ctas": [
+        "Book a calibration slot",
+        "Ask for the schedule",
+        "Talk to our team"
+      ],
+      "voice": [
+        "Calibration is not paperwork, it is evidence. Vision Analytical calibrates {instrument} against traceable standards and issues the report on the same visit. Book a slot at {website}."
+      ],
+      "voice_hi": [
+        "कैलिब्रेशन कागज़ी काम नहीं, सबूत है। विज़न एनालिटिकल {instrument} को ट्रेसेबल स्टैंडर्ड पर कैलिब्रेट करता है और उसी विज़िट में रिपोर्ट देता है। स्लॉट {website} पर बुक कीजिए।"
+      ]
     },
     {
       "id": "training",
       "label": "Operator Training",
       "eyebrow": "OPERATOR TRAINING",
-      "keywords": ["training", "operator", "learn", "workshop"],
-      "headlines": ["Trained analysts, better data", "Confidence at the keyboard", "Fewer repeats, cleaner runs", "Hands-on operator training", "Know your instrument"],
-      "subheads": ["Practical training on {instrument} for analysts and QC teams", "Run it, troubleshoot it, document it", "On your instrument, in your lab"],
-      "chips": ["Hands-on sessions", "In your own lab", "Troubleshooting included"],
-      "ctas": ["Schedule a session", "Ask for the syllabus", "Talk to us"],
-      "voice": ["Most instrument problems are method problems. Vision Analytical trains your analysts on {instrument} - running it, troubleshooting it and documenting it properly. Schedule a session at {website}."]
+      "keywords": [
+        "training",
+        "operator",
+        "learn",
+        "workshop"
+      ],
+      "headlines": [
+        "Trained analysts, better data",
+        "Confidence at the keyboard",
+        "Fewer repeats, cleaner runs",
+        "Hands-on operator training",
+        "Know your instrument"
+      ],
+      "subheads": [
+        "Practical training on {instrument} for analysts and QC teams",
+        "Run it, troubleshoot it, document it",
+        "On your instrument, in your lab"
+      ],
+      "chips": [
+        "Hands-on sessions",
+        "In your own lab",
+        "Troubleshooting included"
+      ],
+      "ctas": [
+        "Schedule a session",
+        "Ask for the syllabus",
+        "Talk to us"
+      ],
+      "voice": [
+        "Most instrument problems are method problems. Vision Analytical trains your analysts on {instrument} - running it, troubleshooting it and documenting it properly. Schedule a session at {website}."
+      ],
+      "voice_hi": [
+        "ज़्यादातर इंस्ट्रूमेंट की समस्याएँ असल में मेथड की समस्याएँ होती हैं। विज़न एनालिटिकल आपके एनालिस्ट को {instrument} पर ट्रेन करता है — चलाना, ट्रबलशूट करना और सही दस्तावेज़ बनाना। सेशन {website} पर।"
+      ]
     },
     {
       "id": "relocation",
       "label": "Relocation & Installation",
       "eyebrow": "RELOCATION",
-      "keywords": ["relocation", "shifting", "move", "installation", "install"],
-      "headlines": ["Moved, installed, re-qualified", "Your instrument, safely re-sited", "Relocation handled end to end", "Lifted, levelled, running", "From old bench to new"],
-      "subheads": ["De-installation, transport and re-qualification of {instrument}", "Packed properly, installed properly, verified properly", "One team from unplug to first injection"],
-      "chips": ["De-installation", "Safe transport", "Re-qualification"],
-      "ctas": ["Plan your instrument move", "Request a survey", "Talk to our team"],
-      "voice": ["Moving a lab is where instruments get damaged. Vision Analytical handles {instrument} from de-installation to re-qualification, and verifies it runs before we leave. Plan your move at {website}."]
+      "keywords": [
+        "relocation",
+        "shifting",
+        "move",
+        "installation",
+        "install"
+      ],
+      "headlines": [
+        "Moved, installed, re-qualified",
+        "Your instrument, safely re-sited",
+        "Relocation handled end to end",
+        "Lifted, levelled, running",
+        "From old bench to new"
+      ],
+      "subheads": [
+        "De-installation, transport and re-qualification of {instrument}",
+        "Packed properly, installed properly, verified properly",
+        "One team from unplug to first injection"
+      ],
+      "chips": [
+        "De-installation",
+        "Safe transport",
+        "Re-qualification"
+      ],
+      "ctas": [
+        "Plan your instrument move",
+        "Request a survey",
+        "Talk to our team"
+      ],
+      "voice": [
+        "Moving a lab is where instruments get damaged. Vision Analytical handles {instrument} from de-installation to re-qualification, and verifies it runs before we leave. Plan your move at {website}."
+      ],
+      "voice_hi": [
+        "लैब शिफ़्ट करते समय ही इंस्ट्रूमेंट ख़राब होते हैं। विज़न एनालिटिकल {instrument} को डी-इंस्टॉलेशन से री-क्वालिफ़िकेशन तक संभालता है, और चलता हुआ देखकर ही जाता है। प्लानिंग {website} पर।"
+      ]
     }
   ]
 }

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageStat
 
 from . import brand
 
@@ -118,6 +118,38 @@ def vignette(image: Image.Image, strength: float) -> Image.Image:
     mask = mask.filter(ImageFilter.GaussianBlur(18)).resize((w, h), Image.LANCZOS)
     dark = Image.new("RGB", (w, h), (0, 0, 0))
     return Image.composite(image, Image.blend(image, dark, min(0.9, strength)), mask)
+
+
+def _knockout_logo(mark: Image.Image, ink: tuple[int, int, int] | None = None) -> Image.Image:
+    """Drop the logo's white background and, on dark designs, re-ink it.
+
+    Logo files are usually dark artwork on solid white. Pasted as-is they show
+    a white slab, and the white inside letters stays white. Building the alpha
+    from luminance removes the slab and the counters together, with soft edges.
+    """
+    alpha = mark.getchannel("A")
+    if alpha.getextrema()[0] < 250:
+        keyed = mark  # already transparent
+    else:
+        grey = mark.convert("L")
+        corner = sum(grey.getpixel(p) for p in ((0, 0), (grey.width - 1, 0),
+                                                (0, grey.height - 1), (grey.width - 1, grey.height - 1))) / 4
+        if corner < 200:
+            return mark  # not a white-background file - leave it alone
+        # white -> transparent, ink -> opaque, with the anti-aliasing preserved
+        new_alpha = grey.point(lambda value: max(0, min(255, int((235 - value) * 255 / 200))))
+        keyed = mark.copy()
+        keyed.putalpha(new_alpha)
+
+    if ink is None:
+        return keyed
+    visible = keyed.getchannel("A").point(lambda v: 255 if v > 40 else 0)
+    luminance = ImageStat.Stat(keyed.convert("L"), mask=visible).mean[0]
+    if luminance > 150:
+        return keyed  # already light artwork - it will read on a dark design
+    solid = Image.new("RGBA", keyed.size, (*ink, 0))
+    solid.putalpha(keyed.getchannel("A"))
+    return solid
 
 
 def _trim_logo(mark: Image.Image) -> Image.Image:
@@ -590,25 +622,11 @@ class Renderer:
         if self.logo and self.logo.is_file():
             try:
                 with Image.open(self.logo) as raw:
-                    mark = _trim_logo(raw.convert("RGBA"))
+                    mark = _knockout_logo(raw.convert("RGBA"), self.c_text if self.dark else None)
+                    mark = _trim_logo(mark)
                 target_w = int(w * 0.30)
                 mark = mark.resize((target_w, max(1, int(mark.height * target_w / mark.width))), Image.LANCZOS)
-                x, y = int(w * 0.07), int(h * 0.055)
-                alpha = mark.getchannel("A")
-                if alpha.getextrema()[0] > 250 and self.dark:
-                    # opaque logo on a dark design: give it a tight light plate
-                    pad = int(14 * s)
-                    plate = Image.new("RGBA", (mark.width + pad * 2, mark.height + pad * 2), (0, 0, 0, 0))
-                    ImageDraw.Draw(plate).rounded_rectangle(
-                        (0, 0, plate.width - 1, plate.height - 1), radius=int(16 * s),
-                        fill=(255, 255, 255, 235))
-                    plate.alpha_composite(mark, (pad, pad))
-                    layer.alpha_composite(plate, (x, y))
-                    bottom = y + plate.height
-                else:
-                    layer.alpha_composite(mark, (x, y))
-                    bottom = y + mark.height
-                del bottom
+                layer.alpha_composite(mark, (int(w * 0.07), int(h * 0.055)))
             except OSError:
                 pass
 

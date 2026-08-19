@@ -104,8 +104,9 @@ def ensure(voice: dict, quiet: bool = False) -> Path | None:
     return model
 
 
-def choose(voices: list[dict], recent: list[str], seed: str = "") -> dict:
-    """A different character than the last few runs."""
+def choose(voices: list[dict], recent: list[str], seed: str = "", lang: str = "en") -> dict:
+    """A different character than the last few runs, in the wanted language."""
+    voices = [v for v in voices if v.get("lang", "en") == lang] or voices
     unused = [v for v in voices if v["id"] not in recent]
     pool = unused or voices
     return random.Random(seed).choice(pool)
@@ -124,10 +125,13 @@ ACRONYMS = {
 }
 
 
-def speakable(text: str) -> str:
+def speakable(text: str, lang: str = "en") -> str:
     """Write it the way it should be read aloud: web addresses, acronyms and
     model numbers are what make a synthetic voice sound wrong."""
     out = text
+    if lang == "hi":
+        # the Hindi scripts are already written the way they should be read
+        return re.sub(r"\s{2,}", " ", out).strip()
     out = re.sub(r"\b([\w-]+)\.(in|com|net|org|co\.in)\b",
                  lambda m: f"{re.sub(r'[-.]', ' ', m.group(1))} dot {m.group(2).replace('.', ' dot ')}", out)
     for token, spoken in ACRONYMS.items():
@@ -151,7 +155,8 @@ def speak(script: str, voice: dict, out_path: Path, sentence_silence: float = 0.
              "--noise-scale", str(voice.get("noise_scale", 0.667)),
              "--noise-w-scale", str(voice.get("noise_w", 0.8)),
              "--sentence-silence", str(sentence_silence)],
-            input=speakable(script).encode("utf-8"), capture_output=True, timeout=600)
+            input=speakable(script, voice.get("lang", "en")).encode("utf-8"),
+            capture_output=True, timeout=600)
     except (subprocess.SubprocessError, OSError) as exc:
         return None, f"voice synthesis failed: {str(exc)[:100]}"
     if result.returncode != 0 or not out_path.is_file() or out_path.stat().st_size < 4000:

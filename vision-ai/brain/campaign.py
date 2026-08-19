@@ -49,16 +49,60 @@ def choose(request: str, campaigns: list[dict], recent: list[str], seed: str = "
     return rng.choice(pool), ("rotated - not used recently" if unused else "rotated")
 
 
+MANUFACTURER_HI = {
+    "Agilent": "एजिलेंट", "Shimadzu": "शिमाजू", "Waters": "वॉटर्स",
+    "Thermo Fisher Scientific": "थर्मो फिशर", "PerkinElmer": "पर्किन एल्मर", "Bruker": "ब्रुकर",
+    "JASCO": "जैस्को", "SCIEX": "साइएक्स", "Hitachi": "हिताची", "Metrohm": "मेट्रोम",
+    "Malvern Panalytical": "मालवर्न", "Mettler Toledo": "मेटलर टोलेडो",
+}
+LETTERS_HI = {
+    "A": "ए", "B": "बी", "C": "सी", "D": "डी", "E": "ई", "F": "एफ", "G": "जी", "H": "एच",
+    "I": "आई", "J": "जे", "K": "के", "L": "एल", "M": "एम", "N": "एन", "O": "ओ", "P": "पी",
+    "Q": "क्यू", "R": "आर", "S": "एस", "T": "टी", "U": "यू", "V": "वी", "W": "डब्ल्यू",
+    "X": "एक्स", "Y": "वाई", "Z": "ज़ेड",
+}
+
+
+def hindi_name(instrument) -> str:
+    """Say the instrument the way an Indian engineer says it: the brand in
+    Devanagari, the model spelled out letter by letter, digits as digits."""
+    manufacturer = MANUFACTURER_HI.get(instrument.manufacturer, instrument.manufacturer)
+    spoken = []
+    for token in re.split(r"[\s-]+", instrument.model or ""):
+        if not token:
+            continue
+        if token.isdigit():
+            spoken.append(token)
+        elif token.isalpha() and len(token) <= 4:
+            spoken.append(" ".join(LETTERS_HI.get(ch.upper(), ch) for ch in token))
+        else:
+            part = []
+            for chunk in re.findall(r"\d+|[A-Za-z]+", token):
+                part.append(chunk if chunk.isdigit()
+                            else " ".join(LETTERS_HI.get(ch.upper(), ch) for ch in chunk))
+            spoken.append(" ".join(part))
+    return " ".join(x for x in [manufacturer] + spoken if x).strip() or "आपका इंस्ट्रूमेंट"
+
+
 def fill(text: str, instrument, website: str) -> str:
     return (text.replace("{instrument}", instrument.display_name or "your instrument")
                 .replace("{manufacturer}", instrument.manufacturer or "your")
                 .replace("{website}", website))
 
 
+def fill_hi(text: str, instrument, website: str) -> str:
+    spoken_site = re.sub(r"\.(in|com|co\.in)$", r" डॉट \1", website)
+    return (text.replace("{instrument}", hindi_name(instrument))
+                .replace("{manufacturer}", MANUFACTURER_HI.get(instrument.manufacturer, instrument.manufacturer or ""))
+                .replace("{website}", spoken_site))
+
+
 def copy_for(campaign: dict, instrument, website: str, seed: str) -> dict:
     """One reading of this campaign - a different one next time."""
     rng = random.Random(f"{seed}{campaign['id']}")
+    hindi = campaign.get("voice_hi") or campaign["voice"]
     return {
+        "voice_hi": fill_hi(rng.choice(hindi), instrument, website),
         "campaign": campaign["id"],
         "campaign_label": campaign["label"],
         "eyebrow": campaign["eyebrow"],

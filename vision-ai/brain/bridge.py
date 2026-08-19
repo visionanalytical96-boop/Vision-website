@@ -27,7 +27,7 @@ from vision_ai.skills.ollama_client import OllamaClient  # noqa: E402
 from vision_ai.skills.render_still import Renderer, SceneCopy, save_png  # noqa: E402
 from vision_ai.skills.selector import DesignSelector  # noqa: E402
 
-from . import config_env, deliver, preset_map  # noqa: E402
+from . import config_env, deliver, music_gen, preset_map  # noqa: E402
 
 _STATE: dict = {}
 
@@ -198,6 +198,9 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     video.update(music_volume=float(config.music.get("volume", 0.55)),
                  fade_in=float(config.music.get("fade_in", 1.0)),
                  fade_out=float(config.music.get("fade_out", 1.5)))
+    if config_env.flag(_STATE.get("env", {}), "FAST_MODE", True):
+        # Tuned for a GPU-less box: same 1080x1920 contract, less encoder work.
+        video.update(preset="superfast", crf=23, render_scale=1.3)
     frame = (int(video["width"]), int(video["height"]))
     big = (int(frame[0] * float(video.get("render_scale", 1.5))),
            int(frame[1] * float(video.get("render_scale", 1.5))))
@@ -230,6 +233,14 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     track, note = audio_skill.select_music(library.by_id("music_styles", design["music_style"]) or {},
                                            config.path("input_music"),
                                            _STATE["history"].recent_values("music_track", 30))
+    if track is None and config_env.flag(_STATE.get("env", {}), "MUSIC_GENERATE", True):
+        # No supplied track: synthesise an instrumental bed locally. Nothing is
+        # downloaded, so there is no licence attached to the result.
+        cache = config.creative_pack / "music" / "generated"
+        seed = int(design["design_fingerprint"][:8], 16)
+        track = music_gen.ensure(design["music_style"], cache, seed=seed)
+        note = f"generated locally ({design['music_style']})"
+        print(f"[brain] music: {track.name} (local instrumental bed, generated - no licence)")
     choice.music, choice.music_note = track, note
     design["music_track"] = track.name if track else ""
 

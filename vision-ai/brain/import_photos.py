@@ -30,7 +30,11 @@ from vision_ai.library import Library  # noqa: E402
 from vision_ai.skills.imaging import IMAGE_SUFFIXES, model_dir  # noqa: E402
 from vision_ai.skills.instrument import identify  # noqa: E402
 
-from . import config_env  # noqa: E402
+try:  # `python3 -m brain.x` from the parent dir
+    from . import config_env
+except ImportError:  # `python3 /path/to/brain/x.py`
+    sys.path.insert(0, str(_HERE.parent))
+    from brain import config_env  # noqa: E402
 
 
 def _digest(path: Path) -> str:

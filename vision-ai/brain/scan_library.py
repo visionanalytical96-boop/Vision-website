@@ -42,7 +42,11 @@ from vision_ai.library import Library  # noqa: E402
 from vision_ai.skills.imaging import IMAGE_SUFFIXES, model_dir  # noqa: E402
 from vision_ai.skills.instrument import Instrument, identify  # noqa: E402
 
-from . import config_env  # noqa: E402
+try:  # `python3 -m brain.x` from the parent dir
+    from . import config_env
+except ImportError:  # `python3 /path/to/brain/x.py`
+    sys.path.insert(0, str(_HERE.parent))
+    from brain import config_env  # noqa: E402
 
 HEIC = {".heic", ".heif"}
 SKIP_DIRS = {"appdata", "files_trashbin", "files_versions", "cache", "thumbnails", ".git", "node_modules"}
@@ -176,7 +180,10 @@ def report(result: dict) -> None:
 
 
 def do_import(result: dict, cache_root: Path, move: bool = False) -> int:
-    from .import_photos import _digest, _existing_digests
+    try:
+        from .import_photos import _digest, _existing_digests
+    except ImportError:
+        from brain.import_photos import _digest, _existing_digests
 
     imported = 0
     for entry in result["instruments"].values():

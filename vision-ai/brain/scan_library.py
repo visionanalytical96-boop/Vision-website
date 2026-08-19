@@ -49,7 +49,30 @@ except ImportError:  # `python3 /path/to/brain/x.py`
     from brain import config_env  # noqa: E402
 
 HEIC = {".heic", ".heif"}
-SKIP_DIRS = {"appdata", "files_trashbin", "files_versions", "cache", "thumbnails", ".git", "node_modules"}
+SKIP_DIRS = {"files_trashbin", "files_versions", "cache", "thumbnails", "preview", "previews",
+             ".git", "node_modules", "uploads", "files_external"}
+SKIP_PREFIXES = ("appdata_", "__groupfolders", ".")
+
+
+def nextcloud_data_dir(container: str = "nextcloud") -> Path | None:
+    """Host path of the Nextcloud data directory, read from the container's mounts.
+
+    `occ config:system:get datadirectory` returns the path *inside* the
+    container (/var/www/html/data), which does not exist on the host - this
+    translates it.
+    """
+    try:
+        raw = subprocess.run(["docker", "inspect", "-f", "{{json .Mounts}}", container],
+                             capture_output=True, text=True, timeout=20, check=False)
+        mounts = json.loads(raw.stdout or "[]")
+    except Exception:
+        return None
+    for wanted in ("/var/www/html/data", "/var/www/html"):
+        for mount in mounts:
+            if mount.get("Destination") == wanted:
+                source = Path(mount["Source"])
+                return source if wanted.endswith("data") else source / "data"
+    return None
 
 
 def ocr_available() -> bool:
@@ -82,7 +105,8 @@ def candidates(root: Path) -> list[Path]:
     for path in root.rglob("*"):
         if path.is_dir():
             continue
-        if any(part.lower() in SKIP_DIRS for part in path.parts):
+        parts = [part.lower() for part in path.parts]
+        if any(part in SKIP_DIRS or part.startswith(SKIP_PREFIXES) for part in parts):
             continue
         suffix = path.suffix.lower()
         if suffix in IMAGE_SUFFIXES or suffix in HEIC:
@@ -222,7 +246,9 @@ def do_generate(result: dict, engine: str, per_instrument: int = 1) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--from", dest="root", required=True, help="folder to scan (e.g. the Nextcloud data dir)")
+    parser.add_argument("--from", dest="root", help="folder to scan")
+    parser.add_argument("--nextcloud", nargs="?", const="nextcloud", metavar="CONTAINER",
+                        help="scan the Nextcloud data directory (host path found automatically)")
     parser.add_argument("--ocr", action="store_true", help="also read text printed on the instrument")
     parser.add_argument("--limit", type=int, default=0, help="stop after N photos")
     parser.add_argument("--ocr-limit", type=int, default=400, help="cap OCR attempts (default 400)")
@@ -232,6 +258,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--generate", action="store_true", help="run the engine once per instrument found")
     parser.add_argument("--engine", default="/usr/local/bin/vision-ai-content")
     args = parser.parse_args(argv)
+
+    if args.nextcloud and not args.root:
+        found = nextcloud_data_dir(args.nextcloud)
+        if found is None:
+            print(f"could not read the mounts of container '{args.nextcloud}'.", file=sys.stderr)
+            print("  try:  docker inspect -f '{{json .Mounts}}' " + args.nextcloud, file=sys.stderr)
+            return 2
+        print(f"Nextcloud data directory: {found}")
+        args.root = str(found)
+    if not args.root:
+        print("give --from <folder> or --nextcloud", file=sys.stderr)
+        return 2
 
     root = Path(args.root).expanduser()
     if not root.is_dir():

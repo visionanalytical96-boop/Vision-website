@@ -26,6 +26,23 @@ installs alongside what is already there:
 Every path is configurable in `creative-pack/config/engine.json` or by
 environment variable (`VISION_AI_OUTPUT_READY`, `VISION_AI_ROOT`, …).
 
+## Two different folders
+
+The git clone and the install target are not the same place, and mixing them up
+is the first thing that goes wrong:
+
+| | |
+|---|---|
+| the clone - where every script lives, where `git pull` works | wherever you cloned `Vision-website`, then `vision-ai/` |
+| the install - what the engine loads at runtime | `/srv/vision-workspace/vision-ai/` |
+
+`integrate.sh` copies from the first into the second, and leaves
+`WHERE-ARE-THE-SCRIPTS.txt` in the install folder pointing back. Lost the clone?
+
+```bash
+find /srv /home /root -maxdepth 6 -name integrate.sh -path '*vision-ai*' 2>/dev/null
+```
+
 ## Install
 
 ```bash

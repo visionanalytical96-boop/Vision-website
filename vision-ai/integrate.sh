@@ -144,12 +144,27 @@ run rm -rf "$BRAIN/vision_ai" "$BRAIN/creative-pack"
 run cp -a "$SRC_DIR/engine/vision_ai" "$BRAIN/"
 run cp -a "$SRC_DIR/creative-pack" "$BRAIN/creative-pack"
 if [[ $DRY_RUN -eq 0 ]]; then
+  # The install directory is not the git clone, and people reasonably look for
+  # the scripts here. Leave a note saying where they actually live.
+  {
+    echo "This folder is where the Vision AI layer is INSTALLED."
+    echo "It is not a git repository - do not run git pull here."
+    echo
+    echo "The scripts (integrate.sh, schedule.sh, verify.sh) live in:"
+    echo "  $SRC_DIR"
+    echo
+    echo "To update:"
+    echo "  cd $SRC_DIR && sudo git pull && sudo ./integrate.sh --revert && sudo ./integrate.sh"
+    echo
+    echo "Installed $(date -Is)"
+  } > "$PREFIX/WHERE-ARE-THE-SCRIPTS.txt"
   : > "$BRAIN/.vision-layer-manifest"
   (cd "$SRC_DIR/brain" && ls -1 *.py) >> "$BRAIN/.vision-layer-manifest"
   printf 'vision_ai\ncreative-pack\n__pycache__\n' >> "$BRAIN/.vision-layer-manifest"
 fi
 say "installed $BRAIN (engine modules + bundled library defaults)"
 say "manifest: $BRAIN/.vision-layer-manifest (revert removes only these entries)"
+say "source  : $SRC_DIR  (also noted in $PREFIX/WHERE-ARE-THE-SCRIPTS.txt)"
 
 step "4/7 convert your .txt presets to JSON (your names kept, .txt never modified)"
 if [[ $DRY_RUN -eq 1 ]]; then

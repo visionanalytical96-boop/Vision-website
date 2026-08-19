@@ -50,7 +50,8 @@ except ImportError:  # `python3 /path/to/brain/x.py`
 
 HEIC = {".heic", ".heif"}
 SKIP_DIRS = {"files_trashbin", "files_versions", "cache", "thumbnails", "preview", "previews",
-             ".git", "node_modules", "uploads", "files_external"}
+             ".git", "node_modules", "files_external", "venv", "site-packages", "comfyui",
+             "models", "custom_nodes", "dist", "build", "__pycache__"}
 SKIP_PREFIXES = ("appdata_", "__groupfolders", ".")
 
 
@@ -261,7 +262,8 @@ def do_generate(result: dict, engine: str, per_instrument: int = 1) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--from", dest="root", help="folder to scan")
+    parser.add_argument("--from", dest="roots", nargs="+", metavar="FOLDER",
+                        help="one or more folders to scan")
     parser.add_argument("--nextcloud", nargs="?", const="nextcloud", metavar="CONTAINER",
                         help="scan the Nextcloud data directory (host path found automatically)")
     parser.add_argument("--ocr", action="store_true", help="also read text printed on the instrument")
@@ -274,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--engine", default="/usr/local/bin/vision-ai-content")
     args = parser.parse_args(argv)
 
-    if args.nextcloud and not args.root:
+    if args.nextcloud and not args.roots:
         found = nextcloud_data_dir(args.nextcloud)
         if found is None:
             print(f"could not locate the data directory of container '{args.nextcloud}'.", file=sys.stderr)
@@ -285,14 +287,17 @@ def main(argv: list[str] | None = None) -> int:
             print("  then:  --from /srv/vision-mobile/INBOX/nextcloud", file=sys.stderr)
             return 2
         print(f"Nextcloud data directory: {found}")
-        args.root = str(found)
-    if not args.root:
-        print("give --from <folder> or --nextcloud", file=sys.stderr)
+        args.roots = [str(found)]
+    if not args.roots:
+        print("give --from <folder> [<folder> ...] or --nextcloud", file=sys.stderr)
         return 2
 
-    root = Path(args.root).expanduser()
-    if not root.is_dir():
-        print(f"not a folder: {root}", file=sys.stderr)
+    roots = [Path(r).expanduser() for r in args.roots]
+    missing = [r for r in roots if not r.is_dir()]
+    for r in missing:
+        print(f"skipping (not a folder): {r}", file=sys.stderr)
+    roots = [r for r in roots if r.is_dir()]
+    if not roots:
         return 2
     if args.ocr and not ocr_available():
         print("tesseract not installed - continuing with text matching only")
@@ -301,8 +306,24 @@ def main(argv: list[str] | None = None) -> int:
 
     config = load_config(config_env.to_overrides(config_env.load()))
     library = Library(config)
-    print(f"scanning {root} ...")
-    result = scan(root, library, args.ocr, args.limit, args.ocr_limit)
+    merged = {"root": ", ".join(str(r) for r in roots), "scanned": 0, "seconds": 0.0,
+              "ocr_used": 0, "instruments": {}, "unknown": [], "heic": []}
+    for root in roots:
+        print(f"scanning {root} ...")
+        part = scan(root, library, args.ocr, args.limit, args.ocr_limit)
+        merged["scanned"] += part["scanned"]
+        merged["seconds"] = round(merged["seconds"] + part["seconds"], 1)
+        merged["ocr_used"] += part["ocr_used"]
+        merged["unknown"] += part["unknown"]
+        merged["heic"] += part["heic"]
+        for key, entry in part["instruments"].items():
+            existing = merged["instruments"].get(key)
+            if existing:
+                existing["photos"] += entry["photos"]
+                existing["sources"] += entry["sources"]
+            else:
+                merged["instruments"][key] = entry
+    result = merged
     report(result)
 
     if args.report:

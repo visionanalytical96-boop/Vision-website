@@ -213,7 +213,10 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     env = _STATE.get("env", {})
     if config_env.flag(env, "TURBO_MODE", False):
         # Shortest wall clock that still meets the phone contract.
-        video.update(preset="ultrafast", crf=26, render_scale=1.1)
+        # ultrafast spends bits to save time; hold the bitrate down so the file
+        # stays easy to send on WhatsApp.
+        video.update(preset="ultrafast", crf=26, render_scale=1.1,
+                     maxrate="5M", bufsize="10M")
     elif config_env.flag(env, "FAST_MODE", True):
         # Tuned for a GPU-less box: same 1080x1920 contract, less encoder work.
         video.update(preset="superfast", crf=23, render_scale=1.3)

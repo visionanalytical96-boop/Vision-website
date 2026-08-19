@@ -78,9 +78,22 @@ function profileRoot() {
 	const root = join(homedir(), '.cache', 'vision-content-engine');
 	try {
 		mkdirSync(root, { recursive: true });
+		sweepStaleProfiles(root);
 		return root;
 	} catch {
 		return tmpdir();
+	}
+}
+
+/** Removes profiles left behind by a crash or an interrupted shutdown. */
+function sweepStaleProfiles(root) {
+	try {
+		for (const entry of readdirSync(root)) {
+			if (!entry.startsWith('vce-chromium-') && !entry.startsWith('probe-')) continue;
+			rmSync(join(root, entry), { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+		}
+	} catch {
+		/* housekeeping only */
 	}
 }
 
@@ -347,9 +360,18 @@ class ChromiumSession {
 		this.proc?.kill();
 		this.proc = null;
 		this.ws = null;
+
 		if (this.userDataDir) {
-			rmSync(this.userDataDir, { recursive: true, force: true });
+			const dir = this.userDataDir;
 			this.userDataDir = null;
+			// The browser is still flushing its profile as it exits, so deleting
+			// immediately races it and throws ENOTEMPTY. Retry briefly, and never
+			// let cleanup of a temporary directory take down the caller.
+			try {
+				rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 150 });
+			} catch {
+				/* left for the sweep on next start */
+			}
 		}
 	}
 }

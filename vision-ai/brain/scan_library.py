@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -91,6 +92,24 @@ def nextcloud_data_dir(container: str = "nextcloud") -> Path | None:
     return None
 
 
+
+CAMERA_NAME = re.compile(r"^(img|dsc|dscn|photo|image|screenshot|pxl|vid|mvimg)[-_ ]?\\d*$", re.I)
+UUID_ISH = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}", re.I)
+
+
+def _is_camera_name(stem: str) -> bool:
+    """IMG_75944CC1-31EF-4BE7-8060-... is a camera filename, not a model number."""
+    return bool(UUID_ISH.search(stem) or CAMERA_NAME.match(stem.split("-")[0].strip()))
+
+
+def _names_a_manufacturer(text: str, library) -> bool:
+    lowered = re.sub(r"[^a-z0-9]+", " ", text.lower())
+    for man in library.get("instruments")["manufacturers"]:
+        if any(re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", lowered) for alias in man["aliases"]):
+            return True
+    return False
+
+
 def ocr_available() -> bool:
     return shutil.which("tesseract") is not None
 
@@ -133,6 +152,10 @@ def candidates(root: Path) -> list[Path]:
 def detect(path: Path, library: Library, use_ocr: bool) -> tuple[Instrument | None, str]:
     """Folder name, then filename, then (optionally) the text in the photo."""
     for text, source in ((path.parent.name, "folder"), (path.stem, "filename")):
+        # A camera filename full of hex can contain "8060" by accident - only
+        # trust it when the name also carries a manufacturer.
+        if source == "filename" and _is_camera_name(text) and not _names_a_manufacturer(text, library):
+            continue
         instrument = identify(text, library)
         if instrument.identified:
             return instrument, source

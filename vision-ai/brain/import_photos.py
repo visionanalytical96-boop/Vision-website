@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -63,6 +64,10 @@ def plan(staging: Path, cache_root: Path, library: Library) -> tuple[list[tuple[
         instrument = identify(folder_hint, library) if folder_hint else None
         reason = "folder name"
         if instrument is None or not instrument.identified:
+            from .scan_library import _is_camera_name, _names_a_manufacturer
+            if _is_camera_name(source.stem) and not _names_a_manufacturer(source.stem, library):
+                unknown.append(source)
+                continue
             instrument = identify(source.stem, library)
             reason = "file name"
         if not instrument.identified:

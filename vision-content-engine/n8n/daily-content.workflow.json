@@ -1,0 +1,148 @@
+{
+  "name": "Vision — Daily Content Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 30 4 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every day 10:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-320, 0],
+      "notes": "04:30 UTC = 10:00 Asia/Kolkata. Adjust if the studio timezone changes."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CONTENT_ENGINE_URL }}/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.CONTENT_ENGINE_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"origin\": \"n8n\",\n  \"publish\": false\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "generate",
+      "name": "Generate Next Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-100, 0],
+      "notes": "Body is empty of product/template, so the engine's rotation picks what to publish next. publish:false leaves the post for approval."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 201,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check",
+      "name": "Generated?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [120, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "title",
+              "name": "title",
+              "value": "={{ $json.body.content.title }}",
+              "type": "string"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "value": "={{ $json.body.content.status }}",
+              "type": "string"
+            },
+            {
+              "id": "contentId",
+              "name": "contentId",
+              "value": "={{ $json.body.content.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "summary",
+      "name": "Summarise",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [340, -100],
+      "notes": "Wire this into email/Slack/WhatsApp to notify the team that a post is ready for review."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Content generation failed: {{ $json.body.error || $json.statusCode }}"
+      },
+      "id": "fail",
+      "name": "Raise Failure",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [340, 100],
+      "notes": "Attach an error workflow to alert on failures."
+    }
+  ],
+  "connections": {
+    "Every day 10:00 IST": {
+      "main": [[{ "node": "Generate Next Post", "type": "main", "index": 0 }]]
+    },
+    "Generate Next Post": {
+      "main": [[{ "node": "Generated?", "type": "main", "index": 0 }]]
+    },
+    "Generated?": {
+      "main": [
+        [{ "node": "Summarise", "type": "main", "index": 0 }],
+        [{ "node": "Raise Failure", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "description": "Generates one Vision Analytical post per day via the Content Engine API and leaves it awaiting approval. Requires CONTENT_ENGINE_URL and CONTENT_ENGINE_API_KEY environment variables on the n8n instance."
+  }
+}

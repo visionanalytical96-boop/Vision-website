@@ -1,0 +1,26 @@
+{
+  "name": "vision-content-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted, GPU-free, AI-independent content generation and publishing engine for Vision Analytical",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node scripts/migrate.mjs",
+    "seed": "node scripts/seed.mjs",
+    "generate": "node scripts/generate.mjs",
+    "scheduler": "node scripts/run-scheduler.mjs",
+    "fetch-fonts": "node scripts/fetch-fonts.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "test": "node --test tests/**/*.test.js",
+    "calibrate-fonts": "node scripts/calibrate-fonts.mjs",
+    "test:unit": "node --test tests/engine.test.js"
+  },
+  "optionalDependencies": {},
+  "license": "UNLICENSED"
+}

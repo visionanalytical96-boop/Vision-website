@@ -1,0 +1,8 @@
+# Local configuration and secrets
+.env
+
+# Local workspace (database, generated images, uploads, logs)
+.data/
+
+# Node
+node_modules/

@@ -1,0 +1,124 @@
+{
+  "name": "Vision — Publish Approved Content",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vision-publish",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Approval Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-320, 0],
+      "notes": "POST { \"contentId\": 123 }. Configure Header Auth credentials in n8n so only your approver can call it.",
+      "webhookId": "vision-publish"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CONTENT_ENGINE_URL }}/api/content/{{ $json.body.contentId }}/publish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.CONTENT_ENGINE_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "publish",
+      "name": "Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-80, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "version": 2 },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ok",
+      "name": "Published?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [160, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CONTENT_ENGINE_URL }}/api/content/{{ $('Approval Webhook').item.json.body.contentId }}/retry",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-API-Key", "value": "={{ $env.CONTENT_ENGINE_API_KEY }}" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "neverError": true, "fullResponse": true } }
+        }
+      },
+      "id": "retry",
+      "name": "Retry Once",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 120],
+      "notes": "The generated image is preserved on failure, so retrying only re-attempts delivery."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "url", "name": "url", "value": "={{ $json.body.content.published_url }}", "type": "string" },
+            { "id": "title", "name": "title", "value": "={{ $json.body.content.title }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "done",
+      "name": "Publication Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [400, -100]
+    }
+  ],
+  "connections": {
+    "Approval Webhook": { "main": [[{ "node": "Publish", "type": "main", "index": 0 }]] },
+    "Publish": { "main": [[{ "node": "Published?", "type": "main", "index": 0 }]] },
+    "Published?": {
+      "main": [
+        [{ "node": "Publication Result", "type": "main", "index": 0 }],
+        [{ "node": "Retry Once", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Once": { "main": [[{ "node": "Publication Result", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": {
+    "description": "Publishes a generated post on approval, retrying once on failure. Requires CONTENT_ENGINE_URL and CONTENT_ENGINE_API_KEY on the n8n instance."
+  }
+}

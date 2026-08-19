@@ -6,20 +6,27 @@
  * over CDP so the engine carries no npm dependencies.
  */
 import { spawn } from 'node:child_process';
-import { accessSync, constants, existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { accessSync, constants, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { config } from '../config/env.js';
 
+// Ordered by reliability for headless server use, not alphabetically.
+//
+// Snap-packaged Chromium is listed last: it runs under confinement with its own
+// private /tmp, so it cannot see the temporary profile directory this module
+// creates and the launch times out. On Ubuntu `/usr/bin/chromium-browser` is a
+// wrapper around that snap, so it has to rank below the real .deb browsers —
+// otherwise installing Chrome alongside it changes nothing.
 const CANDIDATE_BINARIES = [
 	process.env.CONTENT_ENGINE_CHROMIUM,
 	process.env.CHROME_PATH,
-	'/usr/bin/chromium',
-	'/usr/bin/chromium-browser',
-	'/usr/bin/google-chrome',
 	'/usr/bin/google-chrome-stable',
-	'/snap/bin/chromium',
+	'/usr/bin/google-chrome',
+	'/usr/bin/chromium',
 	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+	'/usr/bin/chromium-browser',
+	'/snap/bin/chromium',
 ];
 
 /** Playwright-managed browsers, when present, are preferred and pinned. */
@@ -60,6 +67,23 @@ function isExecutable(path) {
 	}
 }
 
+/**
+ * Where to put the throwaway browser profile.
+ *
+ * Not /tmp: a snap-confined browser gets a private /tmp and cannot see a
+ * directory created there by this process, so the launch hangs. A directory
+ * under the user's home is visible to both confined and unconfined builds.
+ */
+function profileRoot() {
+	const root = join(homedir(), '.cache', 'vision-content-engine');
+	try {
+		mkdirSync(root, { recursive: true });
+		return root;
+	} catch {
+		return tmpdir();
+	}
+}
+
 class ChromiumSession {
 	constructor(binary) {
 		this.binary = binary;
@@ -81,7 +105,7 @@ class ChromiumSession {
 	}
 
 	async #launch() {
-		this.userDataDir = mkdtempSync(join(tmpdir(), 'vce-chromium-'));
+		this.userDataDir = mkdtempSync(join(profileRoot(), 'vce-chromium-'));
 		this.proc = spawn(
 			this.binary,
 			[
@@ -109,7 +133,17 @@ class ChromiumSession {
 
 		const wsUrl = await new Promise((resolve, reject) => {
 			let buffer = '';
-			const timer = setTimeout(() => reject(new Error('Timed out waiting for Chromium to start')), config.render.timeoutMs);
+			const timer = setTimeout(
+				() =>
+					reject(
+						new Error(
+							`Timed out waiting for Chromium to start (${this.binary}). ` +
+								'A snap-packaged browser cannot be driven this way — install the Chrome or Chromium .deb, ' +
+								'or set CONTENT_ENGINE_CHROMIUM to an unconfined binary.',
+						),
+					),
+				config.render.timeoutMs,
+			);
 			this.proc.stderr.on('data', (chunk) => {
 				buffer += chunk.toString();
 				const match = buffer.match(/ws:\/\/[^\s]+/);

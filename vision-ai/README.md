@@ -121,6 +121,32 @@ Publishing is a dry run until `--apply`. The reel's own `-Caption.txt` is used
 as the caption unless `--caption-file` says otherwise. If Meta reports that the
 API version is gone, set `META_API_VERSION` to the current one.
 
+## Getting photos onto the server
+
+Photos usually start life on a PC, in whatever folders their owner made. Copy
+the whole tree to a staging folder on the server, then file it:
+
+```powershell
+# Windows PowerShell, from the PC
+scp -r "C:\Users\visha\Desktop\HPLC PHOTOS" vision@vision:/srv/vision-mobile/INBOX/
+```
+
+```bash
+# on the server - a dry run first, nothing is touched
+python3 vision-ai/brain/import_photos.py --from "/srv/vision-mobile/INBOX/HPLC PHOTOS"
+python3 vision-ai/brain/import_photos.py --from "/srv/vision-mobile/INBOX/HPLC PHOTOS" --apply
+```
+
+Each photo is identified from its folder name, walking up until something
+matches - so `Agilent 1260 Infinity II/Detector/IMG_0489.JPG` is filed under the
+1260, and a model folder nested inside a brand folder still resolves to the
+model. Files are copied, not moved, duplicates are skipped by content hash, and
+anything it cannot identify is listed rather than guessed at: put those in a
+folder named after the instrument and run it again.
+
+Folders that are not instruments at all - "HPLC Columns", "Site Photos" - are
+meant to come back as unidentified. Nothing files them anywhere.
+
 ## Checking the photo folders
 
 The folder name is the only claim that a photo shows a given instrument, and a

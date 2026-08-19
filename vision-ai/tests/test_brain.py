@@ -1250,5 +1250,111 @@ class SyncPatchTests(unittest.TestCase):
         self.assertTrue(keeper.is_file(), "something that was not a reel was deleted")
 
 
+class ImportPhotosTests(unittest.TestCase):
+    """Photos arrive from a PC in whatever folders their owner made.
+
+    The model is often on a parent folder - "Agilent 1260 Infinity II/Detector" -
+    so only reading the folder that holds the file loses those photos.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from brain import import_photos
+        cls.importer = import_photos
+        cls.config = load_config({})
+        cls.library = Library(cls.config)
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.staging = self.tmp / "HPLC PHOTOS"
+        self.cache = self.tmp / "images"
+        self.staging.mkdir(parents=True)
+        self.cache.mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def photo(self, relative: str, name: str = "IMG_0001.JPG"):
+        from PIL import Image
+        folder = self.staging / relative
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / name
+        Image.new("RGB", (900, 700), (200, 205, 210)).save(path, quality=80)
+        return path
+
+    def plan(self):
+        return self.importer.plan(self.staging, self.cache, self.library)
+
+    def test_a_model_folder_files_its_photos(self):
+        self.photo("Agilent 1260 Infinity II")
+        matched, unknown = self.plan()
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(unknown, [])
+        self.assertEqual(matched[0][1].parent.relative_to(self.cache).as_posix(),
+                         "agilent/1260-infinity-ii")
+
+    def test_a_sub_folder_inherits_the_model_from_its_parent(self):
+        self.photo("Agilent 1260 Infinity II/Detector")
+        matched, unknown = self.plan()
+        self.assertEqual(unknown, [], "a photo in a sub-category was thrown away")
+        self.assertEqual(matched[0][1].parent.relative_to(self.cache).as_posix(),
+                         "agilent/1260-infinity-ii")
+
+    def test_a_deeper_sub_folder_still_finds_it(self):
+        self.photo("Shimadzu LC-2010CHT/2026/Site visit/Front")
+        matched, unknown = self.plan()
+        self.assertEqual(unknown, [])
+        self.assertEqual(matched[0][1].parent.relative_to(self.cache).as_posix(),
+                         "shimadzu/lc-2010cht")
+
+    def test_the_most_specific_folder_wins(self):
+        """A model folder nested inside a brand folder must not lose the model."""
+        self.photo("Shimadzu/Shimadzu UV-1900i")
+        matched, _ = self.plan()
+        self.assertEqual(matched[0][1].parent.relative_to(self.cache).as_posix(),
+                         "shimadzu/uv-1900i")
+
+    def test_folders_that_are_not_instruments_are_reported_not_guessed(self):
+        self.photo("HPLC Columns")
+        self.photo("Site Photos")
+        matched, unknown = self.plan()
+        self.assertEqual(matched, [])
+        self.assertEqual(len(unknown), 2)
+
+    def test_nothing_outside_the_staging_tree_is_consulted(self):
+        """Walking up must stop at the staging root, not reach the whole disk."""
+        outside = self.tmp.parent
+        names = self.importer._parent_names(self.staging / "a" / "b" / "x.jpg", self.staging)
+        self.assertEqual(names, ["b", "a"])
+        self.assertNotIn(self.staging.name, names)
+        self.assertNotIn(outside.name, names)
+
+    def test_a_dry_run_copies_nothing(self):
+        self.photo("Agilent 1260 Infinity II")
+        self.importer.run(self.staging, self.cache, self.library, apply=False, move=False)
+        self.assertEqual(list(self.cache.rglob("*.JPG")), [])
+
+    def test_applying_copies_and_leaves_the_original_alone(self):
+        source = self.photo("Agilent 1260 Infinity II")
+        self.importer.run(self.staging, self.cache, self.library, apply=True, move=False)
+        self.assertTrue(source.is_file(), "the photo on the PC copy was removed")
+        self.assertEqual(len(list(self.cache.rglob("*.JPG"))), 1)
+
+    def test_running_twice_does_not_duplicate_the_same_photo(self):
+        self.photo("Agilent 1260 Infinity II")
+        self.importer.run(self.staging, self.cache, self.library, apply=True, move=False)
+        self.importer.run(self.staging, self.cache, self.library, apply=True, move=False)
+        self.assertEqual(len(list(self.cache.rglob("*.JPG"))), 1)
+
+    def test_two_different_photos_with_the_same_name_both_survive(self):
+        self.photo("Agilent 1260 Infinity II", "IMG_0001.JPG")
+        self.importer.run(self.staging, self.cache, self.library, apply=True, move=False)
+        from PIL import Image
+        Image.new("RGB", (900, 700), (10, 20, 30)).save(
+            self.staging / "Agilent 1260 Infinity II" / "IMG_0001.JPG", quality=80)
+        self.importer.run(self.staging, self.cache, self.library, apply=True, move=False)
+        self.assertEqual(len(list(self.cache.rglob("*.JPG"))), 2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

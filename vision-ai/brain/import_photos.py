@@ -52,6 +52,20 @@ def _existing_digests(directory: Path) -> set[str]:
     return {_digest(p) for p in directory.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES}
 
 
+def _parent_names(source: Path, staging: Path) -> list[str]:
+    """Folder names between the photo and the staging root, closest first."""
+    names: list[str] = []
+    parent = source.parent
+    while parent != staging:
+        try:
+            parent.relative_to(staging)
+        except ValueError:
+            break          # walked out of the staging tree
+        names.append(parent.name)
+        parent = parent.parent
+    return names
+
+
 def plan(staging: Path, cache_root: Path, library: Library) -> tuple[list[tuple[Path, Path, str]], list[Path]]:
     """Return (moves, unidentified). A folder name beats a filename: put photos
     of one instrument in a folder called e.g. 'Agilent 1260 Infinity II'."""
@@ -62,9 +76,15 @@ def plan(staging: Path, cache_root: Path, library: Library) -> tuple[list[tuple[
             continue
         if looks_generated(source):
             continue  # a rendered poster is not a photograph
-        folder_hint = source.parent.name if source.parent != staging else ""
-        instrument = identify(folder_hint, library) if folder_hint else None
-        reason = "folder name"
+        # Walk up from the photo towards the staging root, deepest folder
+        # first. People file photos as "Agilent 1260 Infinity II/Detector",
+        # and the model is on the parent, not on the folder holding the file.
+        instrument, reason = None, "folder name"
+        for folder in _parent_names(source, staging):
+            candidate = identify(folder, library)
+            if candidate.identified:
+                instrument, reason = candidate, f"folder \"{folder}\""
+                break
         if instrument is None or not instrument.identified:
             from .scan_library import _is_camera_name, _names_a_manufacturer
             if _is_camera_name(source.stem) and not _names_a_manufacturer(source.stem, library):

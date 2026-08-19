@@ -27,7 +27,7 @@ from vision_ai.skills.ollama_client import OllamaClient  # noqa: E402
 from vision_ai.skills.render_still import Renderer, SceneCopy, save_png  # noqa: E402
 from vision_ai.skills.selector import DesignSelector  # noqa: E402
 
-from . import config_env, cutout, deliver, music_gen, preset_map  # noqa: E402
+from . import config_env, deliver, music_gen, photo_studio, preset_map  # noqa: E402
 
 _STATE: dict = {}
 
@@ -75,13 +75,13 @@ def decide(argv: list[str] | None = None) -> dict:
 
     # Cut the instrument out of its background when the operator wants that
     # look and the optional dependency is installed.
-    if asset.path and config_env.flag(env, "REMOVE_BACKGROUND", True):
-        cut, note = cutout.make(Path(asset.path))
-        if cut is not None:
-            asset.path = cut
-            design["image_cutout"] = True
-        design["cutout_note"] = note
-        print(f"[brain] cutout: {note}")
+    if asset.path and config_env.flag(env, "PHOTO_STUDIO", True):
+        prepared, note = photo_studio.prepare(Path(asset.path))
+        if prepared is not None:
+            asset.path = prepared
+            design["image_prepared"] = True
+        design["photo_note"] = note
+        print(f"[brain] photo studio: {note}")
 
     _STATE.update(env=env, config=config, library=library, history=history,
                   instrument=instrument, design=design, asset=asset, copy=pack)

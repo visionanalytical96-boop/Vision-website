@@ -33,29 +33,31 @@ if not _ok:
 # --- end {marker} ---
 '''
 
-# (name, kind, pattern, replacement) - kind: after | replace | before
+# (name, kind, pattern, replacement, required)
+# Optional edits cover engine revisions that already do that job themselves:
+# a server-side brain that picks its own style/layout is left alone.
 EDITS = [
     ("bootstrap", "after",
      r"from PIL import Image, ImageDraw, ImageFont, ImageFilter",
-     None),
+     None, True),
     ("exact instrument photo", "replace",
      r"source\s*=\s*random\.choice\(images if images else videos\)",
-     "source = _bridge.pick_source(D, images, videos)"),
+     "source = _bridge.pick_source(D, images, videos)", True),
     ("design rotation (style)", "replace",
      r"style\s*=\s*random\.choice\(styles\)",
-     "style = _bridge.pick_style(D, styles)"),
+     "style = _bridge.pick_style(D, styles)", False),
     ("design rotation (layout)", "replace",
      r"layout\s*=\s*random\.choice\(layouts\)",
-     "layout = _bridge.pick_layout(D, layouts)"),
+     "layout = _bridge.pick_layout(D, layouts)", False),
     ("skip the 120 s ollama CLI call", "regex",
      "(?m)^(\\s*)result = subprocess\\.run\\(\\s*\\n(\\s*)\\[\"ollama\"",
-     "\\1raise RuntimeError('brain: short-copy path')  # patched\n\\1result = subprocess.run(\n\\2[\"ollama\""),
+     "\\1raise RuntimeError('brain: short-copy path')  # patched\n\\1result = subprocess.run(\n\\2[\"ollama\"", True),
     ("short copy from the brain", "before",
      r'title\s*=\s*str\(data\.get\(',
-     "data = _bridge.copy_pack(D, data)"),
+     "data = _bridge.copy_pack(D, data)", True),
     ("legacy reel duration", "regex",
      r'"-t"\s*,\s*"12"\s*,',
-     '"-t", _bridge.legacy_seconds(),'),
+     '"-t", _bridge.legacy_seconds(),', False),
 ]
 
 
@@ -63,7 +65,10 @@ def apply(source: str, brain_parent: str) -> tuple[str, list[str]]:
     if MARKER in source:
         raise SystemExit("engine is already patched - revert first (integrate.sh --revert)")
     log, out = [], source
-    for name, kind, pattern, replacement in EDITS:
+    for name, kind, pattern, replacement, required in EDITS:
+        if not required and not re.search(pattern, out):
+            log.append(f"- {name} (not present in this engine revision - skipped)")
+            continue
         if kind == "after":
             match = re.search(pattern, out)
             if not match:

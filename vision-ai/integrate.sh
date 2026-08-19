@@ -56,18 +56,27 @@ import re, sys
 source = open(sys.argv[1], encoding="utf-8").read()
 if "vision brain integration" in source:
     print("  engine is already patched - run ./integrate.sh --revert first"); sys.exit(1)
-for name, pattern in [
-    ("PIL import",  r"from PIL import Image, ImageDraw, ImageFont, ImageFilter"),
-    ("source pick", r"source\s*=\s*random\.choice\(images if images else videos\)"),
-    ("style pick",  r"style\s*=\s*random\.choice\(styles\)"),
-    ("layout pick", r"layout\s*=\s*random\.choice\(layouts\)"),
-    ("ollama call", r"\[\"ollama\",\"run\""),
-    ("copy assign", r"title\s*=\s*str\(data\.get\("),
-    ("reel length", r'"-t"\s*,\s*"12"\s*,'),
+missing = []
+for name, pattern, required in [
+    ("PIL import",  r"from PIL import Image, ImageDraw, ImageFont, ImageFilter", True),
+    ("source pick", r"source\s*=\s*random\.choice\(images if images else videos\)", True),
+    ("style pick",  r"style\s*=\s*random\.choice\(styles\)", False),
+    ("layout pick", r"layout\s*=\s*random\.choice\(layouts\)", False),
+    ("ollama call", r'\["ollama"\s*,\s*"run"', True),
+    ("copy assign", r"title\s*=\s*str\(data\.get\(", True),
+    ("reel length", r'"-t"\s*,\s*"12"\s*,', False),
 ]:
-    print(f"  anchor {'OK ' if re.search(pattern, source) else 'MISSING'}  {name}")
-    if not re.search(pattern, source):
-        sys.exit(1)
+    found = bool(re.search(pattern, source))
+    state = "OK     " if found else ("MISSING" if required else "absent ")
+    note = "" if found else ("  <- REQUIRED" if required else "  (optional - this engine revision does it itself)")
+    print(f"  anchor {state}  {name}{note}")
+    if required and not found:
+        missing.append(name)
+if missing:
+    print()
+    print("  cannot patch: " + ", ".join(missing))
+    print("  nothing was changed - send this output plus the engine source to update the anchors.")
+    sys.exit(1)
 PY
 say "python $(python3 -c 'import sys,PIL;print(sys.version.split()[0], "Pillow", PIL.__version__)')"
 

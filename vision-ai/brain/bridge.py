@@ -269,6 +269,9 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     choice.music, choice.music_note = track, note
     design["music_track"] = track.name if track else ""
 
+    print(f"[brain] rendering the reel: 2 scenes, {int(float(video['duration']) * int(video['fps']))} frames "
+          f"at {video['width']}x{video['height']} - this takes 20-40s, please do not interrupt",
+          flush=True)
     result = reel_skill.render(reel_skill.ReelInputs(
         scenes["a_base"], scenes["a_text"], scenes["b_base"], scenes["b_text"],
         library.by_id("animations", design["animation_1"]),

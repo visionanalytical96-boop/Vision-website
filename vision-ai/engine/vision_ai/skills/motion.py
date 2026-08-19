@@ -11,12 +11,58 @@ CENTER_X = "iw/2-(iw/zoom/2)"
 CENTER_Y = "ih/2-(ih/zoom/2)"
 
 
+def _constant_zoom(spec: dict) -> bool:
+    if spec.get("blur_in"):
+        return False
+    if spec.get("type") not in {"pan_h", "pan_v", "pan_diag", "drift", "static"}:
+        return False
+    return abs(float(spec.get("z_to", 1.0)) - float(spec.get("z_from", 1.0))) < 1e-6
+
+
+def _crop_filter(spec: dict, frames: int, width: int, height: int, fps: int) -> str:
+    """crop + one scale, with x/y walking over time (crop re-evaluates them)."""
+    kind = spec.get("type", "pan_h")
+    zoom = max(1.001, float(spec.get("z_from", 1.10)))
+    direction = float(spec.get("dir", 1))
+    seconds = max(0.1, frames / float(fps))
+    p = f"(t/{seconds:.3f})"
+    span_x, span_y = f"(iw-iw/{zoom})", f"(ih-ih/{zoom})"
+    centre_x, centre_y = f"{span_x}/2", f"{span_y}/2"
+
+    if kind == "pan_h":
+        x = f"{span_x}*{p}" if direction > 0 else f"{span_x}*(1-{p})"
+        y = centre_y
+    elif kind == "pan_v":
+        x = centre_x
+        y = f"{span_y}*{p}" if direction > 0 else f"{span_y}*(1-{p})"
+    elif kind == "pan_diag":
+        if direction > 0:
+            x, y = f"{span_x}*{p}", f"{span_y}*{p}"
+        else:
+            x, y = f"{span_x}*(1-{p})", f"{span_y}*(1-{p})"
+    elif kind == "drift":
+        x = f"{span_x}*(0.5+0.34*sin(2*PI*{p}*0.5))"
+        y = f"{span_y}*(0.5+0.28*cos(2*PI*{p}*0.5))"
+    else:
+        x, y = centre_x, centre_y
+
+    return (f"fps={fps},crop=w=iw/{zoom}:h=ih/{zoom}:x='{x}':y='{y}',"
+            f"scale={width}:{height}:flags=bicubic,setsar=1,format=rgba")
+
+
 def _progress(frames: int) -> str:
     return f"on/{max(1, frames - 1)}"
 
 
 def camera_filter(spec: dict, frames: int, width: int, height: int, fps: int) -> str:
-    """zoompan expression for one scene's background/instrument layer."""
+    """Camera move for one scene's background/instrument layer.
+
+    A move at constant zoom (pans, drifts) is a crop that walks across the
+    over-rendered still - about twice as fast as zoompan, which rescales every
+    frame. Only real zooms still need zoompan.
+    """
+    if _constant_zoom(spec):
+        return _crop_filter(spec, frames, width, height, fps)
     kind = spec.get("type", "zoom")
     z_from = float(spec.get("z_from", 1.0))
     z_to = float(spec.get("z_to", 1.08))

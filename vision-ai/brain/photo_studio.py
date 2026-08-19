@@ -14,6 +14,8 @@ photo is only ever processed once.
 
 from __future__ import annotations
 
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -82,20 +84,69 @@ def _corner_background(image: Image.Image, tolerance: int = 26) -> Image.Image |
     return mask
 
 
+VENV_CANDIDATES = (
+    "REMBG_PYTHON",  # environment override
+    str(Path(__file__).resolve().parent / "rembg-venv" / "bin" / "python"),
+    "/srv/vision-workspace/vision-ai/brain/rembg-venv/bin/python",
+)
+
+_REMBG_SCRIPT = """
+import sys
+from rembg import new_session, remove
+from PIL import Image
+source, target, model = sys.argv[1], sys.argv[2], sys.argv[3]
+with Image.open(source) as image:
+    remove(image.convert("RGBA"), session=new_session(model)).save(target, "PNG")
+"""
+
+
+def rembg_python() -> str | None:
+    """rembg in its own virtualenv keeps numpy/scipy/jsonschema off the system
+    python - which is what the Debian jsonschema conflict is about."""
+    override = os.environ.get(VENV_CANDIDATES[0], "")
+    for candidate in ([override] if override else []) + list(VENV_CANDIDATES[1:]):
+        if candidate and Path(candidate).is_file() and os.access(candidate, os.X_OK):
+            return candidate
+    return None
+
+
+def _rembg_via_venv(image: Image.Image, python: str, model: str) -> tuple[Image.Image, str] | None:
+    import tempfile
+    with tempfile.TemporaryDirectory() as work:
+        source, target = Path(work) / "in.png", Path(work) / "out.png"
+        image.convert("RGBA").save(source, "PNG")
+        result = subprocess.run([python, "-c", _REMBG_SCRIPT, str(source), str(target), model],
+                                capture_output=True, text=True, timeout=600)
+        if result.returncode != 0 or not target.is_file():
+            return None
+        with Image.open(target) as done:
+            return done.copy(), f"background removed ({model}, rembg venv)"
+
+
 def remove_background(image: Image.Image, model: str = "u2netp") -> tuple[Image.Image, str]:
     try:
         from rembg import new_session, remove
         result = remove(image.convert("RGBA"), session=new_session(model))
         return result, f"background removed ({model})"
     except ImportError:
-        pass
+        python = rembg_python()
+        if python:
+            try:
+                done = _rembg_via_venv(image, python, model)
+            except Exception as exc:
+                done = None
+                print(f"  rembg venv failed: {str(exc)[:80]}")
+            if done is not None:
+                return done
     except Exception as exc:
         return image.convert("RGBA"), f"rembg failed ({str(exc)[:60]}) - photo kept as-is"
 
     mask = _corner_background(image)
     if mask is None:
         return (image.convert("RGBA"),
-                'background kept (not a plain backdrop) - install: pip install "rembg[cpu]" onnxruntime')
+                "background kept (not a plain backdrop) - for any background, install rembg in its own venv: "
+                "python3 -m venv /srv/vision-workspace/vision-ai/brain/rembg-venv && "
+                "/srv/vision-workspace/vision-ai/brain/rembg-venv/bin/pip install \"rembg[cpu]\" onnxruntime pillow")
     cut = image.convert("RGBA")
     cut.putalpha(mask)
     return cut, "background removed (plain-backdrop fill)"

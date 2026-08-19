@@ -14,6 +14,12 @@ check(){ if [[ "$2" == "$3" ]]; then printf '  [PASS] %-26s %s\n' "$1" "$2"; PAS
          else printf '  [FAIL] %-26s got %s, want %s\n' "$1" "$2" "$3"; FAIL=$((FAIL+1)); fi; }
 probe(){ ffprobe -v error -select_streams "$1" -show_entries "$2" -of default=nw=1:nk=1 "$3" | head -1; }
 
+ENGINE="${VISION_ENGINE:-/usr/local/bin/vision-ai-content}"
+if ! grep -q "vision brain integration" "$ENGINE" 2>/dev/null; then
+  echo "engine at $ENGINE is not integrated yet - run integrate.sh first" >&2
+  exit 2
+fi
+
 echo "== generating: $REQUEST"
 vision-ai-content "$REQUEST"
 

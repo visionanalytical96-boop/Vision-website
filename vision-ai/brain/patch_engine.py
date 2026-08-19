@@ -27,7 +27,7 @@ D = _bridge.decide(_sys.argv[1:])
 FINISH = '''
 
 # --- {marker}: validate, record history, deliver through the existing sync chain ---
-_ok = _bridge.finish(D, READY, STAMP, post, reel)
+_ok = _bridge.finish(D, READY, STAMP, post, reel, globals().get("brain_choice"))
 if not _ok:
     _sys.exit(1)
 # --- end {marker} ---
@@ -52,6 +52,9 @@ EDITS = [
     ("skip the 120 s ollama CLI call", "regex",
      "(?m)^(\\s*)result = subprocess\\.run\\(\\s*\\n(\\s*)\\[\"ollama\"",
      "\\1raise RuntimeError('brain: short-copy path')  # patched\n\\1result = subprocess.run(\n\\2[\"ollama\"", True),
+    ("identity from the request (server brain engines)", "regex",
+     r"instrument = detect_instrument\(source\.name\)",
+     "instrument = detect_instrument(_bridge.request_text() or source.name)", False),
     ("short copy from the brain", "before",
      r'title\s*=\s*str\(data\.get\(',
      "data = _bridge.copy_pack(D, data)", True),

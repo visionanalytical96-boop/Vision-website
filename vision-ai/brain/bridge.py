@@ -24,13 +24,18 @@ from vision_ai.skills.ollama_client import OllamaClient  # noqa: E402
 from vision_ai.skills.render_still import Renderer, SceneCopy, save_png  # noqa: E402
 from vision_ai.skills.selector import DesignSelector  # noqa: E402
 
-from . import config_env, deliver  # noqa: E402
+from . import config_env, deliver, preset_map  # noqa: E402
 
 _STATE: dict = {}
 
 
 def _index(text: str, size: int) -> int:
     return sum(ord(c) for c in text) % max(1, size)
+
+
+def request_text() -> str:
+    """The operator's request, for engines that derive identity from a filename."""
+    return " ".join(sys.argv[1:]).strip()
 
 
 def decide(argv: list[str] | None = None) -> dict:
@@ -139,9 +144,38 @@ def _typographic_base(design: dict, size) -> Path:
     return save_png(image, work / f"typographic-{design['design_fingerprint'][:12]}.png")
 
 
-def finish(design: dict, ready, stamp: str, post, reel) -> bool:
+def adopt(design: dict, brain_choice: dict | None) -> dict:
+    """Let the server's own brain drive the render.
+
+    Its names (ORBITAL_DRIFT, MASK_REVEAL, SCHEMATIC_LAB...) are resolved to
+    executable mechanics; the fields it does not choose - palette, typography,
+    camera, effect, music - stay with the local selector.
+    """
+    if not brain_choice:
+        return design
+    library = _STATE["library"]
+    first, second = preset_map.resolve_pair(brain_choice.get("motions"), library.get("animations"))
+    transition = preset_map.resolve(brain_choice.get("transition", "fade"), library.get("transitions"), "transitions")
+    family = preset_map.resolve(brain_choice.get("family", ""), library.get("families"), "families")
+    layout = preset_map.resolve(brain_choice.get("layout", ""), library.get("layouts"), "layouts")
+    design.update({
+        "animation_1": first["id"], "animation_1_label": first["label"],
+        "animation_2": second["id"], "animation_2_label": second["label"],
+        "transition": transition["id"], "transition_label": transition["label"],
+        "design_family": family["id"], "design_family_label": family["label"],
+        "layout": layout["id"], "layout_label": layout["label"],
+        "brain_choice": {k: brain_choice.get(k) for k in ("family", "layout", "motions", "transition", "fingerprint")},
+        "decision_source": "server brain",
+    })
+    print(f"[brain] server choice adopted: {brain_choice.get('motions')} -> "
+          f"{first['id']} + {second['id']} | {brain_choice.get('transition')} -> {transition['xfade']}")
+    return design
+
+
+def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | None = None) -> bool:
     """Render the real reel over the engine's stub, validate it, write Info,
     record history, and hand the package to the existing sync chain."""
+    design = adopt(design, brain_choice)
     from vision_ai.skills import audio as audio_skill
     from vision_ai.skills import motion, validate
     from vision_ai.skills import reel as reel_skill
@@ -259,4 +293,7 @@ def _record(design: dict, reel: Path) -> dict:
     record["layout_id"] = design.get("layout", "")
     record["music_track"] = design.get("music_track", "")
     record["output_path"] = str(reel)
+    if design.get("brain_choice"):
+        record["brain_choice"] = design["brain_choice"]
+        record["decision_source"] = design.get("decision_source", "server brain")
     return record

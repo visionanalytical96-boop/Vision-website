@@ -60,7 +60,7 @@ class PatchTests(unittest.TestCase):
                          "_bridge.pick_layout(D, layouts)",
                          "_bridge.copy_pack(D, data)",
                          "_bridge.legacy_seconds()",
-                         "_bridge.finish(D, READY, STAMP, post, reel)"):
+                         '_bridge.finish(D, READY, STAMP, post, reel, globals().get("brain_choice"))'):
             self.assertIn(expected, patched, expected)
 
     def test_ollama_cli_call_is_bypassed_not_deleted(self):
@@ -160,6 +160,42 @@ class DeliveryTests(unittest.TestCase):
         self.assertTrue((drop / "2026-08-18_22-41-02" / payload.name).is_file())
         self.assertIsNone(result["nextcloud"])  # not configured -> not attempted
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+class PresetMapTests(unittest.TestCase):
+    """The server brain's names must reach ffmpeg as real mechanics."""
+
+    @classmethod
+    def setUpClass(cls):
+        from brain import preset_map
+        cls.preset_map = preset_map
+        cls.library = Library(load_config())
+
+    def test_server_preset_names_all_resolve(self):
+        animations = self.library.get("animations")
+        for name in ("ORBITAL_DRIFT", "SLOW_PUSH", "MICRO_PARALLAX", "DEPTH_ZOOM", "FLOATING_CARD",
+                     "GLASS_PANEL_ENTRY", "PARTICLE_DRIFT", "DATA_LINE_MOTION", "WHIP_MOTION",
+                     "CAMERA_ORBIT_SIM", "HORIZONTAL_PAN_LEFT", "VERTICAL_PAN_DOWN", "DIAGONAL_DRIFT"):
+            entry = self.preset_map.resolve(name, animations, "animations")
+            self.assertIn("camera", entry, name)
+            self.assertIn("layer", entry, name)
+
+    def test_every_transition_preset_maps_to_a_real_xfade(self):
+        transitions = self.library.get("transitions")
+        for name in ("FADE", "DIP", "CROSS_DISSOLVE", "DIRECTIONAL_WIPE", "LIGHT_FLASH", "GLASS_WIPE",
+                     "BLUR_TRANSITION", "ZOOM_TRANSITION", "WHIP_PAN", "DIAGONAL_REVEAL", "MASK_REVEAL",
+                     "LENS_FLASH", "SOFT_WHITE_FLASH", "DARK_CUT", "FILM_BURN_SIM"):
+            self.assertTrue(self.preset_map.resolve(name, transitions, "transitions")["xfade"], name)
+
+    def test_repeated_motions_from_the_brain_are_separated(self):
+        first, second = self.preset_map.resolve_pair(["SLOW_PUSH", "SLOW_PUSH"], self.library.get("animations"))
+        self.assertNotEqual(first["id"], second["id"])
+
+    def test_unknown_name_is_deterministic_not_random(self):
+        animations = self.library.get("animations")
+        a = self.preset_map.resolve("SOMETHING_NOBODY_DEFINED", animations, "animations")
+        b = self.preset_map.resolve("SOMETHING_NOBODY_DEFINED", animations, "animations")
+        self.assertEqual(a["id"], b["id"])
 
 
 if __name__ == "__main__":

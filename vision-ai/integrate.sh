@@ -39,9 +39,19 @@ if [[ $REVERT -eq 1 ]]; then
   [[ -n "$LATEST" ]] || { echo "no backup found in $BACKUP_DIR" >&2; exit 1; }
   say "restoring $ENGINE from $LATEST"
   run cp -a "$LATEST" "$ENGINE"
-  say "removing $BRAIN"
-  run rm -rf "$BRAIN"
-  say "creative-pack, history, outputs and .txt presets are untouched"
+  MANIFEST="$BRAIN/.vision-layer-manifest"
+  if [[ -f "$MANIFEST" ]]; then
+    say "removing only what this layer installed (per $MANIFEST):"
+    while IFS= read -r entry; do
+      [[ -z "$entry" ]] && continue
+      if [[ -e "$BRAIN/$entry" ]]; then say "  - $entry"; run rm -rf "$BRAIN/$entry"; fi
+    done < "$MANIFEST"
+    run rm -f "$MANIFEST"
+    run rmdir "$BRAIN" 2>/dev/null || say "kept $BRAIN (your own modules are still there)"
+  elif [[ -d "$BRAIN" ]]; then
+    say "no manifest found - leaving $BRAIN untouched (remove it by hand if you want it gone)"
+  fi
+  say "creative-pack, history, outputs, .txt presets and your brain modules are untouched"
   say "done - the engine is byte-identical to before integration"
   exit 0
 fi
@@ -63,6 +73,7 @@ for name, pattern, required in [
     ("style pick",  r"style\s*=\s*random\.choice\(styles\)", False),
     ("layout pick", r"layout\s*=\s*random\.choice\(layouts\)", False),
     ("ollama call", r'\["ollama"\s*,\s*"run"', True),
+    ("brain identity", r"instrument = detect_instrument\(source\.name\)", False),
     ("copy assign", r"title\s*=\s*str\(data\.get\(", True),
     ("reel length", r'"-t"\s*,\s*"12"\s*,', False),
 ]:
@@ -88,12 +99,29 @@ say "creative-pack-> $BACKUP_DIR/creative-pack-$STAMP.tgz"
 run tar czf "$BACKUP_DIR/creative-pack-$STAMP.tgz" -C "$(dirname "$PACK")" "$(basename "$PACK")"
 
 step "3/7 install the brain (additive, never touches ComfyUI or creative-pack contents)"
+if [[ -d "$BRAIN" ]]; then
+  say "existing brain found -> backing it up to $BACKUP_DIR/brain-$STAMP"
+  run cp -a "$BRAIN" "$BACKUP_DIR/brain-$STAMP"
+  COLLISIONS="$(cd "$SRC_DIR/brain" && for f in *.py; do [[ -e "$BRAIN/$f" ]] && echo "$f"; done || true)"
+  if [[ -n "${COLLISIONS:-}" ]]; then
+    echo "  refusing to overwrite existing brain modules: $COLLISIONS" >&2
+    echo "  rename them or move this layer elsewhere with VISION_AI_PREFIX" >&2
+    exit 1
+  fi
+  say "no filename collisions with your existing brain modules"
+fi
 run mkdir -p "$BRAIN"
 run cp -a "$SRC_DIR/brain/." "$BRAIN/"
 run rm -rf "$BRAIN/vision_ai" "$BRAIN/creative-pack"
 run cp -a "$SRC_DIR/engine/vision_ai" "$BRAIN/"
 run cp -a "$SRC_DIR/creative-pack" "$BRAIN/creative-pack"
+if [[ $DRY_RUN -eq 0 ]]; then
+  : > "$BRAIN/.vision-layer-manifest"
+  (cd "$SRC_DIR/brain" && ls -1 *.py) >> "$BRAIN/.vision-layer-manifest"
+  printf 'vision_ai\ncreative-pack\n__pycache__\n' >> "$BRAIN/.vision-layer-manifest"
+fi
 say "installed $BRAIN (engine modules + bundled library defaults)"
+say "manifest: $BRAIN/.vision-layer-manifest (revert removes only these entries)"
 
 step "4/7 convert your .txt presets to JSON (your names kept, .txt never modified)"
 if [[ $DRY_RUN -eq 1 ]]; then

@@ -111,8 +111,13 @@ def audio_plan(choice: AudioChoice, duration: float, volume: float, fade_in: flo
     if choice.voice:
         index = first_index + len(labels)
         inputs += ["-i", str(choice.voice)]
+        # Broadcast-style voice chain: cut the rumble, even out the level, then
+        # sit it above the bed. This is most of what makes narration sound
+        # produced rather than pasted on.
         filters.append(
-            f"[{index}:a]adelay=400|400,atrim=0:{duration:.2f},asetpts=PTS-STARTPTS,volume=1.6[voc]"
+            f"[{index}:a]adelay=500|500,atrim=0:{duration:.2f},asetpts=PTS-STARTPTS,"
+            f"highpass=f=90,acompressor=threshold=0.09:ratio=4:attack=15:release=250,"
+            f"dynaudnorm=f=250:g=6,volume=1.7[voc]"
         )
         labels.append("voc")
 
@@ -126,9 +131,23 @@ def audio_plan(choice: AudioChoice, duration: float, volume: float, fade_in: flo
                            f"{'stereo' if channels == 2 else 'mono'},apad,atrim=0:{duration:.2f}[aout]"]
         return inputs, chain, "aout"
 
+    if "mus" in labels and "voc" in labels:
+        # Duck the music under the narration the way an ad does, instead of
+        # leaving both at a fixed level and hoping.
+        chain = filters + [
+            "[voc]asplit=2[voc_key][voc_out]",
+            "[mus][voc_key]sidechaincompress=threshold=0.045:ratio=9:attack=25:release=450:makeup=1[mus_ducked]",
+            f"[mus_ducked][voc_out]amix=inputs=2:duration=first:dropout_transition=0:normalize=0,"
+            f"alimiter=limit=0.93:level=disabled,"
+            f"aformat=sample_rates={sample_rate}:channel_layouts="
+            f"{'stereo' if channels == 2 else 'mono'},apad,atrim=0:{duration:.2f}[aout]",
+        ]
+        return inputs, chain, "aout"
+
     mixed = "".join(f"[{label}]" for label in labels)
     chain = filters + [
         f"{mixed}amix=inputs={len(labels)}:duration=first:dropout_transition=0:normalize=0,"
+        f"alimiter=limit=0.93:level=disabled,"
         f"aformat=sample_rates={sample_rate}:channel_layouts={'stereo' if channels == 2 else 'mono'},"
         f"apad,atrim=0:{duration:.2f}[aout]"
     ]

@@ -308,6 +308,10 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
         design["voice_character"] = voice["character"]
         voice_path, voice_note = voices.speak(
             pack.voice_script, voice, config.path("audio_dir") / f"{stamp}-voice.wav")
+        if voice_path is None:
+            print("[brain] piper voice not ready - falling back to espeak, which sounds robotic")
+            print("[brain] for a human voice run once:  sudo python3 "
+                  "/srv/vision-workspace/vision-ai/brain/voices.py --warm")
         if voice_path is None:  # piper unavailable - fall back to whatever TTS exists
             voice_path, voice_note = audio_skill.synthesize_voice(
                 pack.voice_script,

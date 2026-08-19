@@ -84,6 +84,43 @@ Local Python makes every design decision (about 0.2 ms per design). Ollama is
 asked only for a headline and a call to action, capped at a few words and a few
 seconds, and any failure silently falls back to the local templates.
 
+## Posting to Instagram
+
+The token goes in `creative-pack/config.env` on the server. That file is never
+committed and nothing here ever prints a token in full.
+
+```
+META_APP_ID=...
+META_APP_SECRET=...
+META_ACCESS_TOKEN=...        # a USER token - an app token (id|secret) cannot post
+IG_USER_ID=...               # optional, --check tells you the number
+```
+
+```bash
+python3 vision-ai/brain/instagram.py --check        # what the token is and what it may do
+python3 vision-ai/brain/instagram.py --long-lived   # 1-hour token -> 60-day token
+python3 vision-ai/brain/instagram.py --post-latest             # dry run
+python3 vision-ai/brain/instagram.py --post-latest --apply     # publish
+```
+
+`--check` reports the token type, its expiry, the permissions actually granted,
+which Instagram account it reaches (through a Facebook Page or through
+Instagram Login), and how much of the 50-posts-per-day quota is used. Each
+failure comes with the specific fix rather than the raw Graph API error.
+
+**Instagram downloads the video itself**, so the reel must sit on a public
+HTTPS URL - a local path will not work. Either pass `--video-url`, or point the
+script at a folder your web server already serves:
+
+```
+INSTAGRAM_PUBLIC_DIR=/srv/public/reels
+INSTAGRAM_PUBLIC_BASE=https://your-domain/reels
+```
+
+Publishing is a dry run until `--apply`. The reel's own `-Caption.txt` is used
+as the caption unless `--caption-file` says otherwise. If Meta reports that the
+API version is gone, set `META_API_VERSION` to the current one.
+
 ## Checking the photo folders
 
 The folder name is the only claim that a photo shows a given instrument, and a

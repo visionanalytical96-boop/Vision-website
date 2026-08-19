@@ -722,5 +722,249 @@ class IntegrateScriptTests(unittest.TestCase):
         self.assertNotIn(MARKER, self.engine.read_text())
 
 
+class InstagramTests(unittest.TestCase):
+    """Every way a Meta token can be wrong, without ever touching the network."""
+
+    @classmethod
+    def setUpClass(cls):
+        from brain import instagram
+        cls.ig = instagram
+
+    def setUp(self):
+        self.calls = []
+        self._real_call = self.ig.call
+
+    def tearDown(self):
+        self.ig.call = self._real_call
+
+    def fake_graph(self, routes: dict):
+        """routes maps a path to a response, or to an exception to raise."""
+        def call(host, version, path, params, post=False, timeout=120):
+            self.calls.append((host, path, dict(params), post))
+            answer = routes.get(path, routes.get("*"))
+            if answer is None:
+                raise self.ig.GraphError(f"unrouted call to {path}")
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+        self.ig.call = call
+
+    def env(self, **overrides):
+        base = {"META_APP_ID": "111", "META_APP_SECRET": "secret-value-here",
+                "META_ACCESS_TOKEN": "EAAG" + "x" * 40, "META_API_VERSION": "v21.0"}
+        base.update(overrides)
+        return base
+
+    def run_check(self, env):
+        import contextlib, io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = self.ig.check(env)
+        return code, out.getvalue()
+
+    # --- the token itself -------------------------------------------------
+
+    def test_a_token_is_never_printed_in_full(self):
+        token = "EAAG" + "s" * 60
+        masked = self.ig.mask(token)
+        self.assertNotIn(token, masked)
+        self.assertNotIn("s" * 10, masked)
+        self.assertIn("64 chars", masked)
+
+    def test_check_never_leaks_the_token_or_the_secret(self):
+        token, secret = "EAAG" + "z" * 50, "very-secret-value"
+        self.fake_graph({"*": self.ig.GraphError("nope")})
+        _, text = self.run_check(self.env(META_ACCESS_TOKEN=token, META_APP_SECRET=secret))
+        self.assertNotIn(token, text)
+        self.assertNotIn(secret, text)
+
+    def test_an_app_token_is_refused_with_the_reason(self):
+        code, text = self.run_check(self.env(META_ACCESS_TOKEN="111|app-secret-value"))
+        self.assertEqual(code, 1)
+        self.assertIn("APP token", text)
+        self.assertIn("instagram_content_publish", text)
+        self.assertEqual(self.calls, [], "an app token must fail before any network call")
+
+    def test_a_missing_token_asks_for_it_and_stops(self):
+        code, text = self.run_check(self.env(META_ACCESS_TOKEN=""))
+        self.assertEqual(code, 1)
+        self.assertIn("META_ACCESS_TOKEN", text)
+
+    # --- permissions and expiry ------------------------------------------
+
+    def debug(self, **overrides):
+        data = {"is_valid": True, "type": "USER", "app_id": "111",
+                "expires_at": int(__import__("time").time()) + 60 * 86400,
+                "scopes": list(self.ig.REQUIRED_SCOPES)}
+        data.update(overrides)
+        return {"data": data}
+
+    def working_routes(self, **debug_overrides):
+        return {
+            "debug_token": self.debug(**debug_overrides),
+            "me/accounts": {"data": [{"id": "9", "name": "Vision Analytical",
+                                      "instagram_business_account": {"id": "17841", "username": "vision"}}]},
+            "17841": {"username": "vision", "followers_count": 120, "media_count": 8},
+            "17841/content_publishing_limit": {"data": [{"quota_usage": 2, "config": {"quota_total": 50}}]},
+        }
+
+    def test_a_good_token_passes_and_reports_the_account(self):
+        self.fake_graph(self.working_routes())
+        code, text = self.run_check(self.env())
+        self.assertEqual(code, 0, text)
+        self.assertIn("@vision", text)
+        self.assertIn("2 of 50", text)
+
+    def test_a_missing_publish_permission_is_named(self):
+        self.fake_graph(self.working_routes(scopes=["instagram_basic"]))
+        code, text = self.run_check(self.env())
+        self.assertEqual(code, 1)
+        self.assertIn("instagram_content_publish", text)
+
+    def test_an_expired_token_says_so(self):
+        self.fake_graph(self.working_routes(expires_at=int(__import__("time").time()) - 3600))
+        code, text = self.run_check(self.env())
+        self.assertEqual(code, 1)
+        self.assertIn("expired", text)
+
+    def test_a_token_about_to_expire_suggests_the_long_lived_swap(self):
+        self.fake_graph(self.working_routes(expires_at=int(__import__("time").time()) + 3600))
+        _, text = self.run_check(self.env())
+        self.assertIn("long-lived", text)
+
+    def test_a_token_from_a_different_app_is_caught(self):
+        self.fake_graph(self.working_routes(app_id="999"))
+        code, text = self.run_check(self.env())
+        self.assertEqual(code, 1)
+        self.assertIn("999", text)
+
+    # --- finding the account ---------------------------------------------
+
+    def test_a_page_with_no_instagram_linked_is_explained(self):
+        routes = self.working_routes()
+        routes["me/accounts"] = {"data": [{"id": "9", "name": "Vision Analytical"}]}
+        self.fake_graph(routes)
+        code, text = self.run_check(self.env())
+        self.assertEqual(code, 1)
+        self.assertIn("Linked accounts", text)
+
+    def test_an_instagram_login_token_is_also_understood(self):
+        routes = self.working_routes()
+        routes["me/accounts"] = self.ig.GraphError("not a page token")
+        routes["me"] = {"user_id": "17841", "username": "vision"}
+        self.fake_graph(routes)
+        code, text = self.run_check(self.env())
+        self.assertEqual(code, 0, text)
+        self.assertIn("Instagram Login", text)
+
+    def test_a_wrong_ig_user_id_in_config_is_flagged(self):
+        self.fake_graph(self.working_routes())
+        _, text = self.run_check(self.env(IG_USER_ID="12345"))
+        self.assertIn("IG_USER_ID=17841", text)
+
+    # --- publishing -------------------------------------------------------
+
+    def make_reel(self, folder: Path) -> Path:
+        reel = folder / "Vision-Analytical-20260101-000000-Reel.mp4"
+        reel.write_bytes(b"\x00" * 2048)
+        (folder / "Vision-Analytical-20260101-000000-Caption.txt").write_text(
+            "AMC that keeps the lab running\n", encoding="utf-8")
+        return reel
+
+    def test_publishing_is_a_dry_run_until_asked(self):
+        import contextlib, io
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            reel = self.make_reel(tmp)
+            self.fake_graph(self.working_routes())
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = self.ig.post(self.env(IG_USER_ID="17841"), reel, "caption",
+                                    "https://example.com/reel.mp4", dry_run=True)
+            self.assertEqual(code, 0)
+            self.assertIn("dry run", out.getvalue())
+            self.assertEqual([c for c in self.calls if c[3]], [], "a dry run posted something")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_a_real_publish_walks_container_then_status_then_publish(self):
+        import contextlib, io
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            reel = self.make_reel(tmp)
+            self.fake_graph({"17841/media": {"id": "CONTAINER1"},
+                             "CONTAINER1": {"status_code": "FINISHED"},
+                             "17841/media_publish": {"id": "MEDIA9"}})
+            self.ig.PUBLISH_POLL_SECONDS = 0
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = self.ig.post(self.env(IG_USER_ID="17841"), reel, "caption",
+                                    "https://example.com/reel.mp4", dry_run=False)
+            self.assertEqual(code, 0, out.getvalue())
+            self.assertIn("MEDIA9", out.getvalue())
+            paths = [c[1] for c in self.calls]
+            self.assertEqual(paths, ["17841/media", "CONTAINER1", "17841/media_publish"])
+            container = self.calls[0][2]
+            self.assertEqual(container["media_type"], "REELS")
+            self.assertEqual(container["video_url"], "https://example.com/reel.mp4")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_a_video_instagram_rejects_does_not_get_published(self):
+        import contextlib, io
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            reel = self.make_reel(tmp)
+            self.fake_graph({"17841/media": {"id": "C1"},
+                             "C1": {"status_code": "ERROR", "status": "bad aspect ratio"}})
+            self.ig.PUBLISH_POLL_SECONDS = 0
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = self.ig.post(self.env(IG_USER_ID="17841"), reel, "c",
+                                    "https://example.com/r.mp4", dry_run=False)
+            self.assertEqual(code, 1)
+            self.assertNotIn("17841/media_publish", [c[1] for c in self.calls])
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_without_a_public_url_it_explains_instead_of_failing_blindly(self):
+        import contextlib, io
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            reel = self.make_reel(tmp)
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = self.ig.post(self.env(IG_USER_ID="17841"), reel, "c", "", dry_run=True)
+            self.assertEqual(code, 1)
+            self.assertIn("INSTAGRAM_PUBLIC_BASE", out.getvalue())
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_the_public_folder_gets_a_copy_and_a_matching_url(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            reel = self.make_reel(tmp)
+            served = tmp / "public"
+            url = self.ig.public_url(reel, {"INSTAGRAM_PUBLIC_BASE": "https://cdn.example.com/reels/",
+                                            "INSTAGRAM_PUBLIC_DIR": str(served)}, "")
+            self.assertEqual(url, f"https://cdn.example.com/reels/{reel.name}")
+            self.assertTrue((served / reel.name).is_file())
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_the_newest_reel_is_the_one_picked(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            import os, time as clock
+            for index in range(3):
+                path = tmp / f"Vision-Analytical-2026010{index}-000000-Reel.mp4"
+                path.write_bytes(b"x")
+                os.utime(path, (clock.time() + index, clock.time() + index))
+            picked = self.ig.newest_reel({"VISION_READY": str(tmp)})
+            self.assertEqual(picked.name, "Vision-Analytical-20260102-000000-Reel.mp4")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

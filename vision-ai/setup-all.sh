@@ -52,14 +52,14 @@ set_key(){  # set_key KEY VALUE - only when a value was given
   say "$key=$value"
 }
 
-step "1/7  engine"
+step "1/8  engine"
 if grep -q "vision brain integration" /usr/local/bin/vision-ai-content 2>/dev/null; then
   say "already integrated - refreshing"
   "$SRC_DIR/integrate.sh" --revert >/dev/null
 fi
 "$SRC_DIR/integrate.sh" | grep -E "anchor MISSING|patched |installed |write |keep " || true
 
-step "2/7  contact details and options"
+step "2/8  contact details and options"
 set_key BRAND_PHONE "$PHONE"
 set_key BRAND_EMAIL "$EMAIL"
 set_key WEBSITE "$WEBSITE"
@@ -74,7 +74,7 @@ grep -q "^REEL_MIN_SECONDS=" "$ENV_FILE" || echo "REEL_MIN_SECONDS=15" >> "$ENV_
 grep -q "^REEL_MAX_SECONDS=" "$ENV_FILE" || echo "REEL_MAX_SECONDS=30" >> "$ENV_FILE"
 say "config: $ENV_FILE"
 
-step "3/7  background removal (rembg, own venv)"
+step "3/8  background removal (rembg, own venv)"
 if [[ $SKIP_CUTOUT -eq 1 ]]; then say "skipped"
 elif [[ -x "$BRAIN/rembg-venv/bin/python" ]]; then say "already installed"
 else
@@ -84,7 +84,7 @@ else
   say "installed"
 fi
 
-step "4/7  voices (piper, own venv)"
+step "4/8  voices (piper, own venv)"
 if [[ $SKIP_VOICES -eq 1 ]]; then say "skipped"
 else
   if [[ ! -x "$BRAIN/piper-venv/bin/piper" ]]; then
@@ -98,17 +98,26 @@ else
   python3 "$BRAIN/voices.py" --warm | tail -3
 fi
 
-step "5/7  music beds"
+step "5/8  music beds"
 if [[ $SKIP_MUSIC -eq 1 ]]; then say "skipped"
 else python3 "$BRAIN/music_gen.py" --warm "$PACK/music/generated" --variants 2 | tail -2
 fi
 
-step "6/7  clearing stale cutouts"
+step "6/8  clearing stale cutouts"
 find "$PACK/images" -name '*-studio.png' -delete 2>/dev/null || true
 find "$PACK/images" \( -name '*.mp4' -o -name '*.MP4' -o -name '*.zip' \) -delete 2>/dev/null || true
 say "done"
 
-step "7/7  test"
+step "7/8  photo folders"
+if [[ -d "$PACK/images" ]]; then
+  ODD="$(python3 "$BRAIN/photo_review.py" --audit 2>/dev/null | tail -2 | head -1)"
+  say "${ODD:-nothing to review}"
+  say "look:  python3 $BRAIN/photo_review.py --sheet"
+else
+  say "no photo folders yet"
+fi
+
+step "8/8  test"
 if [[ $NO_TEST -eq 1 ]]; then
   say "skipped - run: sudo vision-ai-content \"Agilent 1260 II HPLC\""
 else

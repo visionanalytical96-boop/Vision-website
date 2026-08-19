@@ -9,6 +9,24 @@
 # Creates no container, no model, no timer, no cron. Deletes nothing.
 set -Eeuo pipefail
 
+# Anchors are reported at the top, so a failure further down scrolls past and
+# the run looks like it worked. It did not: the engine is then unpatched and
+# generation dies on the engine's own bugs. Say so, loudly, at the end.
+INTEGRATION_DONE=0
+on_exit() {
+  local code=$?
+  if [[ $code -ne 0 && $INTEGRATION_DONE -eq 0 ]]; then
+    echo >&2
+    echo "  ================================================================" >&2
+    echo "  INTEGRATION DID NOT COMPLETE - the engine was NOT patched." >&2
+    echo "  Fix what is reported above and run this again. Nothing was lost;" >&2
+    echo "  backups are in ${BACKUP_DIR:-/root/vision-backups}." >&2
+    echo "  ================================================================" >&2
+  fi
+  exit $code
+}
+trap on_exit EXIT
+
 PREFIX="${VISION_AI_PREFIX:-/srv/vision-workspace/vision-ai}"
 PACK="$PREFIX/creative-pack"
 BRAIN="$PREFIX/brain"
@@ -103,13 +121,22 @@ step "3/7 install the brain (additive, never touches ComfyUI or creative-pack co
 if [[ -d "$BRAIN" ]]; then
   say "existing brain found -> backing it up to $BACKUP_DIR/brain-$STAMP"
   run cp -a "$BRAIN" "$BACKUP_DIR/brain-$STAMP"
-  COLLISIONS="$(cd "$SRC_DIR/brain" && for f in *.py; do [[ -e "$BRAIN/$f" ]] && echo "$f"; done || true)"
+  # A file this layer installed before is ours to update - that is an upgrade,
+  # not a collision. The manifest says which those are. Only a file we never
+  # installed may block, because that one belongs to the operator.
+  MANIFEST="$BRAIN/.vision-layer-manifest"
+  COLLISIONS="$(cd "$SRC_DIR/brain" && for f in *.py; do
+      [[ -e "$BRAIN/$f" ]] || continue
+      grep -qxF "$f" "$MANIFEST" 2>/dev/null && continue
+      echo "$f"
+    done || true)"
   if [[ -n "${COLLISIONS:-}" ]]; then
-    echo "  refusing to overwrite existing brain modules: $COLLISIONS" >&2
-    echo "  rename them or move this layer elsewhere with VISION_AI_PREFIX" >&2
+    echo "  refusing to overwrite brain modules this layer did not install: $COLLISIONS" >&2
+    echo "  rename them, or move this layer elsewhere with VISION_AI_PREFIX" >&2
+    echo "  (if they are leftovers from an older copy of this package, delete them and re-run)" >&2
     exit 1
   fi
-  say "no filename collisions with your existing brain modules"
+  say "safe to upgrade - no files outside this layer would be overwritten"
 fi
 run mkdir -p "$BRAIN"
 run cp -a "$SRC_DIR/brain/." "$BRAIN/"
@@ -178,6 +205,7 @@ if command -v systemctl >/dev/null; then
   say "  vision-mobile-final.timer, vision-ipad-sync.timer"
 fi
 
+INTEGRATION_DONE=1
 step "7/7 done"
 say "test  :  sudo vision-ai-content \"Agilent 1260 II HPLC\""
 say "verify:  sudo $SRC_DIR/verify.sh"

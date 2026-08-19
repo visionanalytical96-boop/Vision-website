@@ -64,9 +64,13 @@ def deliver_nextcloud(files: list[Path], env: dict[str, str]) -> str | None:
     container = env.get("NEXTCLOUD_CONTAINER")
     data_dir = env.get("NEXTCLOUD_DATA_DIR")
     target = env.get("NEXTCLOUD_TARGET")
+    if not (container or data_dir or target):
+        return None  # deliberately not used - the mobile sync chain is the delivery
     if not (container and data_dir and target):
-        print("[brain] Nextcloud delivery not configured "
-              "(set NEXTCLOUD_CONTAINER, NEXTCLOUD_DATA_DIR, NEXTCLOUD_TARGET in config.env)")
+        missing = [key for key, value in (("NEXTCLOUD_CONTAINER", container),
+                                          ("NEXTCLOUD_DATA_DIR", data_dir),
+                                          ("NEXTCLOUD_TARGET", target)) if not value]
+        print(f"[brain] Nextcloud delivery half-configured - missing {', '.join(missing)}")
         return None
 
     destination = Path(data_dir) / target

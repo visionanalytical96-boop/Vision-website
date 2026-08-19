@@ -84,6 +84,25 @@ Local Python makes every design decision (about 0.2 ms per design). Ollama is
 asked only for a headline and a call to action, capped at a few words and a few
 seconds, and any failure silently falls back to the local templates.
 
+## Checking the photo folders
+
+The folder name is the only claim that a photo shows a given instrument, and a
+phone dump drops mixed shots into one place. A wrong photo there reaches a real
+post, so review it before it does:
+
+```bash
+python3 vision-ai/brain/photo_review.py --audit    # group each folder, mark what does not fit
+python3 vision-ai/brain/photo_review.py --sheet    # numbered contact sheet per folder
+python3 vision-ai/brain/photo_review.py --move shimadzu/lc-2010cht 4,7,9 shimadzu/uv-1900i
+```
+
+Nothing here recognises instruments. It fingerprints each photo twice - where
+the light sits and which way it steps - and groups what looks alike; the
+largest group is taken as the instrument the folder is named for and anything
+else is flagged for a human look. `--move` is a dry run until `--apply`, and it
+deletes the moved photo's cached cutout so the old background never comes back
+in the new folder.
+
 ## Instrument identity rules
 
 - The manufacturer and model in the request are the ones used, everywhere.

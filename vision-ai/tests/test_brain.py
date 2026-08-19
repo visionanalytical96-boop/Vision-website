@@ -360,12 +360,12 @@ class PresetRotationTests(unittest.TestCase):
 
     def test_layouts_reach_most_of_the_library(self):
         seen = self.replay(self.LAYOUTS, "layouts", "layouts")
-        self.assertGreaterEqual(self.coverage(seen, "layouts"), 0.4,
+        self.assertGreaterEqual(self.coverage(seen, "layouts"), 0.6,
                                 f"only {len(set(seen))} layouts in {self.RUNS} runs")
 
     def test_families_reach_most_of_the_library(self):
         seen = self.replay(self.FAMILIES, "families", "families")
-        self.assertGreaterEqual(self.coverage(seen, "families"), 0.4,
+        self.assertGreaterEqual(self.coverage(seen, "families"), 0.5,
                                 f"only {len(set(seen))} families in {self.RUNS} runs")
 
     def test_motions_and_transitions_spread_too(self):
@@ -373,7 +373,7 @@ class PresetRotationTests(unittest.TestCase):
                                      (self.TRANSITIONS, "transitions", "transitions")):
             with self.subTest(kind=kind):
                 seen = self.replay(names, kind, lib_key)
-                self.assertGreaterEqual(self.coverage(seen, lib_key), 0.4,
+                self.assertGreaterEqual(self.coverage(seen, lib_key), 0.55,
                                         f"only {len(set(seen))} {kind} in {self.RUNS} runs")
 
     def test_the_same_look_does_not_come_back_immediately(self):
@@ -382,8 +382,27 @@ class PresetRotationTests(unittest.TestCase):
                                      (self.FAMILIES, "families", "families")):
             with self.subTest(kind=kind):
                 seen = self.replay(names, kind, lib_key)
-                self.assertLessEqual(self.clumping(seen), self.RUNS * 0.3,
+                self.assertLessEqual(self.clumping(seen), self.RUNS * 0.2,
                                      f"{kind} repeats within 3 runs too often")
+
+    def test_different_names_widen_into_different_parts_of_the_library(self):
+        """The tail sorted alphabetically, so every name reached the same ids."""
+        anims = self.library.get("animations")
+        bands = {n: [e["id"] for e in self.preset_map.candidates(n, anims, "animations")]
+                 for n in self.MOTIONS}
+        for a in self.MOTIONS:
+            for b in self.MOTIONS:
+                if a >= b:
+                    continue
+                shared = set(bands[a]) & set(bands[b])
+                self.assertLess(len(shared), len(bands[a]) - 1,
+                                f"{a} and {b} widen into nearly the same entries")
+
+    def test_no_single_entry_dominates_the_rotation(self):
+        seen = self.replay(self.MOTIONS, "animations", "animations")
+        counts = {value: seen.count(value) for value in set(seen)}
+        self.assertLess(max(counts.values()), self.RUNS * 0.3,
+                        f"one motion took {max(counts.values())} of {self.RUNS} runs")
 
     def test_rotation_beats_the_literal_mapping_it_replaced(self):
         for names, kind, lib_key in ((self.LAYOUTS, "layouts", "layouts"),
@@ -516,6 +535,191 @@ class PosterRenderTests(unittest.TestCase):
             self.assertEqual(len(signatures), 6, "two designs rendered the same poster")
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
+
+
+class PhotoReviewTests(unittest.TestCase):
+    """A photo of the wrong instrument in a named folder reaches a real post."""
+
+    @classmethod
+    def setUpClass(cls):
+        from brain import photo_review
+        cls.review = photo_review
+
+    def make_tree(self, root: Path, wrong: int = 2, right: int = 5):
+        from PIL import Image, ImageDraw
+        folder = root / "shimadzu" / "lc-2010cht"
+        folder.mkdir(parents=True)
+        (root / "shimadzu" / "uv-1900i").mkdir(parents=True)
+        for i in range(right):  # the same instrument, shifted a little each shot
+            image = Image.new("RGB", (900, 1200), (214, 218, 224))
+            draw = ImageDraw.Draw(image)
+            draw.rectangle((180 + i * 6, 300, 720, 980), fill=(58, 62, 70))
+            draw.rectangle((210, 340, 690, 430), fill=(150, 160, 172))
+            draw.ellipse((300, 700, 420, 820), fill=(90, 140, 190))
+            image.save(folder / f"IMG_90{i}0.jpg", quality=88)
+        for i in range(wrong):  # something else entirely
+            image = Image.new("RGB", (900, 1200), (240, 235, 120) if i == 0 else (120, 200, 140))
+            draw = ImageDraw.Draw(image)
+            draw.ellipse((100, 100, 800, 700), fill=(30, 30, 30))
+            draw.rectangle((0, 900, 900, 1200), fill=(255, 255, 255))
+            image.save(folder / f"IMG_other{i}.jpg", quality=88)
+        return folder
+
+    def test_the_odd_photos_are_separated_from_the_rest(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            folder = self.make_tree(tmp)
+            found = self.review.photos(folder)
+            prints = {p: h for p in found if (h := self.review.fingerprint(p)) is not None}
+            groups = self.review.group(prints)
+            self.assertEqual(len(groups), 2, "the wrong photos were not separated")
+            self.assertEqual(len(groups[0]), 5)
+            self.assertTrue(all("other" in p.name for p in groups[1]))
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_shots_of_one_instrument_are_not_split_apart(self):
+        """A false alarm every run is as useless as no check at all."""
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            folder = self.make_tree(tmp, wrong=0, right=6)
+            found = self.review.photos(folder)
+            prints = {p: h for p in found if (h := self.review.fingerprint(p)) is not None}
+            self.assertEqual(len(self.review.group(prints)), 1)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_the_cutout_cache_is_not_reviewed_as_a_photo(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            folder = self.make_tree(tmp, wrong=0, right=2)
+            from PIL import Image
+            Image.new("RGB", (400, 400), (10, 10, 10)).save(folder / "IMG_9000-studio.png")
+            self.assertEqual(len(self.review.photos(folder)), 2)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_moving_is_a_dry_run_until_asked(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            folder = self.make_tree(tmp)
+            before = len(self.review.photos(folder))
+            self.review.move(tmp, "shimadzu/lc-2010cht", "6,7", "shimadzu/uv-1900i", apply=False)
+            self.assertEqual(len(self.review.photos(folder)), before, "a dry run moved files")
+
+            self.review.move(tmp, "shimadzu/lc-2010cht", "6,7", "shimadzu/uv-1900i", apply=True)
+            self.assertEqual(len(self.review.photos(folder)), before - 2)
+            self.assertEqual(len(self.review.photos(tmp / "shimadzu" / "uv-1900i")), 2)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_a_number_outside_the_folder_moves_nothing(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            folder = self.make_tree(tmp)
+            self.assertEqual(
+                self.review.move(tmp, "shimadzu/lc-2010cht", "99", "shimadzu/uv-1900i", apply=True), 1)
+            self.assertEqual(len(self.review.photos(folder)), 7)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_a_stale_cutout_does_not_follow_the_photo_to_a_new_folder(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            folder = self.make_tree(tmp, wrong=0, right=2)
+            from PIL import Image
+            stale = folder / "IMG_9000-studio.png"
+            Image.new("RGB", (400, 400), (10, 10, 10)).save(stale)
+            self.review.move(tmp, "shimadzu/lc-2010cht", "1", "shimadzu/uv-1900i", apply=True)
+            self.assertFalse(stale.exists(), "the old cutout would be used for the wrong folder")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_contact_sheet_is_written_for_every_folder(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            self.make_tree(tmp)
+            out = tmp / "review"
+            self.assertEqual(self.review.sheet(tmp, out), 0)
+            sheets = list(out.glob("*.png"))
+            self.assertEqual(len(sheets), 1)
+            from PIL import Image
+            with Image.open(sheets[0]) as image:
+                self.assertGreater(image.width, 300)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+class IntegrateScriptTests(unittest.TestCase):
+    """Re-running the installer must be an upgrade, not a refusal.
+
+    The collision guard exists to protect the operator's own brain modules, but
+    it also counted this layer's own files - so the second install aborted at
+    step 3 while the anchor report at the top still said OK. The engine was left
+    unpatched and generation then died on the engine's own bugs.
+    """
+
+    SCRIPT = ROOT / "integrate.sh"
+
+    def setUp(self):
+        if not shutil.which("bash"):
+            self.skipTest("bash is not available")
+        self.tmp = Path(tempfile.mkdtemp())
+        self.engine = self.tmp / "vision-ai-content"
+        self.engine.write_text(ENGINE_SNIPPET, encoding="utf-8")
+        self.engine.chmod(0o755)
+        # integrate.sh expects the operator's creative-pack to already be there
+        shutil.copytree(ROOT / "creative-pack", self.tmp / "prefix" / "creative-pack")
+        self.env = {
+            **__import__("os").environ,
+            "VISION_AI_PREFIX": str(self.tmp / "prefix"),
+            "VISION_ENGINE": str(self.engine),
+            "VISION_BACKUP_DIR": str(self.tmp / "backups"),
+        }
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def integrate(self, *args):
+        import subprocess
+        return subprocess.run(["bash", str(self.SCRIPT), *args], env=self.env,
+                              capture_output=True, text=True, timeout=300)
+
+    def test_installing_twice_succeeds_and_leaves_the_engine_patched(self):
+        first = self.integrate()
+        self.assertEqual(first.returncode, 0, first.stderr[-600:])
+        self.assertIn(MARKER, self.engine.read_text())
+
+        self.integrate("--revert")
+        second = self.integrate()
+        self.assertEqual(second.returncode, 0,
+                         "re-installing refused itself:\n" + second.stderr[-600:])
+        self.assertIn(MARKER, self.engine.read_text())
+
+    def test_a_module_the_layer_never_installed_still_blocks(self):
+        self.assertEqual(self.integrate().returncode, 0)
+        self.integrate("--revert")
+        # a brain module that this layer never installed - the operator's own
+        brain = Path(self.env["VISION_AI_PREFIX"]) / "brain"
+        brain.mkdir(parents=True, exist_ok=True)
+        (brain / ".vision-layer-manifest").write_text("", encoding="utf-8")
+        (brain / "bridge.py").write_text("# the operator's own module\n", encoding="utf-8")
+        blocked = self.integrate()
+        self.assertNotEqual(blocked.returncode, 0, "someone else's module was overwritten")
+        self.assertIn("did not install", blocked.stderr)
+
+    def test_a_failed_run_says_the_engine_was_not_patched(self):
+        """The anchor report scrolls past; the last line has to be the truth."""
+        self.assertEqual(self.integrate().returncode, 0)
+        self.integrate("--revert")
+        manifest = Path(self.env["VISION_AI_PREFIX"]) / "brain" / ".vision-layer-manifest"
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        manifest.write_text("", encoding="utf-8")
+        (manifest.parent / "bridge.py").write_text("# not ours\n", encoding="utf-8")
+        failed = self.integrate()
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn("INTEGRATION DID NOT COMPLETE", failed.stderr)
+        self.assertNotIn(MARKER, self.engine.read_text())
 
 
 if __name__ == "__main__":

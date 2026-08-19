@@ -106,8 +106,17 @@ def candidates(name: str, library: list[dict], kind: str, pool: int = DEFAULT_PO
         start = sum(ord(c) for c in slug(name)) % len(library)
         return [library[(start + i) % len(library)] for i in range(min(pool, len(library)))]
     top = [item for score, item in ranked if score == ranked[0][0]]
+    rest = ranked[len(top):]
+    # Everything that matched nothing scores 0 and so sorts alphabetically,
+    # which meant every preset name widened into the very same handful of ids.
+    # Rotate that tail by the name, then re-sort so genuine partial matches
+    # still come first (the sort is stable, so the rotation survives).
+    if rest:
+        offset = sum(ord(c) for c in slug(name)) % len(rest)
+        rest = rest[offset:] + rest[:offset]
+        rest.sort(key=lambda pair: -pair[0])
     chosen = list(top)
-    for _, item in ranked[len(top):]:
+    for _, item in rest:
         if len(chosen) >= max(pool, len(top)):
             break
         chosen.append(item)

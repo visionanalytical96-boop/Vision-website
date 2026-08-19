@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "engine"))
 
-from brain import config_env, deliver, pack_convert  # noqa: E402
+from brain import bridge, config_env, deliver, pack_convert  # noqa: E402
 from brain.patch_engine import EDITS, MARKER, apply  # noqa: E402
 from vision_ai.config import load_config  # noqa: E402
 from vision_ai.library import Library  # noqa: E402
@@ -230,6 +230,85 @@ class PresetMapTests(unittest.TestCase):
         a = self.preset_map.resolve("SOMETHING_NOBODY_DEFINED", animations, "animations")
         b = self.preset_map.resolve("SOMETHING_NOBODY_DEFINED", animations, "animations")
         self.assertEqual(a["id"], b["id"])
+
+
+class NarrationLength(unittest.TestCase):
+    """The reel must never cut the speaker off mid-sentence."""
+
+    FLOOR, CEILING = 15.0, 30.0
+
+    def plan(self, spoken: float):
+        return bridge.narration_plan(spoken, self.FLOOR, self.CEILING)
+
+    def test_short_narration_still_gets_the_minimum_reel(self):
+        tempo, duration = self.plan(6.0)
+        self.assertEqual(tempo, 1.0)
+        self.assertEqual(duration, self.FLOOR)
+
+    def test_reel_grows_to_hold_the_whole_narration(self):
+        tempo, duration = self.plan(21.0)
+        self.assertEqual(tempo, 1.0)
+        self.assertGreater(duration, self.FLOOR)
+        self.assertLessEqual(duration, self.CEILING)
+        self.assertGreaterEqual(duration, bridge.VOICE_LEAD_IN + 21.0 + bridge.VOICE_TAIL)
+
+    def test_every_length_leaves_room_for_the_last_word(self):
+        for tenth in range(10, 400):
+            spoken = tenth / 10
+            tempo, duration = self.plan(spoken)
+            fitted = spoken / tempo
+            self.assertGreaterEqual(
+                duration + 0.01, bridge.VOICE_LEAD_IN + fitted + bridge.VOICE_TAIL,
+                f"{spoken}s of narration would be cut at {duration}s")
+            self.assertGreaterEqual(duration, self.FLOOR)
+
+    def test_a_slightly_long_script_is_paced_up_instead_of_cut(self):
+        tempo, duration = self.plan(30.0)
+        self.assertGreater(tempo, 1.0)
+        self.assertLessEqual(tempo, bridge.VOICE_MAX_TEMPO)
+        self.assertLessEqual(duration, self.CEILING + 0.01)
+
+    def test_an_unfittable_script_runs_long_rather_than_truncating(self):
+        tempo, duration = self.plan(60.0)
+        self.assertEqual(tempo, bridge.VOICE_MAX_TEMPO)
+        self.assertGreater(duration, self.CEILING)
+        self.assertGreaterEqual(duration, bridge.VOICE_LEAD_IN + 60.0 / tempo + bridge.VOICE_TAIL)
+
+    def test_no_speed_up_is_applied_twice(self):
+        _, once = bridge.narration_plan(40.0, self.FLOOR, self.CEILING, allow_tempo=False)
+        self.assertGreaterEqual(once, bridge.VOICE_LEAD_IN + 40.0 + bridge.VOICE_TAIL)
+
+
+class SizeBudget(unittest.TestCase):
+    """A longer reel must still be sendable on a phone."""
+
+    VALIDATION = {"max_video_bytes": 26_214_400}
+
+    def video(self, duration):
+        return {"duration": duration, "maxrate": "8M", "bufsize": "16M", "abitrate": "192k"}
+
+    def test_short_reel_keeps_the_configured_ceiling(self):
+        video = self.video(15.0)
+        bridge._fit_size_budget(video, self.VALIDATION)
+        self.assertEqual(video["maxrate"], "8M")
+
+    def test_long_reel_is_capped_to_stay_under_the_limit(self):
+        for seconds in (25.0, 30.0, 45.0, 60.0):
+            video = self.video(seconds)
+            bridge._fit_size_budget(video, self.VALIDATION)
+            total_bps = bridge._bitrate_bps(video["maxrate"]) + bridge._bitrate_bps(video["abitrate"])
+            self.assertLessEqual(total_bps * seconds / 8, self.VALIDATION["max_video_bytes"],
+                                 f"{seconds}s reel could exceed the size ceiling")
+
+    def test_the_cap_never_collapses_to_an_unwatchable_bitrate(self):
+        video = self.video(600.0)
+        bridge._fit_size_budget(video, self.VALIDATION)
+        self.assertGreaterEqual(bridge._bitrate_bps(video["maxrate"]), 1_200_000)
+
+    def test_bitrate_units(self):
+        self.assertEqual(bridge._bitrate_bps("5M"), 5_000_000)
+        self.assertEqual(bridge._bitrate_bps("800k"), 800_000)
+        self.assertEqual(bridge._bitrate_bps("nonsense"), 8_000_000)
 
 
 if __name__ == "__main__":

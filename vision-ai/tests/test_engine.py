@@ -25,6 +25,7 @@ from vision_ai.skills.audio import AudioChoice  # noqa: E402
 from vision_ai.skills.history import DesignHistory, fingerprint, structure_key  # noqa: E402
 from vision_ai.skills.instrument import identify  # noqa: E402
 from vision_ai.skills.reel import ReelInputs, build_command  # noqa: E402
+from vision_ai.skills.render_still import SceneCopy  # noqa: E402
 from vision_ai.skills.selector import DesignSelector, pick_two_animations  # noqa: E402
 
 SWEEP = "-q" not in sys.argv
@@ -277,6 +278,106 @@ class FilterGraphSweepTests(unittest.TestCase):
         for effect in self.library.get("effects"):
             with self.subTest(effect=effect["id"]):
                 self._run(animations[0], animations[1], transition, effect, f"fx-{effect['id']}")
+
+
+class LogoTests(unittest.TestCase):
+    """The logo must keep its own colours - it was coming out solid white."""
+
+    BLUE = (12, 74, 140)
+    ORANGE = (232, 120, 32)
+
+    def make_logo(self, path: Path):
+        from PIL import Image, ImageDraw
+        mark = Image.new("RGB", (600, 200), (255, 255, 255))
+        draw = ImageDraw.Draw(mark)
+        draw.rectangle((60, 60, 260, 140), fill=self.BLUE)
+        draw.ellipse((300, 60, 460, 140), fill=self.ORANGE)
+        mark.save(path)
+        return path
+
+    def colours_in(self, image, alpha_floor=200):
+        pixels = image.convert("RGBA").load()
+        found = set()
+        for y in range(0, image.height, 2):
+            for x in range(0, image.width, 2):
+                r, g, b, a = pixels[x, y]
+                if a >= alpha_floor:
+                    found.add((r // 24, g // 24, b // 24))
+        return found
+
+    def near(self, found, colour):
+        return (colour[0] // 24, colour[1] // 24, colour[2] // 24) in found
+
+    def test_white_paper_becomes_transparent(self):
+        from PIL import Image
+        from vision_ai.skills.render_still import _knockout_logo
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            with Image.open(self.make_logo(tmp / "logo.png")) as raw:
+                keyed = _knockout_logo(raw.convert("RGBA"))
+            self.assertLess(keyed.getpixel((5, 5))[3], 40, "the white background is still opaque")
+            self.assertGreater(keyed.getpixel((120, 100))[3], 200, "the artwork was knocked out too")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_brand_colours_survive_the_knockout(self):
+        from PIL import Image
+        from vision_ai.skills.render_still import _knockout_logo, _trim_logo
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            with Image.open(self.make_logo(tmp / "logo.png")) as raw:
+                mark = _trim_logo(_knockout_logo(raw.convert("RGBA")))
+            found = self.colours_in(mark)
+            self.assertTrue(self.near(found, self.BLUE), "the blue was lost")
+            self.assertTrue(self.near(found, self.ORANGE), "the orange was lost")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_rendered_poster_still_shows_the_brand_colours(self):
+        """Across every palette, not just the one that happens to suit it."""
+        from PIL import Image
+        from vision_ai.skills.render_still import Renderer
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            config = make_config(tmp)
+            library = Library(config)
+            logo = self.make_logo(tmp / "logo.png")
+            for palette in library.get("palettes"):
+                with self.subTest(palette=palette["id"]):
+                    renderer = Renderer(
+                        design={"design_fingerprint": "a" * 16},
+                        palette=palette,
+                        layout=library.get("layouts")[0],
+                        composition=library.get("compositions")[0],
+                        background=library.get("backgrounds")[0],
+                        typography=library.get("typography")[0],
+                        effect=library.by_id("effects", "clean_none") or {},
+                        photo=None, seed="logo-test", ghost="HPLC", logo=logo,
+                        contact=["+91 00000 00000"])
+                    poster = renderer.render_base((540, 960), 0)
+                    layer = renderer.render_text_layer((540, 960), SceneCopy(
+                        "EYEBROW", "Headline", "Subhead line", ("chip",), "Call us"), 0)
+                    poster = poster.convert("RGBA")
+                    poster.alpha_composite(layer)
+                    found = self.colours_in(poster.crop((0, 0, 300, 200)), alpha_floor=0)
+                    self.assertTrue(
+                        self.near(found, self.BLUE) or self.near(found, self.ORANGE),
+                        f"the logo lost its colours on palette {palette['id']}")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_mono_knockout_is_available_when_asked_for(self):
+        from vision_ai.skills.render_still import _recolour_logo, _knockout_logo
+        from PIL import Image
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            with Image.open(self.make_logo(tmp / "logo.png")) as raw:
+                mark = _recolour_logo(_knockout_logo(raw.convert("RGBA")), (255, 255, 255))
+            found = self.colours_in(mark)
+            self.assertFalse(self.near(found, self.BLUE))
+            self.assertTrue(self.near(found, (255, 255, 255)))
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":

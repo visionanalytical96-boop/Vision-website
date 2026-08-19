@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageStat
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageStat
 
 from . import brand
 
@@ -120,36 +120,60 @@ def vignette(image: Image.Image, strength: float) -> Image.Image:
     return Image.composite(image, Image.blend(image, dark, min(0.9, strength)), mask)
 
 
-def _knockout_logo(mark: Image.Image, ink: tuple[int, int, int] | None = None) -> Image.Image:
-    """Drop the logo's white background and, on dark designs, re-ink it.
+# White-key thresholds: a pixel is background only once every channel is this
+# close to white. Anything darker in *any* channel is artwork.
+_LOGO_WHITE_FLOOR = 248
+_LOGO_WHITE_SPAN = 40
 
-    Logo files are usually dark artwork on solid white. Pasted as-is they show
-    a white slab, and the white inside letters stays white. Building the alpha
-    from luminance removes the slab and the counters together, with soft edges.
+
+def _knockout_logo(mark: Image.Image) -> Image.Image:
+    """Drop the logo's white background, keeping the artwork exactly as drawn.
+
+    Logo files are usually artwork on solid white. Pasted as-is they show a
+    white slab, and the white inside letters stays white. Keying on the
+    *whitest* channel rather than on luminance removes the slab and the
+    counters together while leaving saturated brand colours fully opaque - an
+    orange mark is bright, but it is nowhere near white.
     """
     alpha = mark.getchannel("A")
     if alpha.getextrema()[0] < 250:
-        keyed = mark  # already transparent
-    else:
-        grey = mark.convert("L")
-        corner = sum(grey.getpixel(p) for p in ((0, 0), (grey.width - 1, 0),
-                                                (0, grey.height - 1), (grey.width - 1, grey.height - 1))) / 4
-        if corner < 200:
-            return mark  # not a white-background file - leave it alone
-        # white -> transparent, ink -> opaque, with the anti-aliasing preserved
-        new_alpha = grey.point(lambda value: max(0, min(255, int((235 - value) * 255 / 200))))
-        keyed = mark.copy()
-        keyed.putalpha(new_alpha)
+        return mark  # already transparent
 
-    if ink is None:
-        return keyed
-    visible = keyed.getchannel("A").point(lambda v: 255 if v > 40 else 0)
-    luminance = ImageStat.Stat(keyed.convert("L"), mask=visible).mean[0]
-    if luminance > 150:
-        return keyed  # already light artwork - it will read on a dark design
-    solid = Image.new("RGBA", keyed.size, (*ink, 0))
-    solid.putalpha(keyed.getchannel("A"))
+    r, g, b = mark.split()[:3]
+    whitest = ImageChops.darker(ImageChops.darker(r, g), b)  # min channel
+    corner = sum(whitest.getpixel(p) for p in ((0, 0), (whitest.width - 1, 0),
+                                               (0, whitest.height - 1),
+                                               (whitest.width - 1, whitest.height - 1))) / 4
+    if corner < 200:
+        return mark  # not a white-background file - leave it alone
+
+    new_alpha = whitest.point(
+        lambda value: max(0, min(255, int((_LOGO_WHITE_FLOOR - value) * 255 / _LOGO_WHITE_SPAN))))
+    keyed = mark.copy()
+    keyed.putalpha(new_alpha)
+    return keyed
+
+
+def logo_ink_luminance(mark: Image.Image) -> float:
+    visible = mark.getchannel("A").point(lambda v: 255 if v > 40 else 0)
+    if visible.getbbox() is None:
+        return 128.0
+    return ImageStat.Stat(mark.convert("L"), mask=visible).mean[0]
+
+
+def _recolour_logo(mark: Image.Image, ink: tuple[int, int, int]) -> Image.Image:
+    solid = Image.new("RGBA", mark.size, (*ink, 0))
+    solid.putalpha(mark.getchannel("A"))
     return solid
+
+
+def _logo_plate(mark: Image.Image, radius: int, pad: int) -> Image.Image:
+    """A tight light card behind the logo - just enough to hold it, not a slab."""
+    plate = Image.new("RGBA", (mark.width + pad * 2, mark.height + pad * 2), (0, 0, 0, 0))
+    ImageDraw.Draw(plate).rounded_rectangle(
+        (0, 0, plate.width - 1, plate.height - 1), radius=radius, fill=(255, 255, 255, 240))
+    plate.alpha_composite(mark, (pad, pad))
+    return plate
 
 
 def _trim_logo(mark: Image.Image) -> Image.Image:
@@ -235,7 +259,7 @@ class Renderer:
     def __init__(self, design: dict, palette: dict, layout: dict, composition: dict,
                  background: dict, typography: dict, effect: dict, photo: Path | None,
                  seed: str = "", ghost: str = "", logo: Path | None = None,
-                 contact: list[str] | None = None) -> None:
+                 contact: list[str] | None = None, logo_mono: bool = False) -> None:
         self.design = design
         self.palette = palette
         self.layout = layout
@@ -247,6 +271,7 @@ class Renderer:
         self.ghost = ghost
         self.logo = Path(logo) if logo else None
         self.contact = [c for c in (contact or []) if c]
+        self.logo_mono = logo_mono
         self.rng = random.Random(seed or design.get("design_fingerprint", ""))
         self.c_bg1 = hex_rgb(palette["bg1"])
         self.c_bg2 = hex_rgb(palette["bg2"])
@@ -643,10 +668,19 @@ class Renderer:
         if self.logo and self.logo.is_file():
             try:
                 with Image.open(self.logo) as raw:
-                    mark = _knockout_logo(raw.convert("RGBA"), self.c_text if self.dark else None)
-                    mark = _trim_logo(mark)
+                    mark = _trim_logo(_knockout_logo(raw.convert("RGBA")))
                 target_w = int(w * 0.30)
                 mark = mark.resize((target_w, max(1, int(mark.height * target_w / mark.width))), Image.LANCZOS)
+
+                # Keep the brand's own colours. Only step in when the artwork
+                # would disappear into the background: mono knockout if asked
+                # for, otherwise a tight plate behind it.
+                ink_luma = logo_ink_luminance(mark)
+                background_luma = (sum(self.c_bg1) / 3 + sum(self.c_bg2) / 3) / 2
+                if self.logo_mono:
+                    mark = _recolour_logo(mark, self.c_text)
+                elif abs(ink_luma - background_luma) < 70:
+                    mark = _logo_plate(mark, int(14 * s), int(12 * s))
                 layer.alpha_composite(mark, (int(w * 0.07), int(h * 0.055)))
             except OSError:
                 pass

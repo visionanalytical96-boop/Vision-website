@@ -69,6 +69,9 @@ set_key BRAND_LOGO "$LOGO"
 set_key VOICE_LANG "${VOICE_LANG:-mix}"
 grep -q "^VOICE=" "$ENV_FILE" || echo "VOICE=1" >> "$ENV_FILE"
 grep -q "^TURBO_MODE=" "$ENV_FILE" || echo "TURBO_MODE=1" >> "$ENV_FILE"
+# the reel follows the narration: never shorter than this, and never cut mid-sentence
+grep -q "^REEL_MIN_SECONDS=" "$ENV_FILE" || echo "REEL_MIN_SECONDS=15" >> "$ENV_FILE"
+grep -q "^REEL_MAX_SECONDS=" "$ENV_FILE" || echo "REEL_MAX_SECONDS=30" >> "$ENV_FILE"
 say "config: $ENV_FILE"
 
 step "3/7  background removal (rembg, own venv)"

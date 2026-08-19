@@ -56,7 +56,7 @@ Output lands in `/srv/vision-mobile/OUTPUT/READY`:
 Vision-Analytical-YYYYMMDD-HHMMSS-POST.png     1080x1350 portrait
 Vision-Analytical-YYYYMMDD-HHMMSS-SQUARE.png   1080x1080 square
 Vision-Analytical-YYYYMMDD-HHMMSS-STORY.png    1080x1920 story
-Vision-Analytical-YYYYMMDD-HHMMSS-Reel.mp4     1080x1920 H.264/AAC 30fps 15s
+Vision-Analytical-YYYYMMDD-HHMMSS-Reel.mp4     1080x1920 H.264/AAC 30fps 15-30s
 Vision-Analytical-YYYYMMDD-HHMMSS-Caption.txt
 Vision-Analytical-YYYYMMDD-HHMMSS-Info.txt     design + validation report
 ```
@@ -132,10 +132,36 @@ effects rotate rather than clustering.
 
 ## Video contract
 
-1080x1920, 30 fps, H.264 High, yuv420p, AAC-LC 192k @ 48 kHz, ~15 s,
-`+faststart`, bitrate capped at 8 Mbit/s so files stay phone- and
-WhatsApp-friendly. Every file is checked with `ffprobe` before it is reported
-as delivered; a failed check means nothing is written to design history.
+1080x1920, 30 fps, H.264 High, yuv420p, AAC-LC 192k @ 48 kHz, `+faststart`,
+bitrate capped so files stay phone- and WhatsApp-friendly. Every file is
+checked with `ffprobe` before it is reported as delivered; a failed check
+means nothing is written to design history.
+
+### Length follows the narration
+
+A silent reel is 15 s. With `--voice` the reel is as long as the narration
+needs, because a sentence cut in half is worse than a reel that runs a little
+long:
+
+| Narration | Reel |
+|---|---|
+| under ~13 s | 15 s (`REEL_MIN_SECONDS`) |
+| 13-28 s | narration + 2.2 s of lead-in and tail |
+| over 28 s | the speaker is paced up to 1.18x to fit `REEL_MAX_SECONDS` (30 s) |
+| longer than even that allows | the reel runs past 30 s rather than truncating |
+
+The encoder's bitrate ceiling is recalculated from the final length, so a 30 s
+reel is still under the size limit. Set `REEL_MIN_SECONDS` / `REEL_MAX_SECONDS`
+in the env file to change the window.
+
+## Logo
+
+The brand logo keeps its own colours. A logo file that is artwork on solid
+white has the white keyed out per-channel, so the paper and the counters
+inside letters go transparent while saturated brand colours stay fully
+opaque. When the artwork would otherwise disappear into the background it is
+given a tight rounded card instead of being repainted. `LOGO_MONO=1` forces
+the old single-colour knockout.
 
 ## Tests
 

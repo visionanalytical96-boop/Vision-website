@@ -165,6 +165,91 @@ LOGO_CANDIDATES = (
 )
 
 
+# The narration is delayed by this much inside the audio chain (see
+# skills/audio.audio_plan) and wants a breath after the last word, so the reel
+# has to be at least lead-in + spoken + tail for nothing to be cut off.
+VOICE_LEAD_IN = 0.5
+VOICE_TAIL = 1.7
+VOICE_MAX_TEMPO = 1.18   # beyond this a voice starts to sound rushed
+
+
+def _audio_seconds(path: Path) -> float:
+    import subprocess
+    try:
+        out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                              "-of", "default=nw=1:nk=1", str(path)],
+                             capture_output=True, text=True, timeout=60).stdout.strip()
+        return float(out)
+    except (ValueError, OSError, subprocess.SubprocessError):
+        return 0.0
+
+
+def _retime_audio(path: Path, tempo: float) -> bool:
+    """Speed a narration file up in place. atempo keeps the pitch, so the
+    speaker just talks a little brisker rather than turning into a chipmunk."""
+    import subprocess
+    path = Path(path)
+    tmp = path.with_name(path.stem + "-fit" + path.suffix)
+    try:
+        done = subprocess.run(
+            ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(path),
+             "-filter:a", f"atempo={tempo:.3f}", str(tmp)],
+            capture_output=True, text=True, timeout=180)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if done.returncode != 0 or not tmp.is_file() or tmp.stat().st_size < 1000:
+        tmp.unlink(missing_ok=True)
+        return False
+    tmp.replace(path)
+    return True
+
+
+def narration_plan(spoken: float, floor: float, ceiling: float,
+                   allow_tempo: bool = True) -> tuple[float, float]:
+    """Work out how long the reel has to be for `spoken` seconds of narration,
+    and how much faster the speaker has to talk to stay inside `ceiling`.
+
+    Returns (tempo, duration). Fitting the ceiling never wins over finishing
+    the sentence: if even the fastest comfortable pace does not fit, the reel
+    is allowed to run long instead of cutting the words off.
+    """
+    import math
+    tempo = 1.0
+    needed = VOICE_LEAD_IN + spoken + VOICE_TAIL
+    if needed > ceiling and allow_tempo:
+        room = max(1.0, ceiling - VOICE_LEAD_IN - VOICE_TAIL)
+        # round the pace *up* so the rounding itself can never re-introduce
+        # the overrun we just removed
+        tempo = min(VOICE_MAX_TEMPO, math.ceil(spoken / room * 1000) / 1000)
+        needed = VOICE_LEAD_IN + spoken / tempo + VOICE_TAIL
+    return tempo, math.ceil(max(needed, floor) * 100) / 100
+
+
+def _bitrate_bps(value: str) -> int:
+    text = str(value).strip().lower()
+    try:
+        if text.endswith("m"):
+            return int(float(text[:-1]) * 1_000_000)
+        if text.endswith("k"):
+            return int(float(text[:-1]) * 1_000)
+        return int(float(text))
+    except ValueError:
+        return 8_000_000
+
+
+def _fit_size_budget(video: dict, validation: dict) -> None:
+    """A longer reel must not grow past what a phone will happily send, so cap
+    the encoder's ceiling to fit the duration we ended up with."""
+    max_bytes = int(validation.get("max_video_bytes", 26_214_400))
+    seconds = max(1.0, float(video["duration"]))
+    audio_bps = _bitrate_bps(video.get("abitrate", "192k"))
+    budget = int(max_bytes * 8 * 0.82 / seconds) - audio_bps
+    budget = max(1_200_000, budget)
+    if budget < _bitrate_bps(video.get("maxrate", "8M")):
+        video["maxrate"] = f"{budget // 1000}k"
+        video["bufsize"] = f"{budget * 2 // 1000}k"
+
+
 def contact_lines(env: dict) -> list[str]:
     """Whatever the operator filled in - nothing is invented."""
     ordered = ("BRAND_PHONE", "BRAND_EMAIL", "WEBSITE", "BRAND_INSTAGRAM", "BRAND_ADDRESS")
@@ -203,6 +288,7 @@ def _renderer(design: dict, photo: Path | None) -> Renderer:
         ghost=instrument.display_name,
         logo=brand_logo(),
         contact=contact_lines(_STATE.get("env", {})),
+        logo_mono=config_env.flag(_STATE.get("env", {}), "LOGO_MONO", False),
     )
 
 
@@ -347,7 +433,25 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
         if voice_path:
             # duck the bed so the words stay on top
             video["music_volume"] = round(float(video["music_volume"]) * 0.45, 2)
+            # and give the narration room to finish - a reel that cuts a
+            # sentence in half is worse than a reel that runs a bit long
+            spoken = _audio_seconds(voice_path)
+            if spoken:
+                floor = config_env.number(env, "REEL_MIN_SECONDS", 15.0)
+                ceiling = config_env.number(env, "REEL_MAX_SECONDS", 30.0)
+                tempo, wanted = narration_plan(spoken, floor, ceiling)
+                if tempo > 1.01 and _retime_audio(voice_path, tempo):
+                    spoken = _audio_seconds(voice_path) or spoken / tempo
+                    _, wanted = narration_plan(spoken, floor, ceiling, allow_tempo=False)
+                    print(f"[brain] narration paced up x{tempo:.2f} to fit the {ceiling:.0f}s reel")
+                if wanted > ceiling:
+                    print(f"[brain] narration needs {wanted:.1f}s - letting the reel run past "
+                          f"{ceiling:.0f}s so no sentence is cut")
+                if wanted > float(video["duration"]):
+                    print(f"[brain] narration is {spoken:.1f}s - stretching the reel to {wanted:.1f}s")
+                video["duration"] = wanted
 
+    _fit_size_budget(video, config.validation)
     print(f"[brain] rendering the reel: 2 scenes, {int(float(video['duration']) * int(video['fps']))} frames "
           f"at {video['width']}x{video['height']} - this takes 20-40s, please do not interrupt",
           flush=True)
@@ -358,7 +462,7 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
         library.by_id("transitions", design["transition"]),
         effect, choice, sprite_path), reel, video)
 
-    report = validate.validate_video(reel, config.video, config.validation)
+    report = validate.validate_video(reel, video, config.validation)
     info = ready / f"Vision-Analytical-{stamp}-Info.txt"
     info.write_text(_info_text(design, instrument, asset, report, result), encoding="utf-8")
 

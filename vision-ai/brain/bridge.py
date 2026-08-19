@@ -13,7 +13,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))  # brain/vision_ai
+_HERE = Path(__file__).resolve().parent
+for _candidate in (_HERE, _HERE.parent / "engine"):   # vendored, then repo layout
+    if (_candidate / "vision_ai").is_dir() and str(_candidate) not in sys.path:
+        sys.path.insert(0, str(_candidate))
 
 from vision_ai.config import load_config  # noqa: E402
 from vision_ai.library import Library  # noqa: E402

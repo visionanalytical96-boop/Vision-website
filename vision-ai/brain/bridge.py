@@ -97,6 +97,13 @@ def pick_source(design: dict, images: list, videos: list):
     return Path(pool[_index(design["design_fingerprint"], len(pool))]) if pool else None
 
 
+def style_index(style: str, size: int = 10) -> int:
+    """Stand-in for `styles.index(style)` in engines whose hardcoded `styles`
+    list was replaced by a brain choice. Deterministic, so a family always gets
+    the same treatment, and always inside the engine's expected range."""
+    return _index(str(style), size)
+
+
 def pick_style(design: dict, styles: list[str]) -> str:
     """Keeps the engine's own style vocabulary, but rotates it with history."""
     return styles[_index(design["design_family"] + design["design_fingerprint"], len(styles))]

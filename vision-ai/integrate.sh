@@ -74,6 +74,7 @@ for name, pattern, required in [
     ("layout pick", r"layout\s*=\s*random\.choice\(layouts\)", False),
     ("ollama call", r'\["ollama"\s*,\s*"run"', True),
     ("brain identity", r"instrument = detect_instrument\(source\.name\)", False),
+    ("orphaned styles.index", r"style_index\s*=\s*styles\.index\(style\)", False),
     ("copy assign", r"title\s*=\s*str\(data\.get\(", True),
     ("reel length", r'"-t"\s*,\s*"12"\s*,', False),
 ]:

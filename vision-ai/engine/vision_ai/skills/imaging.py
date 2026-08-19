@@ -42,8 +42,15 @@ def _tokens(text: str) -> list[str]:
     return [t for t in re.split(r"[^A-Za-z0-9]+", (text or "").lower()) if t]
 
 
-GENERATED_DIRS = {"generated", "output", "outputs", "ready", "posters", "renders", "tmp"}
+GENERATED_DIRS = {"generated", "outputs", "posters", "renders"}
 GENERATED_NAMES = ("vision-analytical-", "-post", "-story", "-square", "-poster", "-reel")
+
+
+def _is_render_output(parts: tuple[str, ...]) -> bool:
+    """OUTPUT/READY only counts as rendered output when both appear together,
+    so a folder merely called "output" elsewhere is not caught."""
+    lowered = [part.lower() for part in parts]
+    return any(a == "output" and b == "ready" for a, b in zip(lowered, lowered[1:]))
 
 
 def looks_generated(path: Path) -> bool:
@@ -52,7 +59,8 @@ def looks_generated(path: Path) -> bool:
     Putting one in the asset library stacks a design on top of a design - the
     instrument disappears and the branding doubles up.
     """
-    if any(part.lower() in GENERATED_DIRS for part in Path(path).parts):
+    parts = Path(path).parts
+    if any(part.lower() in GENERATED_DIRS for part in parts) or _is_render_output(parts):
         return True
     stem = Path(path).stem.lower()
     return any(token in stem for token in GENERATED_NAMES)

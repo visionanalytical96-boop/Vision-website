@@ -71,7 +71,22 @@ def nextcloud_data_dir(container: str = "nextcloud") -> Path | None:
         for mount in mounts:
             if mount.get("Destination") == wanted:
                 source = Path(mount["Source"])
-                return source if wanted.endswith("data") else source / "data"
+                found = source if wanted.endswith("data") else source / "data"
+                if found.is_dir():
+                    return found
+
+    # Not bind-mounted: the data lives in the container's own filesystem, which
+    # the host can still read through the overlay merged directory (root only).
+    try:
+        merged = subprocess.run(
+            ["docker", "inspect", "-f", "{{.GraphDriver.Data.MergedDir}}", container],
+            capture_output=True, text=True, timeout=20, check=False).stdout.strip()
+    except Exception:
+        merged = ""
+    if merged:
+        candidate = Path(merged) / "var/www/html/data"
+        if candidate.is_dir():
+            return candidate
     return None
 
 
@@ -262,8 +277,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.nextcloud and not args.root:
         found = nextcloud_data_dir(args.nextcloud)
         if found is None:
-            print(f"could not read the mounts of container '{args.nextcloud}'.", file=sys.stderr)
-            print("  try:  docker inspect -f '{{json .Mounts}}' " + args.nextcloud, file=sys.stderr)
+            print(f"could not locate the data directory of container '{args.nextcloud}'.", file=sys.stderr)
+            print("  it is neither bind-mounted nor readable through the container filesystem.", file=sys.stderr)
+            print("  run as root, or copy the photos out with:", file=sys.stderr)
+            print(f"    docker cp {args.nextcloud}:/var/www/html/data /srv/vision-mobile/INBOX/nextcloud",
+                  file=sys.stderr)
+            print("  then:  --from /srv/vision-mobile/INBOX/nextcloud", file=sys.stderr)
             return 2
         print(f"Nextcloud data directory: {found}")
         args.root = str(found)

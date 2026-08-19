@@ -49,7 +49,15 @@ except ImportError:  # `python3 /path/to/brain/x.py`
     sys.path.insert(0, str(_HERE.parent))
     from brain import config_env  # noqa: E402
 
-HEIC = {".heic", ".heif"}
+try:
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+    HEIC_READY = True
+except Exception:
+    HEIC_READY = False
+
+HEIC = set() if HEIC_READY else {".heic", ".heif"}   # listed as "needs pillow-heif" only when it cannot be read
 SKIP_DIRS = {"files_trashbin", "files_versions", "cache", "thumbnails", "preview", "previews",
              ".git", "node_modules", "files_external", "venv", "site-packages", "comfyui",
              "models", "custom_nodes", "dist", "build", "__pycache__",

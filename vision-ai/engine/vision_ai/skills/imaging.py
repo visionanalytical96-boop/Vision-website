@@ -16,6 +16,15 @@ from .instrument import Instrument
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 
+try:  # iPhone photos are HEIC; usable as soon as pillow-heif is installed
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+    IMAGE_SUFFIXES |= {".heic", ".heif"}
+    HEIC_READY = True
+except Exception:
+    HEIC_READY = False
+
 # Ranked from strongest to weakest evidence that the file really shows the
 # instrument that was asked for.
 SOURCE_EXACT_CURATED = "curated-pack-exact-model"

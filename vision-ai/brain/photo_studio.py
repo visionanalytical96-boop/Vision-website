@@ -21,6 +21,13 @@ from pathlib import Path
 
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
+try:  # iPhone HEIC support when the optional package is present
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+except Exception:
+    pass
+
 SUFFIX = "-studio.png"
 
 

@@ -1329,6 +1329,56 @@ class ImportPhotosTests(unittest.TestCase):
         self.assertNotIn(self.staging.name, names)
         self.assertNotIn(outside.name, names)
 
+    def sized(self, relative: str, name: str, size: tuple[int, int]):
+        from PIL import Image
+        folder = self.staging / relative
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / name
+        Image.new("RGB", size, (190, 196, 204)).save(path)
+        return path
+
+    def test_a_web_sized_image_is_flagged_as_too_small(self):
+        """A 1080-wide post cannot be made from a 275px thumbnail."""
+        grade, note = self.importer._quality_note(
+            self.sized("Agilent 1260 Infinity II", "images.jpg", (275, 183)))
+        self.assertEqual(grade, "small")
+        self.assertIn("blurry", note)
+
+    def test_a_middling_image_is_flagged_as_soft_not_rejected(self):
+        grade, _ = self.importer._quality_note(
+            self.sized("Agilent 1260 Infinity II", "500x500.webp", (500, 500)))
+        self.assertEqual(grade, "soft")
+
+    def test_a_real_photograph_passes_clean(self):
+        grade, note = self.importer._quality_note(
+            self.sized("Agilent 1260 Infinity II", "IMG_2201.JPG", (1600, 1200)))
+        self.assertEqual(grade, "good")
+        self.assertEqual(note, "1600x1200")
+
+    def test_a_small_image_is_still_imported_just_marked(self):
+        """The operator decides what to keep; the tool only tells them."""
+        self.sized("Agilent 1260 Infinity II", "images.jpg", (275, 183))
+        self.importer.run(self.staging, self.cache, self.library, apply=True, move=False)
+        self.assertEqual(len(list(self.cache.rglob("*.jpg"))), 1)
+
+    def test_a_file_that_cannot_be_opened_is_not_imported(self):
+        folder = self.staging / "Agilent 1260 Infinity II"
+        folder.mkdir(parents=True)
+        (folder / "broken.jpg").write_bytes(b"this is not an image")
+        self.importer.run(self.staging, self.cache, self.library, apply=True, move=False)
+        self.assertEqual(list(self.cache.rglob("*.jpg")), [])
+
+    def test_avif_is_read_when_pillow_can(self):
+        """Product pages serve AVIF now; skipping it silently loses photos."""
+        from vision_ai.skills.imaging import AVIF_READY, IMAGE_SUFFIXES
+        if not AVIF_READY:
+            self.skipTest("this Pillow has no AVIF support")
+        self.assertIn(".avif", IMAGE_SUFFIXES)
+        self.sized("Shimadzu LC-2010CHT", "product.avif", (1200, 900))
+        matched, unknown = self.plan()
+        self.assertEqual(unknown, [])
+        self.assertEqual(len(matched), 1)
+
     def test_a_dry_run_copies_nothing(self):
         self.photo("Agilent 1260 Infinity II")
         self.importer.run(self.staging, self.cache, self.library, apply=False, move=False)

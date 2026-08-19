@@ -25,6 +25,15 @@ try:  # iPhone photos are HEIC; usable as soon as pillow-heif is installed
 except Exception:
     HEIC_READY = False
 
+try:  # AVIF is what a lot of product pages serve now; Pillow 11.3+ reads it
+    from PIL import features as _pil_features
+
+    AVIF_READY = bool(_pil_features.check("avif"))
+except Exception:
+    AVIF_READY = False
+if AVIF_READY:
+    IMAGE_SUFFIXES |= {".avif"}
+
 # Ranked from strongest to weakest evidence that the file really shows the
 # instrument that was asked for.
 SOURCE_EXACT_CURATED = "curated-pack-exact-model"

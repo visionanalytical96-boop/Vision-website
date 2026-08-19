@@ -38,6 +38,36 @@ except ImportError:  # `python3 /path/to/brain/x.py`
     from brain import config_env  # noqa: E402
 
 
+# The posts are rendered at 1080 wide and the reel at 1080x1920, so a small
+# web image has to be blown up and shows it. These are the long-edge sizes at
+# which that starts to be visible.
+GOOD_PIXELS = 900
+POOR_PIXELS = 500
+
+
+def _dimensions(path: Path) -> tuple[int, int] | None:
+    from PIL import Image
+    try:
+        with Image.open(path) as image:
+            return image.size
+    except (OSError, ValueError):
+        return None
+
+
+def _quality_note(path: Path) -> tuple[str, str]:
+    """(grade, note) - grade is one of good / soft / small / unreadable."""
+    size = _dimensions(path)
+    if size is None:
+        return "unreadable", "cannot be opened"
+    longest = max(size)
+    label = f"{size[0]}x{size[1]}"
+    if longest < POOR_PIXELS:
+        return "small", f"{label} - too small for a 1080-wide post, it will look blurry"
+    if longest < GOOD_PIXELS:
+        return "soft", f"{label} - usable, but soft once enlarged"
+    return "good", label
+
+
 def _digest(path: Path) -> str:
     sha = hashlib.sha256()
     with path.open("rb") as handle:
@@ -108,6 +138,7 @@ def run(staging: Path, cache_root: Path, library: Library, apply: bool, move: bo
 
     imported = skipped = 0
     seen: dict[Path, set[str]] = {}
+    grades: dict[str, int] = {}
     for source, target, reason in matched:
         digests = seen.setdefault(target.parent, _existing_digests(target.parent))
         digest = _digest(source)
@@ -115,8 +146,13 @@ def run(staging: Path, cache_root: Path, library: Library, apply: bool, move: bo
             print(f"  skip   {source.name}  (already in {target.parent.name}/)")
             skipped += 1
             continue
-        print(f"  {'move' if move else 'copy'}   {source.name}  ->  "
-              f"{target.parent.relative_to(cache_root)}/   [{reason}]")
+        grade, note = _quality_note(source)
+        grades[grade] = grades.get(grade, 0) + 1
+        flag = {"good": " ", "soft": "~", "small": "!", "unreadable": "x"}[grade]
+        print(f" {flag}{'move' if move else 'copy'}   {source.name}  ->  "
+              f"{target.parent.relative_to(cache_root)}/   [{note}]")
+        if grade == "unreadable":
+            continue
         if apply:
             target.parent.mkdir(parents=True, exist_ok=True)
             final = target
@@ -138,6 +174,13 @@ def run(staging: Path, cache_root: Path, library: Library, apply: bool, move: bo
 
     print(f"\n{'imported' if apply else 'would import'}: {imported}   skipped (duplicate): {skipped}   "
           f"unidentified: {len(unknown)}")
+    if grades.get("small") or grades.get("soft"):
+        print(f"  resolution: {grades.get('good', 0)} good, {grades.get('soft', 0)} soft (~), "
+              f"{grades.get('small', 0)} too small (!)")
+        print(f"  A post is rendered 1080 wide. Anything under {POOR_PIXELS}px on its long edge")
+        print("  will look blurry - replace those with your own photographs when you can.")
+    if grades.get("unreadable"):
+        print(f"  {grades['unreadable']} file(s) could not be opened and were not imported")
     if not apply and imported:
         print("re-run with --apply to actually file them")
     return 0

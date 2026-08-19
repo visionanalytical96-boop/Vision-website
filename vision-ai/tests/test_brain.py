@@ -144,6 +144,26 @@ class PackConvertTests(unittest.TestCase):
         self.assertIn("operator_edit", marker.read_text())
 
 
+class FinishSignatureTests(unittest.TestCase):
+    """finish() writes into the directory it is handed - a local variable must
+    never take that name (it did once, and every run died after the voice)."""
+
+    def test_output_directory_is_not_shadowed(self):
+        import ast
+        import inspect
+        from brain import bridge
+
+        source = inspect.getsource(bridge.finish)
+        tree = ast.parse(source.lstrip())
+        assigned = {target.id
+                    for node in ast.walk(tree) if isinstance(node, ast.Assign)
+                    for target in node.targets if isinstance(target, ast.Name)}
+        reassigned_after_path = [name for name in assigned if name == "ready"]
+        # `ready` is assigned once, on the Path() line at the top
+        self.assertLessEqual(len(reassigned_after_path), 1)
+        self.assertIn("usable", source)
+
+
 class DeliveryTests(unittest.TestCase):
     def test_package_name_matches_the_existing_sync_regex(self):
         name = deliver.package_name("20260818-224102")

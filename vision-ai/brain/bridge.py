@@ -27,7 +27,7 @@ from vision_ai.skills.ollama_client import OllamaClient  # noqa: E402
 from vision_ai.skills.render_still import Renderer, SceneCopy, save_png  # noqa: E402
 from vision_ai.skills.selector import DesignSelector  # noqa: E402
 
-from . import config_env, deliver, music_gen, preset_map  # noqa: E402
+from . import config_env, cutout, deliver, music_gen, preset_map  # noqa: E402
 
 _STATE: dict = {}
 
@@ -72,6 +72,16 @@ def decide(argv: list[str] | None = None) -> dict:
     )
     pack = copywriter.build(instrument, design, client, bool(config.ollama["enabled"]))
     design["copy_source"] = pack.source
+
+    # Cut the instrument out of its background when the operator wants that
+    # look and the optional dependency is installed.
+    if asset.path and config_env.flag(env, "REMOVE_BACKGROUND", True):
+        cut, note = cutout.make(Path(asset.path))
+        if cut is not None:
+            asset.path = cut
+            design["image_cutout"] = True
+        design["cutout_note"] = note
+        print(f"[brain] cutout: {note}")
 
     _STATE.update(env=env, config=config, library=library, history=history,
                   instrument=instrument, design=design, asset=asset, copy=pack)
@@ -244,7 +254,13 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
         # downloaded, so there is no licence attached to the result.
         cache = config.creative_pack / "music" / "generated"
         seed = int(design["design_fingerprint"][:8], 16)
+        recent = set(_STATE["history"].recent_values("music_track", 4))
         track = music_gen.ensure(design["music_style"], cache, seed=seed)
+        for attempt in range(1, 6):  # never the same bed two reels running
+            if track.name not in recent:
+                break
+            style = music_gen.STYLES and sorted(music_gen.STYLES)[(seed + attempt) % len(music_gen.STYLES)]
+            track = music_gen.ensure(style, cache, seed=seed + attempt)
         note = f"generated locally ({design['music_style']})"
         print(f"[brain] music: {track.name} (local instrumental bed, generated - no licence)")
     choice.music, choice.music_note = track, note

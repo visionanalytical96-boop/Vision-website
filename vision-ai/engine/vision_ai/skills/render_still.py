@@ -302,9 +302,13 @@ class Renderer:
             self._ghost_mark(canvas, variant)
             return
         try:
-            photo = Image.open(self.photo).convert("RGB")
+            opened = Image.open(self.photo)
+            # A cutout keeps its alpha, so the instrument sits on the design
+            # rather than inside a photographic rectangle.
+            photo = opened.convert("RGBA") if opened.mode in ("RGBA", "LA", "P") else opened.convert("RGB")
         except OSError:
             return
+        transparent = photo.mode == "RGBA" and photo.getchannel("A").getextrema()[0] < 250
         w, h = canvas.size
         s = w / BASE_WIDTH
         comp = self.composition
@@ -318,7 +322,7 @@ class Renderer:
             photo = photo.filter(ImageFilter.GaussianBlur(0.8 * s))
 
         radius = int(26 * s)
-        mask = rounded_mask(photo.size, radius)
+        mask = photo.getchannel("A") if transparent else rounded_mask(photo.size, radius)
         if comp.get("rotate"):
             photo = photo.rotate(comp["rotate"], resample=Image.BICUBIC, expand=True)
             mask = mask.rotate(comp["rotate"], resample=Image.BICUBIC, expand=True)
@@ -336,10 +340,12 @@ class Renderer:
             canvas.alpha_composite(shadow)
 
         layer = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
-        layer.paste(photo, (px, py), mask)
+        layer.paste(photo.convert("RGB"), (px, py), mask)
         canvas.alpha_composite(layer)
 
         draw = ImageDraw.Draw(canvas, "RGBA")
+        if transparent:
+            return  # no frame or fade around a cutout - it is not a photo card
         if self.effect.get("id") in {"edge_light", "metallic_highlight", "glass"}:
             draw.rounded_rectangle((px, py, px + photo.width, py + photo.height), radius=radius,
                                    outline=(*self.c_accent, 130), width=max(2, int(2.5 * s)))

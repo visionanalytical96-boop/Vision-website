@@ -191,6 +191,20 @@ class PresetMapTests(unittest.TestCase):
         first, second = self.preset_map.resolve_pair(["SLOW_PUSH", "SLOW_PUSH"], self.library.get("animations"))
         self.assertNotEqual(first["id"], second["id"])
 
+
+    def test_two_motions_are_always_visibly_different(self):
+        """Names can collide onto one mechanic - MICRO_ZOOM and PARALLAX did."""
+        import itertools
+        from brain.preset_map import _mechanic
+        animations = self.library.get("animations")
+        presets = ["MICRO_ZOOM", "PARALLAX", "MICRO_PARALLAX", "SLOW_PUSH", "DEPTH_ZOOM",
+                   "ORBITAL_DRIFT", "CAMERA_ORBIT_SIM", "HORIZONTAL_PAN_LEFT", "VERTICAL_PAN_DOWN",
+                   "DIAGONAL_DRIFT", "FLOATING_CARD", "PARTICLE_DRIFT", "GLASS_PANEL_ENTRY",
+                   "DATA_LINE_MOTION", "WHIP_MOTION", "BLUR_REVEAL", "TEXT_REVEAL"]
+        for pair in itertools.product(presets, repeat=2):
+            first, second = self.preset_map.resolve_pair(list(pair), animations)
+            self.assertNotEqual(_mechanic(first), _mechanic(second), pair)
+
     def test_unknown_name_is_deterministic_not_random(self):
         animations = self.library.get("animations")
         a = self.preset_map.resolve("SOMETHING_NOBODY_DEFINED", animations, "animations")

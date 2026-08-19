@@ -311,5 +311,212 @@ class SizeBudget(unittest.TestCase):
         self.assertEqual(bridge._bitrate_bps("nonsense"), 8_000_000)
 
 
+class PresetRotationTests(unittest.TestCase):
+    """The server brain repeats itself; the render must not.
+
+    Its whole vocabulary is about five family names, four layout names and six
+    motion names. Mapping each name to exactly one library entry pinned 42 real
+    runs onto 4 layouts and 5 families - which is what "every post looks the
+    same" actually was.
+    """
+
+    # The names the real server brain emitted, taken from design history.
+    FAMILIES = ["CINEMATIC_LAB", "GLASS_SCIENCE", "SCHEMATIC_LAB", "DARK_LUXURY", "PHARMA_WHITE"]
+    LAYOUTS = ["ASYMMETRIC_EDITORIAL", "BOTTOM_STACK", "SIDE_PANEL", "GLASS_CARD"]
+    MOTIONS = ["ORBITAL_DRIFT", "DEPTH_ZOOM", "SLOW_PUSH", "HORIZONTAL_PAN_LEFT", "MICRO_PARALLAX"]
+    TRANSITIONS = ["MASK_REVEAL", "LIGHT_FLASH", "GLASS_WIPE", "DIP"]
+    RUNS = 42
+
+    @classmethod
+    def setUpClass(cls):
+        from brain import preset_map
+        cls.preset_map = preset_map
+        cls.library = Library(load_config({}))
+
+    def replay(self, names, kind, lib_key, window=12):
+        """Run the same short vocabulary `RUNS` times and collect what came out."""
+        seen, recent = [], []
+        for run in range(self.RUNS):
+            name = names[run % len(names)]
+            entry = self.preset_map.resolve_rotated(
+                name, self.library.get(lib_key), kind, recent[-window:], f"seed-{run:03d}")
+            seen.append(entry["id"])
+            recent.append(entry["id"])
+        return seen
+
+    def coverage(self, seen, lib_key):
+        return len(set(seen)) / len(self.library.get(lib_key))
+
+    def clumping(self, seen, window=3):
+        return sum(1 for i in range(1, len(seen)) if seen[i] in seen[max(0, i - window):i])
+
+    def test_a_single_name_no_longer_pins_one_entry(self):
+        for kind, lib_key in (("layouts", "layouts"), ("families", "families"),
+                              ("animations", "animations"), ("transitions", "transitions")):
+            with self.subTest(kind=kind):
+                pool = self.preset_map.candidates("BOTTOM_STACK" if kind == "layouts" else "CINEMATIC_LAB",
+                                                  self.library.get(lib_key), kind)
+                self.assertGreaterEqual(len(pool), 2, f"{kind} still resolves to a single entry")
+
+    def test_layouts_reach_most_of_the_library(self):
+        seen = self.replay(self.LAYOUTS, "layouts", "layouts")
+        self.assertGreaterEqual(self.coverage(seen, "layouts"), 0.4,
+                                f"only {len(set(seen))} layouts in {self.RUNS} runs")
+
+    def test_families_reach_most_of_the_library(self):
+        seen = self.replay(self.FAMILIES, "families", "families")
+        self.assertGreaterEqual(self.coverage(seen, "families"), 0.4,
+                                f"only {len(set(seen))} families in {self.RUNS} runs")
+
+    def test_motions_and_transitions_spread_too(self):
+        for names, kind, lib_key in ((self.MOTIONS, "animations", "animations"),
+                                     (self.TRANSITIONS, "transitions", "transitions")):
+            with self.subTest(kind=kind):
+                seen = self.replay(names, kind, lib_key)
+                self.assertGreaterEqual(self.coverage(seen, lib_key), 0.4,
+                                        f"only {len(set(seen))} {kind} in {self.RUNS} runs")
+
+    def test_the_same_look_does_not_come_back_immediately(self):
+        """What the eye notices is not total coverage, it is back-to-back repeats."""
+        for names, kind, lib_key in ((self.LAYOUTS, "layouts", "layouts"),
+                                     (self.FAMILIES, "families", "families")):
+            with self.subTest(kind=kind):
+                seen = self.replay(names, kind, lib_key)
+                self.assertLessEqual(self.clumping(seen), self.RUNS * 0.3,
+                                     f"{kind} repeats within 3 runs too often")
+
+    def test_rotation_beats_the_literal_mapping_it_replaced(self):
+        for names, kind, lib_key in ((self.LAYOUTS, "layouts", "layouts"),
+                                     (self.FAMILIES, "families", "families"),
+                                     (self.MOTIONS, "animations", "animations")):
+            with self.subTest(kind=kind):
+                literal = {self.preset_map.resolve(n, self.library.get(lib_key), kind)["id"]
+                           for n in names}
+                rotated = set(self.replay(names, kind, lib_key))
+                self.assertGreater(len(rotated), len(literal),
+                                   f"{kind} rotation adds nothing over the literal map")
+
+    def test_the_literal_best_match_is_still_the_most_likely_one(self):
+        """Rotation must widen the pool, not ignore what the server asked for."""
+        literal = self.preset_map.resolve("BOTTOM_STACK", self.library.get("layouts"), "layouts")
+        picks = [self.preset_map.resolve_rotated("BOTTOM_STACK", self.library.get("layouts"),
+                                                 "layouts", [], f"s{i}")["id"] for i in range(200)]
+        counts = {value: picks.count(value) for value in set(picks)}
+        self.assertEqual(max(counts, key=counts.get), literal["id"],
+                         "the server brain's actual choice stopped being the favourite")
+
+    def test_a_recently_used_entry_is_avoided_not_banned(self):
+        layouts = self.library.get("layouts")
+        literal = self.preset_map.resolve("GLASS_CARD", layouts, "layouts")
+        picks = [self.preset_map.resolve_rotated("GLASS_CARD", layouts, "layouts",
+                                                 [literal["id"]], f"s{i}")["id"] for i in range(100)]
+        self.assertLess(picks.count(literal["id"]), 40, "recency is not being applied")
+        self.assertGreater(len(set(picks)), 1)
+
+    def test_two_motions_stay_visibly_different_after_rotation(self):
+        import itertools
+        animations = self.library.get("animations")
+        for pair in itertools.product(self.MOTIONS + ["MICRO_ZOOM", "PARALLAX"], repeat=2):
+            for seed in ("a", "b", "c"):
+                first, second = self.preset_map.resolve_pair_rotated(list(pair), animations, [], seed)
+                self.assertTrue(self.preset_map._distinct(first, second), (pair, seed))
+
+    def test_rotation_is_deterministic_for_a_given_seed(self):
+        args = ("SIDE_PANEL", self.library.get("layouts"), "layouts", ["L01_lower_stack"], "fixed-seed")
+        self.assertEqual(self.preset_map.resolve_rotated(*args)["id"],
+                         self.preset_map.resolve_rotated(*args)["id"])
+
+    def test_an_unknown_name_still_resolves_and_varies(self):
+        pool = self.preset_map.candidates("SOMETHING_NOBODY_DEFINED", self.library.get("layouts"), "layouts")
+        self.assertGreaterEqual(len(pool), 2)
+        self.assertTrue(all(item.get("id") for item in pool))
+
+
+class PosterRenderTests(unittest.TestCase):
+    """The engine writes one flat poster; the brain must replace it.
+
+    Until this existed the whole design system only reached the reel - every
+    still post was the engine's photo + one white headline, which is why they
+    all looked the same whatever the brain chose.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from vision_ai.skills.render_still import Renderer, SceneCopy
+        cls.Renderer, cls.SceneCopy = Renderer, SceneCopy
+        cls.config = load_config({})
+        cls.library = Library(cls.config)
+
+    def renderer(self, index=0):
+        lib = self.library
+        return self.Renderer(
+            design={"design_fingerprint": f"{index:016d}"},
+            palette=lib.get("palettes")[index % len(lib.get("palettes"))],
+            layout=lib.get("layouts")[index % len(lib.get("layouts"))],
+            composition=lib.get("compositions")[index % len(lib.get("compositions"))],
+            background=lib.get("backgrounds")[index % len(lib.get("backgrounds"))],
+            typography=lib.get("typography")[index % len(lib.get("typography"))],
+            effect=lib.by_id("effects", "clean_none") or {},
+            photo=None, seed=f"poster-{index}", ghost="HPLC",
+            contact=["+91 00000 00000", "test@example.com"])
+
+    def copy(self):
+        return (self.SceneCopy("AMC / CMC", "One contract, no surprises",
+                               "Scheduled maintenance", ("IQ/OQ/PQ",), "Talk to us"),
+                self.SceneCopy("HPLC", "Downtime, budgeted away",
+                               "Planned visits", ("Spares",), "Call us"))
+
+    def test_all_three_formats_are_written_at_the_right_size(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            post = tmp / "Vision-Analytical-20260101-000000-POST.png"
+            post.write_bytes(b"the engine's flat poster")
+            hero, detail = self.copy()
+            written = bridge._render_stills(self.renderer(), hero, detail, tmp,
+                                            "20260101-000000", post, self.config)
+            self.assertEqual(len(written), 3)
+            from PIL import Image
+            for path in written:
+                name = path.stem.rsplit("-", 1)[-1]
+                with Image.open(path) as image:
+                    self.assertEqual(image.size, bridge.POST_SIZES[name], name)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_the_engine_poster_is_overwritten_in_place(self):
+        """The delivery chain already knows this filename - keep it."""
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            post = tmp / "Vision-Analytical-20260101-000000-POST.png"
+            post.write_bytes(b"stub")
+            hero, detail = self.copy()
+            written = bridge._render_stills(self.renderer(), hero, detail, tmp,
+                                            "20260101-000000", post, self.config)
+            self.assertIn(post, written)
+            self.assertGreater(post.stat().st_size, 40000, "the flat stub is still there")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_different_designs_produce_visibly_different_posters(self):
+        """The whole point: the design system has to reach the still image."""
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            hero, detail = self.copy()
+            signatures = set()
+            for index in range(6):
+                out = tmp / f"run{index}"
+                out.mkdir()
+                post = out / f"Vision-Analytical-2026010{index}-000000-POST.png"
+                bridge._render_stills(self.renderer(index), hero, detail, out,
+                                      f"2026010{index}-000000", post, self.config)
+                from PIL import Image
+                with Image.open(post) as image:
+                    small = image.convert("RGB").resize((8, 10))
+                    signatures.add(tuple(small.getdata()))
+            self.assertEqual(len(signatures), 6, "two designs rendered the same poster")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

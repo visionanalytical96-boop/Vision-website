@@ -21,6 +21,7 @@ for _candidate in (_HERE, _HERE.parent / "engine"):   # vendored, then repo layo
 from vision_ai.config import load_config  # noqa: E402
 from vision_ai.library import Library  # noqa: E402
 from vision_ai.skills import copywriter, imaging  # noqa: E402
+from vision_ai.skills import history as history_skill  # noqa: E402
 from vision_ai.skills.history import DesignHistory  # noqa: E402
 from vision_ai.skills.instrument import identify  # noqa: E402
 from vision_ai.skills.ollama_client import OllamaClient  # noqa: E402
@@ -311,10 +312,35 @@ def adopt(design: dict, brain_choice: dict | None) -> dict:
     if not brain_choice:
         return design
     library = _STATE["library"]
-    first, second = preset_map.resolve_pair(brain_choice.get("motions"), library.get("animations"))
-    transition = preset_map.resolve(brain_choice.get("transition", "fade"), library.get("transitions"), "transitions")
-    family = preset_map.resolve(brain_choice.get("family", ""), library.get("families"), "families")
-    layout = preset_map.resolve(brain_choice.get("layout", ""), library.get("layouts"), "layouts")
+    env = _STATE.get("env", {})
+    history = _STATE.get("history")
+    seed = design.get("design_fingerprint", "")
+
+    # The server brain says the same handful of words every run. Taken
+    # literally that pinned 42 runs onto 4 layouts and 5 families, which is why
+    # the posts started looking alike. Rotate inside each word's meaning unless
+    # the operator asks for the literal mapping back.
+    if config_env.flag(env, "BRAIN_TRUST_SERVER", False) or history is None:
+        first, second = preset_map.resolve_pair(brain_choice.get("motions"), library.get("animations"))
+        transition = preset_map.resolve(brain_choice.get("transition", "fade"), library.get("transitions"), "transitions")
+        family = preset_map.resolve(brain_choice.get("family", ""), library.get("families"), "families")
+        layout = preset_map.resolve(brain_choice.get("layout", ""), library.get("layouts"), "layouts")
+    else:
+        pool = int(config_env.number(env, "BRAIN_PRESET_POOL", preset_map.DEFAULT_POOL))
+        look_back = int(config_env.number(env, "BRAIN_ROTATION_WINDOW", 12))
+        recent = history.recent_values
+        first, second = preset_map.resolve_pair_rotated(
+            brain_choice.get("motions"), library.get("animations"),
+            recent("animation_1", look_back) + recent("animation_2", look_back), seed, pool)
+        transition = preset_map.resolve_rotated(
+            brain_choice.get("transition", "fade"), library.get("transitions"), "transitions",
+            recent("transition", look_back), seed, pool)
+        family = preset_map.resolve_rotated(
+            brain_choice.get("family", ""), library.get("families"), "families",
+            recent("design_family", look_back), seed, pool)
+        layout = preset_map.resolve_rotated(
+            brain_choice.get("layout", ""), library.get("layouts"), "layouts",
+            recent("layout", look_back), seed, pool)
     design.update({
         "animation_1": first["id"], "animation_1_label": first["label"],
         "animation_2": second["id"], "animation_2_label": second["label"],
@@ -324,8 +350,26 @@ def adopt(design: dict, brain_choice: dict | None) -> dict:
         "brain_choice": {k: brain_choice.get(k) for k in ("family", "layout", "motions", "transition", "fingerprint")},
         "decision_source": "server brain",
     })
+    # The local selector matched the palette to the family it chose; that family
+    # has just been replaced, so the colours no longer belong to the look being
+    # rendered. Re-pick inside the adopted family, still steering off whatever
+    # was used recently.
+    if not config_env.flag(env, "BRAIN_TRUST_SERVER", False) and history is not None:
+        palettes = library.get("palettes")
+        preferred = [p for p in palettes if p["id"] in family.get("palettes", [])] or palettes
+        look_back = int(config_env.number(env, "BRAIN_ROTATION_WINDOW", 12))
+        palette = preset_map.rotate(preferred, history.recent_values("color_palette", look_back),
+                                    seed + "|palette")
+        design.update({"color_palette": palette["id"], "color_palette_label": palette["label"]})
+
+    # The fingerprint was computed before these four fields were replaced, so
+    # recompute it - otherwise history records a design that was never rendered
+    # and the next run's rotation is blind to what actually went out.
+    design["design_fingerprint"] = history_skill.fingerprint(design)
     print(f"[brain] server choice adopted: {brain_choice.get('motions')} -> "
           f"{first['id']} + {second['id']} | {brain_choice.get('transition')} -> {transition['xfade']}")
+    print(f"[brain] look: {family['id']} / {design.get('color_palette')} / {layout['id']} "
+          f"/ {design.get('background')} / {design.get('effect')}")
     return design
 
 
@@ -374,6 +418,12 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
         layer = renderer.render_text_layer(frame, copy, variant)
         layer.save(work / f"{name}.png", "PNG")
         scenes[name] = work / f"{name}.png"
+
+    # The engine writes one flat poster - photo, a white headline, nothing else -
+    # so every post looked identical no matter what the design system chose.
+    # Re-render it here, plus the square and story crops, through the same
+    # palette/layout/background/typography that drive the reel.
+    stills = _render_stills(renderer, hero, detail, ready, stamp, post, config)
 
     effect = library.by_id("effects", design["effect"]) or {}
     sprite_path = None
@@ -475,11 +525,42 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
         return False
 
     _STATE["history"].append(_record(design, reel))
-    files = [p for p in (post, reel, info, ready / f"Vision-Analytical-{stamp}-Caption.txt") if p.is_file()]
+    files = [p for p in (*stills, reel, info, ready / f"Vision-Analytical-{stamp}-Caption.txt")
+             if p.is_file()]
     deliver.publish(files, stamp, _STATE["env"])
     print(f"[brain] reel OK  {reel}  ({reel.stat().st_size / 1048576:.2f} MB, "
           f"{result.seconds:.1f}s, history {len(_STATE['history'].records)})")
     return True
+
+
+POST_SIZES = {
+    "POST": (1080, 1350),    # Instagram / Facebook portrait - the engine's own name
+    "SQUARE": (1080, 1080),  # Instagram square
+    "STORY": (1080, 1920),   # story / WhatsApp status
+}
+
+
+def _render_stills(renderer, hero, detail, ready: Path, stamp: str, post: Path, config) -> list[Path]:
+    """Overwrite the engine's poster and add the square and story crops."""
+    from vision_ai.skills import validate
+
+    written: list[Path] = []
+    for name, size in POST_SIZES.items():
+        target = post if name == "POST" else ready / f"Vision-Analytical-{stamp}-{name}.png"
+        try:
+            image = renderer.render(size, hero if name != "STORY" else detail, variant=0)
+        except (OSError, ValueError) as exc:
+            print(f"[brain] {name} render failed ({exc}) - keeping what the engine wrote")
+            if target.is_file():
+                written.append(target)
+            continue
+        save_png(image, target)
+        report = validate.validate_image(target, size, config.validation)
+        if not report.ok:
+            print(f"[brain] {name} validation: {[c.detail for c in report.failures]}")
+        written.append(target)
+    print(f"[brain] posters rendered: {', '.join(p.name for p in written)}")
+    return written
 
 
 def _info_text(design, instrument, asset, report, result) -> str:

@@ -96,6 +96,42 @@ seconds, and any failure silently falls back to the local templates.
 - Curated authentic photos live in
   `creative-pack/images/<manufacturer>/<model>/` and rotate between runs.
 
+## Why posts stopped looking alike
+
+Two things were quietly flattening every run.
+
+**The stills never went through the design system.** The engine writes one
+poster - the photo, a white headline, a small wordmark - and the brain only
+replaced the reel. Whatever palette, layout and background were chosen reached
+the video and nothing else. The brain now re-renders `POST` (1080x1350) and
+adds `SQUARE` (1080x1080) and `STORY` (1080x1920) through the same renderer,
+overwriting the engine's poster in place so the existing sync chain still
+finds it.
+
+**One preset name meant one library entry.** The server brain's whole
+vocabulary is about five family names, four layout names and six motion names.
+Resolving each name to exactly one entry pinned 42 real runs onto 4 layouts
+and 5 families, while the fields the local selector owned used 93-100% of
+their libraries. A preset name now resolves to a *band* of entries that all
+match it; the literal best match stays the favourite, but recency steers each
+run away from what just went out.
+
+| | library | 42 runs before | 13 runs after |
+|---|---|---|---|
+| layout | 25 | 4 | 11 |
+| design family | 26 | 5 | 9 |
+| transition | 15 | 5 | 9 |
+| animation 2 | 25 | 8 | 9 |
+
+`verify.sh` now reports library coverage over the last 30 runs and warns when
+any of them drops below 35%. Tuning knobs, all optional:
+
+| key | default | effect |
+|---|---|---|
+| `BRAIN_PRESET_POOL` | 8 | how many entries one preset name may reach |
+| `BRAIN_ROTATION_WINDOW` | 12 | how far back recency looks |
+| `BRAIN_TRUST_SERVER` | 0 | `1` restores the literal one-name-one-entry mapping |
+
 ## Anti-repetition
 
 Each design has a SHA-256 fingerprint over manufacturer, model, family,

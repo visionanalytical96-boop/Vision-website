@@ -1,6 +1,46 @@
 {
-  "_comment": "Voice roster. lang 'hi' voices are real Indian voices speaking Hindi - piper has no Indian English voice, so Hindi is how narration actually sounds Indian. VOICE_LANG=hi in config.env selects them. Models download on first use into brain/piper-voices/ and are verified.",
+  "_comment": "Voice roster. lang: 'en-in' = Indian-accented English (VCTK speakers labelled Indian in the corpus), 'hi' = Indian voices speaking Hindi, 'en' = US/UK. VOICE_LANG in config.env picks: 'mix' (default) is mostly Indian English with occasional Hindi. piper has no dedicated en_IN model - these VCTK speakers are the Indian English that exists.",
   "voices": [
+    {
+      "id": "indian_female",
+      "piper": "en_GB-vctk-medium",
+      "speaker": 87,
+      "character": "Indian English, female",
+      "lang": "en-in",
+      "length_scale": 1.08,
+      "noise_scale": 0.667,
+      "noise_w": 0.8
+    },
+    {
+      "id": "indian_male",
+      "piper": "en_GB-vctk-medium",
+      "speaker": 92,
+      "character": "Indian English, male",
+      "lang": "en-in",
+      "length_scale": 1.06,
+      "noise_scale": 0.667,
+      "noise_w": 0.8
+    },
+    {
+      "id": "indian_male_young",
+      "piper": "en_GB-vctk-medium",
+      "speaker": 26,
+      "character": "Indian English, younger male",
+      "lang": "en-in",
+      "length_scale": 1.04,
+      "noise_scale": 0.7,
+      "noise_w": 0.85
+    },
+    {
+      "id": "indian_female_calm",
+      "piper": "en_GB-vctk-medium",
+      "speaker": 87,
+      "character": "Indian English, female, unhurried",
+      "lang": "en-in",
+      "length_scale": 1.2,
+      "noise_scale": 0.6,
+      "noise_w": 0.7
+    },
     {
       "id": "amy",
       "piper": "en_US-amy-medium",

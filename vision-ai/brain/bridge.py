@@ -83,6 +83,10 @@ def decide(argv: list[str] | None = None) -> dict:
 
     pack = copywriter.build(instrument, design, client, bool(config.ollama["enabled"]), campaign_copy)
     design["copy_source"] = pack.source
+    details = contact_lines(env)
+    if details:
+        pack.caption = pack.caption.replace(
+            "\n\n#", "\n\n" + " | ".join(details) + "\n\n#")
 
     # Cut the instrument out of its background when the operator wants that
     # look and the optional dependency is installed.
@@ -161,6 +165,20 @@ LOGO_CANDIDATES = (
 )
 
 
+def contact_lines(env: dict) -> list[str]:
+    """Whatever the operator filled in - nothing is invented."""
+    ordered = ("BRAND_PHONE", "BRAND_EMAIL", "WEBSITE", "BRAND_INSTAGRAM", "BRAND_ADDRESS")
+    out = []
+    for key in ordered:
+        value = (env.get(key) or "").strip()
+        if not value:
+            continue
+        if key == "BRAND_INSTAGRAM" and not value.startswith("@"):
+            value = "@" + value.lstrip("@")
+        out.append(value)
+    return out
+
+
 def brand_logo() -> Path | None:
     """BRAND_LOGO in config.env wins; otherwise the logos already on the box."""
     configured = _STATE.get("env", {}).get("BRAND_LOGO", "")
@@ -184,6 +202,7 @@ def _renderer(design: dict, photo: Path | None) -> Renderer:
         seed=design["design_fingerprint"],
         ghost=instrument.display_name,
         logo=brand_logo(),
+        contact=contact_lines(_STATE.get("env", {})),
     )
 
 
@@ -302,7 +321,7 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     # Voice-over: the campaign script, spoken by whatever CPU TTS is installed.
     if config_env.flag(env, "VOICE", False):
         roster = voices.roster(library)
-        lang = env.get("VOICE_LANG", "en").strip().lower()
+        lang = env.get("VOICE_LANG", "mix").strip().lower()
         usable = voices.available(roster) or roster   # never shadow `ready`, the output dir
         voice = voices.choose(usable, _STATE["history"].recent_values("voice_name", 3),
                               seed=design["design_fingerprint"], lang=lang)

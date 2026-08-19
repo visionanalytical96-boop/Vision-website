@@ -234,7 +234,8 @@ class Renderer:
 
     def __init__(self, design: dict, palette: dict, layout: dict, composition: dict,
                  background: dict, typography: dict, effect: dict, photo: Path | None,
-                 seed: str = "", ghost: str = "", logo: Path | None = None) -> None:
+                 seed: str = "", ghost: str = "", logo: Path | None = None,
+                 contact: list[str] | None = None) -> None:
         self.design = design
         self.palette = palette
         self.layout = layout
@@ -245,6 +246,7 @@ class Renderer:
         self.photo = photo
         self.ghost = ghost
         self.logo = Path(logo) if logo else None
+        self.contact = [c for c in (contact or []) if c]
         self.rng = random.Random(seed or design.get("design_fingerprint", ""))
         self.c_bg1 = hex_rgb(palette["bg1"])
         self.c_bg2 = hex_rgb(palette["bg2"])
@@ -459,6 +461,25 @@ class Renderer:
             canvas.alpha_composite(streak.filter(ImageFilter.GaussianBlur(int(40 * s))))
 
     # -- text ---------------------------------------------------------
+    def _brand_height(self, size: tuple[int, int]) -> float:
+        """How much room the logo/wordmark/contact block needs at the bottom,
+        so the copy above it never lands on top."""
+        w, h = size
+        s = w / BASE_WIDTH
+        families = self.typography.get("headline", ["DejaVu Sans"])
+        wordmark = int(38 * s)
+        tagline = int(21 * s)
+        small = int(19 * s)
+        rows = 0
+        if self.contact:
+            probe = Image.new("RGBA", (10, 10))
+            draw = ImageDraw.Draw(probe)
+            font = load_font(families, small, bold=False)
+            line = "   ·   ".join(self.contact)
+            rows = 2 if draw.textlength(line, font=font) > w * 0.86 else 1
+        # the extra 60s is breathing room plus the panel padding a layout may add
+        return wordmark * 1.15 + tagline * 1.5 + rows * small * 1.45 + h * 0.038 + 60 * s
+
     def _fonts(self, families, bold, s, k):
         return {
             "eyebrow": load_font(families, int(26 * s * k), bold=False),
@@ -506,8 +527,8 @@ class Renderer:
 
         # The brand footer owns the bottom strip; text never enters it.
         top_limit = h * 0.05
-        bottom_limit = h * 0.88
-        anchor_y = h * layout["anchor"][1]
+        bottom_limit = h - self._brand_height(size)
+        anchor_y = min(h * layout["anchor"][1], bottom_limit)
 
         # Regions the text may use: the whole safe area, or - when an instrument
         # photograph is in frame - the clear bands above and below it.
@@ -632,17 +653,40 @@ class Renderer:
 
         footer = copy.footer or brand.BRAND_NAME.upper()
         font = load_font(families, int(38 * s), bold=True)
+        tagline = load_font(families, int(21 * s), bold=False)
+        small = load_font(families, int(19 * s), bold=False)
         tracking = 6 * s
+        gap = "   ·   "
+
+        rows: list[str] = []
+        if self.contact:
+            line = gap.join(self.contact)
+            if draw.textlength(line, font=small) > w * 0.86:
+                half = (len(self.contact) + 1) // 2
+                rows = [gap.join(self.contact[:half]), gap.join(self.contact[half:])]
+            else:
+                rows = [line]
+
+        # Lay the whole block from the bottom edge up, so the contact strip is
+        # never the part that falls off the frame.
+        block_h = font.size * 1.15 + tagline.size * 1.5 + sum(small.size * 1.45 for _ in rows)
+        fy = h - h * 0.038 - block_h
         fw = text_width(draw, footer, font, tracking)
         fx = (w - fw) / 2 if align == "center" else w * 0.07
-        fy = h - h * 0.075
+
         draw.rectangle((fx, fy - 22 * s, fx + max(fw, 60 * s), fy - 22 * s + max(3, int(5 * s))),
                        fill=(*self.c_accent, 240))
         draw_tracked(draw, (fx, fy), footer, font, (*self.c_text, 245), tracking)
 
-        tagline = load_font(families, int(21 * s), bold=False)
-        draw.text((fx, fy + font.size * 1.15), brand.BRAND_TAGLINE, font=tagline,
-                  fill=(*self.c_dim, 220))
+        y_line = fy + font.size * 1.15
+        draw.text((fx, y_line), brand.BRAND_TAGLINE, font=tagline, fill=(*self.c_dim, 220))
+        y_line += tagline.size * 1.5
+
+        for row in rows:
+            width = draw.textlength(row, font=small)
+            x = (w - width) / 2 if align == "center" else fx
+            draw.text((x, y_line), row, font=small, fill=(*self.c_dim, 205))
+            y_line += small.size * 1.45
 
     # -- public -------------------------------------------------------
     def render_base(self, size: tuple[int, int], variant: int = 0) -> Image.Image:

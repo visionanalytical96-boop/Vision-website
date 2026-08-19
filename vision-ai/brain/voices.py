@@ -61,7 +61,7 @@ def _verify(model: Path) -> bool:
     probe = model.with_suffix(".probe.wav")
     try:
         result = subprocess.run([str(binary), "-m", str(model), "-f", str(probe)],
-                                input=b"ready", capture_output=True, timeout=180)
+                                input=b"ready", capture_output=True, timeout=300)
         ok = result.returncode == 0 and probe.is_file() and probe.stat().st_size > 2000
     except (subprocess.SubprocessError, OSError):
         ok = False
@@ -104,12 +104,18 @@ def ensure(voice: dict, quiet: bool = False) -> Path | None:
     return model
 
 
-def choose(voices: list[dict], recent: list[str], seed: str = "", lang: str = "en") -> dict:
-    """A different character than the last few runs, in the wanted language."""
+def choose(voices: list[dict], recent: list[str], seed: str = "", lang: str = "mix") -> dict:
+    """A different character than the last few runs, in the wanted language.
+
+    'mix' is what an Indian audience actually hears: mostly Indian English,
+    with Hindi every fourth or so post.
+    """
+    rng = random.Random(seed)
+    if lang == "mix":
+        lang = "hi" if rng.random() < 0.25 else "en-in"
     voices = [v for v in voices if v.get("lang", "en") == lang] or voices
     unused = [v for v in voices if v["id"] not in recent]
-    pool = unused or voices
-    return random.Random(seed).choice(pool)
+    return rng.choice(unused or voices)
 
 
 def available(voices: list[dict]) -> list[dict]:
@@ -149,8 +155,11 @@ def speak(script: str, voice: dict, out_path: Path, sentence_silence: float = 0.
     binary = piper_binary()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     try:
+        command = [str(binary), "-m", str(model), "-f", str(out_path)]
+        if voice.get("speaker") is not None:
+            command += ["-s", str(voice["speaker"])]
         result = subprocess.run(
-            [str(binary), "-m", str(model), "-f", str(out_path),
+            command + [
              "--length-scale", str(voice.get("length_scale", 1.0)),
              "--noise-scale", str(voice.get("noise_scale", 0.667)),
              "--noise-w-scale", str(voice.get("noise_w", 0.8)),

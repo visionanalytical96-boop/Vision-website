@@ -582,7 +582,9 @@ def _info_text(design, instrument, asset, report, result) -> str:
         f"Effect              : {design['effect_label']}",
         f"Music               : {design['music_style_label']} | {design.get('music_track') or '(silent)'}",
         f"Image Search Query  : {design['image_search_query']}",
-        f"Image Asset         : {asset.name} [{asset.source}]",
+        f"Image Asset         : {design.get('image_asset', asset.name)} [{asset.source}]",
+        f"Rendered From       : {asset.name}"
+        + ("  (background removed)" if design.get("image_prepared") else "  (as supplied)"),
         f"Image Exact Match   : {'yes' if asset.exact_match else 'NO - ' + asset.note}",
         f"Design Fingerprint  : {design['design_fingerprint']}",
         f"Anti-Repetition     : {design.get('anti_repetition', '')}",

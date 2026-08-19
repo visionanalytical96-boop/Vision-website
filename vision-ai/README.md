@@ -152,6 +152,34 @@ in the new folder.
 - Curated authentic photos live in
   `creative-pack/images/<manufacturer>/<model>/` and rotate between runs.
 
+## A reel every N hours
+
+Automatic generation is off by default and the engine refuses to run unattended
+unless it is told otherwise, so it can only happen through this one unit.
+
+```bash
+sudo ./schedule.sh --every 2h --requests requests-shimadzu.txt --voice-lang en-in
+sudo ./schedule.sh --status      # is it on, what fires next, what the last run did
+sudo ./schedule.sh --run-now     # fire once by hand, exactly what the timer does
+sudo ./schedule.sh --off         # remove it completely
+```
+
+The request list is one line per firing and the timer walks down it, so
+consecutive reels are for different instruments and different campaigns rather
+than the same one all day. Comments and blank lines are skipped, and the list
+can be edited while the timer runs - the change is picked up on the next
+firing. Design, palette, layout, voice, music and the photo rotate on their own,
+so the same line twice does not give the same reel.
+
+The unit runs at `Nice=10`, `IOSchedulingClass=idle` and `CPUQuota=300%` - one
+reel at a time, never at the expense of Nextcloud, Jellyfin or n8n. Missed
+firings are not made up, so downtime leaves a gap rather than a burst.
+
+Delivery is unchanged: the package lands in `OUTPUT/READY` and the operator's
+own `vision-mobile-final-sync` / `vision-ipad-sync` timers carry it to the phone
+folder. **Those scripts keep only the newest package** - each sync wipes the
+phone folder first - so a reel every two hours replaces the one before it.
+
 ## Why posts stopped looking alike
 
 Two things were quietly flattening every run.

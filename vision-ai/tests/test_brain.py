@@ -1008,5 +1008,123 @@ class InstagramTests(unittest.TestCase):
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+class ScheduleScriptTests(unittest.TestCase):
+    """The timer must produce a different reel each firing, and come off cleanly."""
+
+    SCRIPT = ROOT / "schedule.sh"
+    REQUESTS = ROOT / "requests-shimadzu.txt"
+
+    def setUp(self):
+        if not shutil.which("bash"):
+            self.skipTest("bash is not available")
+        self.tmp = Path(tempfile.mkdtemp())
+        self.prefix = self.tmp / "prefix"
+        (self.prefix / "brain").mkdir(parents=True)
+        (self.prefix / "creative-pack" / "history").mkdir(parents=True)
+        self.engine = self.tmp / "vision-ai-content"
+        self.engine.write_text("#!/usr/bin/env bash\n# vision brain integration\n"
+                               'echo "engine got: $1"\n', encoding="utf-8")
+        self.engine.chmod(0o755)
+        self.units = self.tmp / "units"
+        self.units.mkdir()
+        self.env = {**__import__("os").environ,
+                    "VISION_AI_PREFIX": str(self.prefix),
+                    "VISION_ENGINE": str(self.engine),
+                    "SYSTEMD_DIR": str(self.units)}
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def run_script(self, *args):
+        import subprocess
+        return subprocess.run(["bash", str(self.SCRIPT), *args], env=self.env,
+                              capture_output=True, text=True, timeout=120)
+
+    def fire(self, times: int) -> list[str]:
+        import subprocess
+        runner = self.prefix / "brain" / "run-scheduled.sh"
+        seen = []
+        for _ in range(times):
+            done = subprocess.run(["bash", str(runner)], env=self.env,
+                                  capture_output=True, text=True, timeout=120)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            seen.append(done.stdout.strip().splitlines()[0])
+        return seen
+
+    def test_install_writes_the_units_and_the_runner(self):
+        done = self.run_script("--every", "2h", "--requests", str(self.REQUESTS))
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertTrue((self.units / "vision-ai-reel.timer").is_file())
+        self.assertTrue((self.units / "vision-ai-reel.service").is_file())
+        self.assertTrue((self.prefix / "brain" / "run-scheduled.sh").is_file())
+        timer = (self.units / "vision-ai-reel.timer").read_text()
+        self.assertIn("OnUnitActiveSec=2h", timer)
+        self.assertIn("Persistent=false", timer, "missed firings would pile up after downtime")
+
+    def test_generation_stays_blocked_outside_this_one_unit(self):
+        """Unattended runs are refused unless the engine is told it is allowed."""
+        self.run_script("--requests", str(self.REQUESTS))
+        service = (self.units / "vision-ai-reel.service").read_text()
+        self.assertIn("VISION_AI_ALLOW_AUTOMATION=1", service)
+        runner = (self.prefix / "brain" / "run-scheduled.sh").read_text()
+        self.assertNotIn("VISION_AI_ALLOW_AUTOMATION", runner,
+                         "the runner must not grant automation on its own")
+
+    def test_each_firing_takes_the_next_request(self):
+        self.run_script("--requests", str(self.REQUESTS))
+        total = len([line for line in self.REQUESTS.read_text().splitlines()
+                     if line.strip() and not line.strip().startswith("#")])
+        seen = self.fire(total)
+        self.assertEqual(len(set(seen)), total, "the same request came round twice too early")
+
+    def test_the_list_wraps_instead_of_stopping(self):
+        self.run_script("--requests", str(self.REQUESTS))
+        total = len([line for line in self.REQUESTS.read_text().splitlines()
+                     if line.strip() and not line.strip().startswith("#")])
+        seen = self.fire(total + 2)
+        self.assertEqual(seen[0], seen[total])
+
+    def test_comments_and_blank_lines_are_not_generated(self):
+        requests = self.tmp / "list.txt"
+        requests.write_text("# a comment\n\nShimadzu UV-1900i\n\n# another\n"
+                            "Shimadzu GCMS-QP2020 NX\n", encoding="utf-8")
+        self.run_script("--requests", str(requests))
+        seen = self.fire(4)
+        for line in seen:
+            self.assertNotIn("#", line)
+            self.assertNotIn("comment", line)
+        self.assertEqual(seen[0], seen[2], "a two-line list should wrap after two firings")
+
+    def test_a_request_list_that_is_all_comments_generates_nothing(self):
+        import subprocess
+        requests = self.tmp / "empty.txt"
+        requests.write_text("# nothing to do yet\n\n", encoding="utf-8")
+        self.run_script("--requests", str(requests))
+        done = subprocess.run(["bash", str(self.prefix / "brain" / "run-scheduled.sh")],
+                              env=self.env, capture_output=True, text=True, timeout=60)
+        self.assertEqual(done.returncode, 0)
+        self.assertIn("empty", done.stdout)
+        self.assertNotIn("engine got", done.stdout)
+
+    def test_an_unintegrated_engine_is_refused(self):
+        self.engine.write_text("#!/usr/bin/env bash\necho hi\n", encoding="utf-8")
+        done = self.run_script("--requests", str(self.REQUESTS))
+        self.assertNotEqual(done.returncode, 0)
+        self.assertIn("integrate.sh", done.stderr)
+
+    def test_installing_without_a_request_list_refuses_rather_than_guessing(self):
+        done = self.run_script("--every", "2h")
+        self.assertNotEqual(done.returncode, 0)
+        self.assertIn("--requests", done.stderr)
+
+    def test_the_bundled_shimadzu_list_is_shimadzu_only(self):
+        """Today's brief: Shimadzu, from the Shimadzu folder."""
+        lines = [line.strip() for line in self.REQUESTS.read_text().splitlines()
+                 if line.strip() and not line.strip().startswith("#")]
+        self.assertTrue(lines)
+        for line in lines:
+            self.assertIn("shimadzu", line.lower(), line)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

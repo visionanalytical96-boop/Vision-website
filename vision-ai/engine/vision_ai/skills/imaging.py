@@ -75,11 +75,18 @@ def looks_generated(path: Path) -> bool:
     return any(token in stem for token in GENERATED_NAMES)
 
 
+# What the photo studio leaves behind next to each original. It is a cutout of
+# a photo already in the folder, so treating it as a photo of its own counts
+# every instrument twice and re-cuts an image that has already been cut.
+STUDIO_SUFFIX = "-studio"
+
+
 def _photos(directory: Path) -> list[Path]:
     if not directory.is_dir():
         return []
     return sorted(p for p in directory.rglob("*")
-                  if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES and not looks_generated(p))
+                  if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES
+                  and not p.stem.endswith(STUDIO_SUFFIX) and not looks_generated(p))
 
 
 def model_dir(cache_root: Path, instrument: Instrument) -> Path:

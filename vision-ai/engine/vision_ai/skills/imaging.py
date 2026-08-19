@@ -42,10 +42,27 @@ def _tokens(text: str) -> list[str]:
     return [t for t in re.split(r"[^A-Za-z0-9]+", (text or "").lower()) if t]
 
 
+GENERATED_DIRS = {"generated", "output", "outputs", "ready", "posters", "renders", "tmp"}
+GENERATED_NAMES = ("vision-analytical-", "-post", "-story", "-square", "-poster", "-reel")
+
+
+def looks_generated(path: Path) -> bool:
+    """A previously rendered poster is not a photograph of an instrument.
+
+    Putting one in the asset library stacks a design on top of a design - the
+    instrument disappears and the branding doubles up.
+    """
+    if any(part.lower() in GENERATED_DIRS for part in Path(path).parts):
+        return True
+    stem = Path(path).stem.lower()
+    return any(token in stem for token in GENERATED_NAMES)
+
+
 def _photos(directory: Path) -> list[Path]:
     if not directory.is_dir():
         return []
-    return sorted(p for p in directory.rglob("*") if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES)
+    return sorted(p for p in directory.rglob("*")
+                  if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES and not looks_generated(p))
 
 
 def model_dir(cache_root: Path, instrument: Instrument) -> Path:

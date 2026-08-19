@@ -28,7 +28,7 @@ for _candidate in (_HERE, _HERE.parent / "engine"):   # vendored, then repo layo
 
 from vision_ai.config import load_config  # noqa: E402
 from vision_ai.library import Library  # noqa: E402
-from vision_ai.skills.imaging import IMAGE_SUFFIXES, model_dir  # noqa: E402
+from vision_ai.skills.imaging import IMAGE_SUFFIXES, looks_generated, model_dir  # noqa: E402
 from vision_ai.skills.instrument import identify  # noqa: E402
 
 try:  # `python3 -m brain.x` from the parent dir
@@ -60,6 +60,8 @@ def plan(staging: Path, cache_root: Path, library: Library) -> tuple[list[tuple[
     for source in sorted(staging.rglob("*")):
         if not source.is_file() or source.suffix.lower() not in IMAGE_SUFFIXES:
             continue
+        if looks_generated(source):
+            continue  # a rendered poster is not a photograph
         folder_hint = source.parent.name if source.parent != staging else ""
         instrument = identify(folder_hint, library) if folder_hint else None
         reason = "folder name"

@@ -120,6 +120,24 @@ def vignette(image: Image.Image, strength: float) -> Image.Image:
     return Image.composite(image, Image.blend(image, dark, min(0.9, strength)), mask)
 
 
+def _trim_logo(mark: Image.Image) -> Image.Image:
+    """Cut the empty margin baked into most logo files.
+
+    Without this the logo looks tiny: the file is mostly padding, so scaling to
+    a share of the frame scales the padding too.
+    """
+    alpha = mark.getchannel("A")
+    box = alpha.point(lambda value: 255 if value > 12 else 0).getbbox()
+    if box is None or alpha.getextrema()[0] > 250:
+        # opaque file: trim the near-white (or near-black) border instead
+        grey = mark.convert("L")
+        corner = grey.getpixel((0, 0))
+        threshold = 245 if corner > 200 else 12
+        mask = grey.point(lambda value: 0 if (value >= threshold if corner > 200 else value <= threshold) else 255)
+        box = mask.getbbox()
+    return mark.crop(box) if box else mark
+
+
 def rounded_mask(size: tuple[int, int], radius: int) -> Image.Image:
     mask = Image.new("L", size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=255)
@@ -184,7 +202,7 @@ class Renderer:
 
     def __init__(self, design: dict, palette: dict, layout: dict, composition: dict,
                  background: dict, typography: dict, effect: dict, photo: Path | None,
-                 seed: str = "", ghost: str = "") -> None:
+                 seed: str = "", ghost: str = "", logo: Path | None = None) -> None:
         self.design = design
         self.palette = palette
         self.layout = layout
@@ -194,6 +212,7 @@ class Renderer:
         self.effect = effect
         self.photo = photo
         self.ghost = ghost
+        self.logo = Path(logo) if logo else None
         self.rng = random.Random(seed or design.get("design_fingerprint", ""))
         self.c_bg1 = hex_rgb(palette["bg1"])
         self.c_bg2 = hex_rgb(palette["bg2"])
@@ -559,14 +578,53 @@ class Renderer:
                                        width=max(2, int(2.5 * s)))
                 draw.text((bx + pad_x, y + 10 * s + pad_y), cta, font=fonts["cta"], fill=(*self.c_accent, 255))
 
-        footer = copy.footer or brand.BRAND_LINE_SHORT
-        fw = text_width(draw, footer, fonts["brand"], 4 * s)
-        fx = (w - fw) / 2 if align == "center" else w * 0.08
-        fy = h - h * 0.055
-        draw.rectangle((fx, fy - 16 * s, fx + max(fw, 40 * s), fy - 16 * s + max(2, int(3 * s))),
-                       fill=(*self.c_accent, 220))
-        draw_tracked(draw, (fx, fy), footer, fonts["brand"], (*self.c_text, 235), 4 * s)
+        self._brand_block(layer, draw, size, align, fonts, copy)
         return layer
+
+    def _brand_block(self, layer, draw, size, align, fonts, copy) -> None:
+        """Logo top-left, wordmark bottom - sized to be read on a phone."""
+        w, h = size
+        s = w / BASE_WIDTH
+        families = self.typography.get("headline", ["DejaVu Sans"])
+
+        if self.logo and self.logo.is_file():
+            try:
+                with Image.open(self.logo) as raw:
+                    mark = _trim_logo(raw.convert("RGBA"))
+                target_w = int(w * 0.30)
+                mark = mark.resize((target_w, max(1, int(mark.height * target_w / mark.width))), Image.LANCZOS)
+                x, y = int(w * 0.07), int(h * 0.055)
+                alpha = mark.getchannel("A")
+                if alpha.getextrema()[0] > 250 and self.dark:
+                    # opaque logo on a dark design: give it a tight light plate
+                    pad = int(14 * s)
+                    plate = Image.new("RGBA", (mark.width + pad * 2, mark.height + pad * 2), (0, 0, 0, 0))
+                    ImageDraw.Draw(plate).rounded_rectangle(
+                        (0, 0, plate.width - 1, plate.height - 1), radius=int(16 * s),
+                        fill=(255, 255, 255, 235))
+                    plate.alpha_composite(mark, (pad, pad))
+                    layer.alpha_composite(plate, (x, y))
+                    bottom = y + plate.height
+                else:
+                    layer.alpha_composite(mark, (x, y))
+                    bottom = y + mark.height
+                del bottom
+            except OSError:
+                pass
+
+        footer = copy.footer or brand.BRAND_NAME.upper()
+        font = load_font(families, int(38 * s), bold=True)
+        tracking = 6 * s
+        fw = text_width(draw, footer, font, tracking)
+        fx = (w - fw) / 2 if align == "center" else w * 0.07
+        fy = h - h * 0.075
+        draw.rectangle((fx, fy - 22 * s, fx + max(fw, 60 * s), fy - 22 * s + max(3, int(5 * s))),
+                       fill=(*self.c_accent, 240))
+        draw_tracked(draw, (fx, fy), footer, font, (*self.c_text, 245), tracking)
+
+        tagline = load_font(families, int(21 * s), bold=False)
+        draw.text((fx, fy + font.size * 1.15), brand.BRAND_TAGLINE, font=tagline,
+                  fill=(*self.c_dim, 220))
 
     # -- public -------------------------------------------------------
     def render_base(self, size: tuple[int, int], variant: int = 0) -> Image.Image:

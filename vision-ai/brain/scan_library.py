@@ -40,7 +40,7 @@ for _candidate in (_HERE, _HERE.parent / "engine"):
 
 from vision_ai.config import load_config  # noqa: E402
 from vision_ai.library import Library  # noqa: E402
-from vision_ai.skills.imaging import IMAGE_SUFFIXES, model_dir  # noqa: E402
+from vision_ai.skills.imaging import IMAGE_SUFFIXES, looks_generated, model_dir  # noqa: E402
 from vision_ai.skills.instrument import Instrument, identify  # noqa: E402
 
 try:  # `python3 -m brain.x` from the parent dir
@@ -52,7 +52,8 @@ except ImportError:  # `python3 /path/to/brain/x.py`
 HEIC = {".heic", ".heif"}
 SKIP_DIRS = {"files_trashbin", "files_versions", "cache", "thumbnails", "preview", "previews",
              ".git", "node_modules", "files_external", "venv", "site-packages", "comfyui",
-             "models", "custom_nodes", "dist", "build", "__pycache__"}
+             "models", "custom_nodes", "dist", "build", "__pycache__",
+             "generated", "output", "outputs", "ready", "posters", "renders"}
 SKIP_PREFIXES = ("appdata_", "__groupfolders", ".")
 
 
@@ -144,7 +145,7 @@ def candidates(root: Path) -> list[Path]:
         if any(part in SKIP_DIRS or part.startswith(SKIP_PREFIXES) for part in parts):
             continue
         suffix = path.suffix.lower()
-        if suffix in IMAGE_SUFFIXES or suffix in HEIC:
+        if (suffix in IMAGE_SUFFIXES or suffix in HEIC) and not looks_generated(path):
             files.append(path)
     return sorted(files)
 

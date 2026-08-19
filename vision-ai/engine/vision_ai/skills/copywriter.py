@@ -16,8 +16,12 @@ from .instrument import Instrument
 from .ollama_client import OllamaClient
 
 HEADLINES = {
-    "amc": ["Maintenance that keeps you running", "Cover the instrument, protect the schedule", "Planned service, predictable uptime"],
-    "calibration": ["Calibrated. Documented. Ready.", "Accuracy you can evidence", "Calibration that stands up to audit"],
+    "amc": ["Maintenance that keeps you running", "Cover the instrument, protect the schedule",
+            "Planned service, predictable uptime", "One contract, no surprises",
+            "Downtime, budgeted away", "Your instrument, always release-ready"],
+    "calibration": ["Calibrated. Documented. Ready.", "Accuracy you can evidence",
+                    "Calibration that stands up to audit", "Traceable, on schedule",
+                    "Numbers you can sign off"],
     "qualification": ["Qualified and audit-ready", "IQ, OQ, PQ - completed properly", "Documentation your auditor expects"],
     "refurbishment": ["Refurbished to specification", "A second life, fully tested", "Reconditioned. Verified. Delivered."],
     "spares": ["Parts in stock, dispatched fast", "The part you need, when you need it", "Spares that keep the run going"],
@@ -26,17 +30,22 @@ HEADLINES = {
     "training": ["Trained analysts, better data", "Hands-on operator training", "Confidence at the keyboard"],
 }
 DEFAULT_HEADLINES = [
-    "Precision, supported",
-    "Built for reliable results",
-    "Analytical performance, maintained",
-    "Laboratory performance you can trust",
-    "Engineered for consistent results",
+    "Precision, supported", "Built for reliable results", "Analytical performance, maintained",
+    "Laboratory performance you can trust", "Engineered for consistent results",
+    "Uptime is the real specification", "Your method, running as it should",
+    "Instruments that hold their calibration", "Ready when the batch is",
+    "Data you can defend", "Serviced by people who run these daily",
+    "From installation to qualification", "Keep the bench moving",
+    "Quiet reliability, run after run", "The instrument, properly supported",
 ]
 SUBHEADS = [
     "Sales - Service - Spares - Qualification",
     "Supported by Vision Analytical engineers",
     "Installation, service and qualification",
     "Nationwide analytical instrument support",
+    "Refurbished systems, tested to specification",
+    "Preventive maintenance that prevents downtime",
+    "Engineer-led support for pharma and testing labs",
 ]
 
 

@@ -141,6 +141,23 @@ def legacy_seconds() -> str:
     return "1" if config_env.flag(_STATE.get("env", {}), "BRAIN_SKIP_LEGACY_REEL", False) else "12"
 
 
+LOGO_CANDIDATES = (
+    "/srv/vision-workspace/vision-ai/creative-pack/brand/logo.png",
+    "/srv/vision-workspace/vision-design-brain/assets/vision-logo.png",
+    "/srv/vision-workspace/vision-autocontent-v2/assets/vision-logo.png",
+    "/srv/vision-workspace/content-engine/uploads/vision-analytical-logo.png",
+)
+
+
+def brand_logo() -> Path | None:
+    """BRAND_LOGO in config.env wins; otherwise the logos already on the box."""
+    configured = _STATE.get("env", {}).get("BRAND_LOGO", "")
+    for candidate in ([configured] if configured else []) + list(LOGO_CANDIDATES):
+        if candidate and Path(candidate).is_file():
+            return Path(candidate)
+    return None
+
+
 def _renderer(design: dict, photo: Path | None) -> Renderer:
     library, instrument = _STATE["library"], _STATE["instrument"]
     return Renderer(
@@ -154,6 +171,7 @@ def _renderer(design: dict, photo: Path | None) -> Renderer:
         photo,
         seed=design["design_fingerprint"],
         ghost=instrument.display_name,
+        logo=brand_logo(),
     )
 
 

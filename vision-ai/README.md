@@ -164,6 +164,28 @@ folder named after the instrument and run it again.
 Folders that are not instruments at all - "HPLC Columns", "Site Photos" - are
 meant to come back as unidentified. Nothing files them anywhere.
 
+### The folder name has to be the full model
+
+A folder called "Shimadzu 2010" files photos under `shimadzu/2010`, but a
+request resolves to the catalogue model and looks only in
+`shimadzu/lc-2010cht`. The import succeeds, the photos are never used, and
+nothing says why. The importer now catches that and names the folders a request
+would actually reach:
+
+```
+  ATTENTION - these folder names are not catalogue models, so a normal
+  request will look somewhere else and never find these photos:
+
+    photos went to   shimadzu/2010
+    a request finds them only under one of these:
+        shimadzu/lc-2010cht                    ("Shimadzu LC-2010CHT")
+        shimadzu/lc-2010aht                    ("Shimadzu LC-2010AHT")
+    -> rename the folder to the full model name and import again
+```
+
+Each file also reports its dimensions as it is filed - `good`, `~soft`, or
+`!too small` - because a 1080-wide post cannot be made from a 275px thumbnail.
+
 ## Checking the photo folders
 
 The folder name is the only claim that a photo shows a given instrument, and a

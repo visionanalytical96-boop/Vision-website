@@ -1283,6 +1283,10 @@ class ImportPhotosTests(unittest.TestCase):
         return path
 
     def plan(self):
+        matched, unknown, _loose = self.importer.plan(self.staging, self.cache, self.library)
+        return matched, unknown
+
+    def plan_full(self):
         return self.importer.plan(self.staging, self.cache, self.library)
 
     def test_a_model_folder_files_its_photos(self):
@@ -1378,6 +1382,40 @@ class ImportPhotosTests(unittest.TestCase):
         matched, unknown = self.plan()
         self.assertEqual(unknown, [])
         self.assertEqual(len(matched), 1)
+
+    def test_a_short_folder_name_is_flagged_as_unreachable(self):
+        """"Shimadzu 2010" files photos where no request will ever look."""
+        self.photo("Shimadzu 2010")
+        _, _, loose = self.plan_full()
+        self.assertEqual(len(loose), 1)
+        self.assertIn(("shimadzu", "2010"), loose)
+
+    def test_a_catalogue_model_is_not_flagged(self):
+        self.photo("Shimadzu LC-2010CHT")
+        self.photo("Waters Alliance e2695")
+        _, _, loose = self.plan_full()
+        self.assertEqual(loose, {}, "a correct folder name was reported as a problem")
+
+    def test_the_warning_names_the_folder_a_request_would_use(self):
+        import contextlib, io
+        self.photo("Waters 2695")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.importer.run(self.staging, self.cache, self.library, apply=False, move=False)
+        text = out.getvalue()
+        self.assertIn("waters/2695", text)
+        self.assertIn("waters/alliance-e2695", text)
+        self.assertIn("rename the folder", text)
+
+    def test_the_suggestion_puts_the_matching_number_first(self):
+        options = self.importer._closest(
+            "2010", ["GC-2030", "LC-2010CHT", "UV-1900i", "LC-2050"])
+        self.assertEqual(options[0], "LC-2010CHT")
+
+    def test_catalogue_models_come_from_the_library(self):
+        models = self.importer.catalogue_models(self.library, "waters")
+        self.assertIn("Alliance e2695", models)
+        self.assertTrue(all(isinstance(m, str) for m in models))
 
     def test_a_dry_run_copies_nothing(self):
         self.photo("Agilent 1260 Infinity II")

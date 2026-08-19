@@ -96,11 +96,13 @@ def _parent_names(source: Path, staging: Path) -> list[str]:
     return names
 
 
-def plan(staging: Path, cache_root: Path, library: Library) -> tuple[list[tuple[Path, Path, str]], list[Path]]:
+def plan(staging: Path, cache_root: Path, library: Library
+         ) -> tuple[list[tuple[Path, Path, str]], list[Path], dict[tuple[str, str], str]]:
     """Return (moves, unidentified). A folder name beats a filename: put photos
     of one instrument in a folder called e.g. 'Agilent 1260 Infinity II'."""
     matched: list[tuple[Path, Path, str]] = []
     unknown: list[Path] = []
+    loose: dict[tuple[str, str], str] = {}
     for source in sorted(staging.rglob("*")):
         if not source.is_file() or source.suffix.lower() not in IMAGE_SUFFIXES:
             continue
@@ -127,11 +129,57 @@ def plan(staging: Path, cache_root: Path, library: Library) -> tuple[list[tuple[
             continue
         matched.append((source, model_dir(cache_root, instrument) / source.name,
                         f"{instrument.manufacturer} {instrument.model} (from {reason})"))
-    return matched, unknown
+        if not instrument.matched_known_model:
+            loose.setdefault((instrument.manufacturer_id, instrument.model),
+                             model_dir(cache_root, instrument).name)
+    return matched, unknown, loose
+
+
+def catalogue_models(library: Library, manufacturer_id: str) -> list[str]:
+    try:
+        known = library.get("instruments")["known_models"]
+    except (KeyError, TypeError):
+        return []
+    return [e["model"] for e in known if e.get("manufacturer") == manufacturer_id]
+
+
+def _closest(name: str, options: list[str]) -> list[str]:
+    """Catalogue models sharing digits with the folder name come first."""
+    digits = {t for t in re.split(r"[^0-9]+", name) if len(t) >= 3}
+    scored = [(len(digits & {t for t in re.split(r"[^0-9]+", o) if len(t) >= 3}), o)
+              for o in options]
+    scored.sort(key=lambda pair: (-pair[0], pair[1]))
+    return [o for _, o in scored]
+
+
+def report_loose_names(loose: dict, library: Library, cache_root: Path) -> None:
+    """A folder called "Shimadzu 2010" files photos where nothing looks for them.
+
+    The generator resolves a request to a catalogue model - LC-2010CHT - and
+    looks only in that folder. A short folder name imports cleanly and then the
+    photos are never used, with nothing saying why.
+    """
+    if not loose:
+        return
+    print("\n  ATTENTION - these folder names are not catalogue models, so a normal")
+    print("  request will look somewhere else and never find these photos:\n")
+    for (manufacturer_id, model), folder in sorted(loose.items()):
+        print(f"    photos went to   {manufacturer_id}/{folder}")
+        options = _closest(model, catalogue_models(library, manufacturer_id))
+        if options:
+            print("    a request finds them only under one of these:")
+            for option in options[:4]:
+                slug = re.sub(r"[^A-Za-z0-9]+", "-", option.lower()).strip("-")
+                print(f"        {manufacturer_id}/{slug:28s}  (\"{ _title(manufacturer_id) } {option}\")")
+        print("    -> rename the folder to the full model name and import again\n")
+
+
+def _title(manufacturer_id: str) -> str:
+    return manufacturer_id.replace("-", " ").title()
 
 
 def run(staging: Path, cache_root: Path, library: Library, apply: bool, move: bool) -> int:
-    matched, unknown = plan(staging, cache_root, library)
+    matched, unknown, loose = plan(staging, cache_root, library)
     if not matched and not unknown:
         print(f"no images found under {staging}")
         return 0
@@ -181,6 +229,7 @@ def run(staging: Path, cache_root: Path, library: Library, apply: bool, move: bo
         print("  will look blurry - replace those with your own photographs when you can.")
     if grades.get("unreadable"):
         print(f"  {grades['unreadable']} file(s) could not be opened and were not imported")
+    report_loose_names(loose, library, cache_root)
     if not apply and imported:
         print("re-run with --apply to actually file them")
     return 0

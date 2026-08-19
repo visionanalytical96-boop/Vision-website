@@ -9,6 +9,7 @@ local template.
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.error
 import urllib.request
@@ -31,6 +32,8 @@ class OllamaClient:
     num_predict: int = 40
     temperature: float = 0.75
     enabled: bool = True
+    keep_alive: str = "30m"   # model stays loaded between runs - no reload cost
+    threads: int = 0          # 0 = every core the box has
     calls: list[dict] = field(default_factory=list)
 
     def available(self) -> bool:
@@ -50,11 +53,14 @@ class OllamaClient:
             "model": self.model,
             "prompt": prompt,
             "stream": False,
+            "keep_alive": self.keep_alive,
             "options": {
                 "num_predict": int(num_predict or self.num_predict),
                 "temperature": self.temperature,
                 "top_p": 0.9,
                 "stop": ["\n\n"],
+                "num_ctx": 512,
+                "num_thread": self.threads or (os.cpu_count() or 4),
             },
         }
         request = urllib.request.Request(

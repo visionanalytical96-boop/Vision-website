@@ -67,6 +67,8 @@ def decide(argv: list[str] | None = None) -> dict:
         timeout=float(config.ollama["timeout_seconds"]),
         num_predict=int(config.ollama["num_predict"]),
         enabled=bool(config.ollama["enabled"]),
+        keep_alive=env.get("OLLAMA_KEEP_ALIVE", "30m"),
+        threads=int(config_env.number(env, "OLLAMA_THREADS", 0)),
     )
     pack = copywriter.build(instrument, design, client, bool(config.ollama["enabled"]))
     design["copy_source"] = pack.source
@@ -198,7 +200,11 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     video.update(music_volume=float(config.music.get("volume", 0.55)),
                  fade_in=float(config.music.get("fade_in", 1.0)),
                  fade_out=float(config.music.get("fade_out", 1.5)))
-    if config_env.flag(_STATE.get("env", {}), "FAST_MODE", True):
+    env = _STATE.get("env", {})
+    if config_env.flag(env, "TURBO_MODE", False):
+        # Shortest wall clock that still meets the phone contract.
+        video.update(preset="ultrafast", crf=26, render_scale=1.1)
+    elif config_env.flag(env, "FAST_MODE", True):
         # Tuned for a GPU-less box: same 1080x1920 contract, less encoder work.
         video.update(preset="superfast", crf=23, render_scale=1.3)
     frame = (int(video["width"]), int(video["height"]))

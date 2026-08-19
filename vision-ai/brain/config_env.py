@@ -17,6 +17,15 @@ DEFAULT_ENV = Path("/srv/vision-workspace/vision-ai/creative-pack/config.env")
 _LINE = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$")
 
 
+# Settings a run may override from the environment. Everything the brain reads
+# begins with one of these, so nothing unrelated to this system can leak in.
+OVERRIDABLE_PREFIXES = (
+    "VOICE", "BRAND_", "WEBSITE", "REEL_", "BRAIN_", "LOGO_", "MUSIC_",
+    "TURBO_", "FAST_", "EXACT_", "PIPER_", "NEXTCLOUD_", "META_", "IG_",
+    "INSTAGRAM_", "VISION_",
+)
+
+
 def load(path: Path | str | None = None) -> dict[str, str]:
     path = Path(path or os.environ.get("VISION_AI_CONFIG_ENV") or DEFAULT_ENV)
     values: dict[str, str] = {}
@@ -28,6 +37,13 @@ def load(path: Path | str | None = None) -> dict[str, str]:
         match = _LINE.match(line)
         if match:
             values[match.group(1)] = match.group(2).strip().strip('"').strip("'")
+
+    # A setting given on the command line wins for that one run, so an option
+    # can be tried without editing the file. Silently ignoring it - which is
+    # what happened before - looks exactly like the option not working.
+    for key, value in os.environ.items():
+        if key in values or key.startswith(OVERRIDABLE_PREFIXES):
+            values[key] = value
     return values
 
 

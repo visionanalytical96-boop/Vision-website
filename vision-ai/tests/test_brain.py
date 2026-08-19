@@ -232,6 +232,48 @@ class PresetMapTests(unittest.TestCase):
         self.assertEqual(a["id"], b["id"])
 
 
+class ConfigEnvOverrideTests(unittest.TestCase):
+    """A setting given on the command line has to actually take effect.
+
+    VOICE_LANG=en-in in front of the command was read from the file only, so it
+    looked exactly like the option being broken.
+    """
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.file = self.tmp / "config.env"
+        self.file.write_text("VOICE=1\nVOICE_LANG=mix\nBRAND_PHONE=+91 00000 00000\n", encoding="utf-8")
+        self.saved = dict(__import__("os").environ)
+
+    def tearDown(self):
+        import os
+        os.environ.clear()
+        os.environ.update(self.saved)
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_a_command_line_setting_wins_over_the_file(self):
+        import os
+        os.environ["VOICE_LANG"] = "en-in"
+        self.assertEqual(config_env.load(self.file)["VOICE_LANG"], "en-in")
+
+    def test_the_file_is_still_used_when_nothing_overrides_it(self):
+        self.assertEqual(config_env.load(self.file)["VOICE_LANG"], "mix")
+
+    def test_a_setting_absent_from_the_file_can_still_be_given(self):
+        import os
+        os.environ["REEL_MAX_SECONDS"] = "45"
+        self.assertEqual(config_env.number(config_env.load(self.file), "REEL_MAX_SECONDS", 30.0), 45.0)
+
+    def test_unrelated_environment_variables_never_leak_in(self):
+        import os
+        os.environ["PATH"] = "/nowhere"
+        os.environ["HOME"] = "/nowhere"
+        os.environ["EDITOR"] = "vi"
+        loaded = config_env.load(self.file)
+        for key in ("PATH", "HOME", "EDITOR"):
+            self.assertNotIn(key, loaded)
+
+
 class NarrationLength(unittest.TestCase):
     """The reel must never cut the speaker off mid-sentence."""
 

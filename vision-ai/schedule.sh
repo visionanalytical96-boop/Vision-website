@@ -9,6 +9,8 @@
 #   sudo ./schedule.sh --every 2h --requests requests-shimadzu.txt
 #   sudo ./schedule.sh --status
 #   sudo ./schedule.sh --run-now
+#   sudo ./schedule.sh --keep 12      # keep the last 12 reels on the phone
+#   sudo ./schedule.sh --keep off     # back to newest-only
 #   sudo ./schedule.sh --off
 set -Eeuo pipefail
 
@@ -21,12 +23,14 @@ REQUEST_FILE="$PREFIX/creative-pack/schedule-requests.txt"
 STATE_FILE="$PREFIX/creative-pack/history/schedule-position"
 RUNNER="$PREFIX/brain/run-scheduled.sh"
 
-EVERY="2h"; REQUESTS=""; ACTION="install"; VOICE_LANG_ARG=""
+EVERY="2h"; REQUESTS=""; ACTION="install"; VOICE_LANG_ARG=""; KEEP=""
+IPAD_SYNC="${VISION_IPAD_SYNC:-/usr/local/bin/vision-ipad-sync}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --every) EVERY="$2"; shift 2 ;;
     --requests) REQUESTS="$2"; shift 2 ;;
     --voice-lang) VOICE_LANG_ARG="$2"; shift 2 ;;
+    --keep) KEEP="$2"; shift 2 ;;
     --off) ACTION="off"; shift ;;
     --status) ACTION="status"; shift ;;
     --run-now) ACTION="run"; shift ;;
@@ -51,6 +55,25 @@ need_systemd(){
 
 count_requests(){ grep -cve '^[[:space:]]*$' -e '^[[:space:]]*#' "$1" 2>/dev/null || echo 0; }
 
+# The operator's own vision-ipad-sync empties the phone folder before each copy,
+# so a reel every couple of hours deletes the one before it. Their script is
+# theirs: this touches one line, keeps a backup, and puts it back on request.
+apply_keep(){
+  local wanted="$1"
+  [[ -f "$IPAD_SYNC" ]] || { echo "no sync script at $IPAD_SYNC" >&2; return 1; }
+  if [[ "$wanted" == "off" ]]; then
+    python3 "$PREFIX/brain/patch_sync.py" "$IPAD_SYNC" --revert
+  else
+    [[ "$wanted" =~ ^[0-9]+$ ]] || { echo "--keep takes a number, or 'off'" >&2; return 1; }
+    python3 "$PREFIX/brain/patch_sync.py" "$IPAD_SYNC" --keep "$wanted"
+  fi
+}
+
+if [[ -n "$KEEP" && "$ACTION" == "install" && -z "$REQUESTS" ]]; then
+  apply_keep "$KEEP"
+  exit $?
+fi
+
 case "$ACTION" in
 status)
   need_systemd
@@ -69,6 +92,10 @@ status)
   else
     say "none - $REQUEST_FILE is missing"
   fi
+  echo
+  echo "== the phone folder"
+  python3 "$PREFIX/brain/patch_sync.py" "$IPAD_SYNC" --status 2>/dev/null | sed 's/^/  /' \
+    || say "could not read $IPAD_SYNC"
   echo
   echo "== last run"
   journalctl -u "$UNIT.service" -n 12 --no-pager 2>/dev/null || say "no journal yet"
@@ -127,6 +154,10 @@ exec "\$ENGINE" "\$REQUEST"
 RUNNER_EOF
 chmod 0755 "$RUNNER"
 say "runner: $RUNNER"
+
+if [[ -n "$KEEP" ]]; then
+  apply_keep "$KEEP" | sed 's/^/  /'
+fi
 
 if [[ "$ACTION" == "run" ]]; then
   say "running one now - exactly what the timer will do"
@@ -188,6 +219,11 @@ systemctl enable --now "$UNIT.timer"
 say "timer on: one reel every $EVERY"
 systemctl list-timers --all "$UNIT.timer" --no-pager 2>/dev/null | sed -n '2p' || true
 echo
-say "delivery is unchanged - the reel lands in OUTPUT/READY and your existing"
+say "delivery: the reel lands in OUTPUT/READY and your existing"
 say "vision-mobile-final-sync / vision-ipad-sync timers carry it to the phone folder"
+if ! python3 "$PREFIX/brain/patch_sync.py" "$IPAD_SYNC" --status 2>/dev/null | grep -q "^patched"; then
+  say ""
+  say "NOTE: that sync keeps only the newest reel, so each one replaces the last."
+  say "      keep more:  sudo $SRC_DIR/schedule.sh --keep 12"
+fi
 say "turn it off any time:  sudo $SRC_DIR/schedule.sh --off"

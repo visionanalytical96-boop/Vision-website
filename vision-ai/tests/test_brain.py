@@ -1126,5 +1126,129 @@ class ScheduleScriptTests(unittest.TestCase):
             self.assertIn("shimadzu", line.lower(), line)
 
 
+class SyncPatchTests(unittest.TestCase):
+    """A reel every two hours must not delete the one before it.
+
+    The operator's vision-ipad-sync empties the phone folder before each copy.
+    Their script is theirs, so this touches one line and puts it back exactly.
+    """
+
+    ORIGINAL = ('#!/usr/bin/env bash\n'
+                'set -Eeuo pipefail\n'
+                'SRC="/srv/vision-mobile/OUTBOX/LATEST"; DST="/srv/vision-mobile/IPAD"; '
+                'TMP="/srv/vision-mobile/.IPAD.tmp"\n'
+                'if [ ! -d "$SRC" ]; then echo "SOURCE NOT FOUND"; exit 0; fi\n'
+                'rm -rf "$TMP"; mkdir -p "$TMP"; cp -a "$SRC"/. "$TMP"/\n'
+                'rm -rf "$DST"/*; cp -a "$TMP"/. "$DST"/; rm -rf "$TMP"\n'
+                'find "$DST" -type f -exec chmod 644 {} +\n'
+                'echo "IPAD SYNC OK"; find "$DST" -maxdepth 1 -type f -printf \'  %f\\n\' | sort\n')
+
+    @classmethod
+    def setUpClass(cls):
+        from brain import patch_sync
+        cls.patch_sync = patch_sync
+
+    def setUp(self):
+        if not shutil.which("bash"):
+            self.skipTest("bash is not available")
+        self.tmp = Path(tempfile.mkdtemp())
+        self.script = self.tmp / "vision-ipad-sync"
+        self.script.write_text(self.ORIGINAL, encoding="utf-8")
+        self.backups = self.tmp / "backups"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def bash_ok(self, path: Path) -> bool:
+        import subprocess
+        return subprocess.run(["bash", "-n", str(path)], capture_output=True).returncode == 0
+
+    def test_the_patched_script_is_still_valid_bash(self):
+        self.patch_sync.apply(self.script, 12, self.backups)
+        self.assertTrue(self.bash_ok(self.script))
+
+    def test_reverting_restores_the_original_byte_for_byte(self):
+        self.patch_sync.apply(self.script, 12, self.backups)
+        self.assertNotEqual(self.script.read_text(), self.ORIGINAL)
+        self.patch_sync.revert(self.script, self.backups)
+        self.assertEqual(self.script.read_text(), self.ORIGINAL)
+
+    def test_a_backup_is_written_before_anything_changes(self):
+        self.patch_sync.apply(self.script, 12, self.backups)
+        saved = list(self.backups.glob("vision-ipad-sync.*"))
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(saved[0].read_text(), self.ORIGINAL)
+
+    def test_applying_twice_with_the_same_number_changes_nothing(self):
+        self.patch_sync.apply(self.script, 12, self.backups)
+        once = self.script.read_text()
+        self.patch_sync.apply(self.script, 12, self.backups)
+        self.assertEqual(self.script.read_text(), once)
+
+    def test_the_number_can_be_changed_without_stacking_patches(self):
+        self.patch_sync.apply(self.script, 12, self.backups)
+        self.patch_sync.apply(self.script, 4, self.backups)
+        text = self.script.read_text()
+        self.assertEqual(text.count(self.patch_sync.MARKER), 2, "the block was applied twice")
+        self.assertIn("VISION_IPAD_KEEP:-4", text)
+        self.assertTrue(self.bash_ok(self.script))
+
+    def test_a_script_it_does_not_recognise_is_left_alone(self):
+        other = self.tmp / "someone-elses-sync"
+        other.write_text("#!/bin/sh\nrsync -a /a/ /b/\n", encoding="utf-8")
+        before = other.read_text()
+        self.assertEqual(self.patch_sync.apply(other, 12, self.backups), 1)
+        self.assertEqual(other.read_text(), before)
+
+    def test_reverting_something_never_patched_is_harmless(self):
+        self.assertEqual(self.patch_sync.revert(self.script, self.backups), 0)
+        self.assertEqual(self.script.read_text(), self.ORIGINAL)
+
+    def run_sync(self, dst: Path, src: Path, keep: int, stamps: list[str]):
+        """Drive the real patched script over throwaway folders."""
+        import subprocess
+        script = self.tmp / "sim"
+        script.write_text(self.ORIGINAL, encoding="utf-8")
+        self.patch_sync.apply(script, keep, self.backups)
+        text = script.read_text().replace(
+            'SRC="/srv/vision-mobile/OUTBOX/LATEST"; DST="/srv/vision-mobile/IPAD"; '
+            'TMP="/srv/vision-mobile/.IPAD.tmp"',
+            f'SRC="{src}"; DST="{dst}"; TMP="{self.tmp}/.tmp"')
+        script.write_text(text, encoding="utf-8")
+        seen = []
+        for stamp in stamps:
+            for path in src.glob("*"):
+                path.unlink()
+            for suffix in ("Reel.mp4", "POST.png", "Caption.txt"):
+                (src / f"Vision-Analytical-{stamp}-{suffix}").write_text("x", encoding="utf-8")
+            subprocess.run(["bash", str(script)], capture_output=True, check=True)
+            seen.append(sorted({p.name.split("-")[2] for p in dst.glob("Vision-Analytical-*")}))
+        return seen
+
+    def test_reels_accumulate_and_only_the_oldest_rolls_off(self):
+        dst, src = self.tmp / "IPAD", self.tmp / "LATEST"
+        dst.mkdir(); src.mkdir()
+        stamps = [f"2026080{n}-120000" for n in range(1, 6)]
+        seen = self.run_sync(dst, src, 3, stamps)
+        self.assertEqual([len(s) for s in seen], [1, 2, 3, 3, 3])
+        self.assertEqual(seen[-1], ["20260803", "20260804", "20260805"])
+
+    def test_every_file_of_a_kept_reel_survives_together(self):
+        dst, src = self.tmp / "IPAD", self.tmp / "LATEST"
+        dst.mkdir(); src.mkdir()
+        self.run_sync(dst, src, 3, [f"2026080{n}-120000" for n in range(1, 6)])
+        self.assertEqual(len(list(dst.glob("*"))), 9, "a reel lost some of its files")
+        for stamp in ("20260803", "20260804", "20260805"):
+            self.assertEqual(len(list(dst.glob(f"*{stamp}*"))), 3, stamp)
+
+    def test_unrelated_files_in_the_phone_folder_are_not_deleted(self):
+        dst, src = self.tmp / "IPAD", self.tmp / "LATEST"
+        dst.mkdir(); src.mkdir()
+        keeper = dst / "my-own-notes.txt"
+        keeper.write_text("mine", encoding="utf-8")
+        self.run_sync(dst, src, 2, [f"2026080{n}-120000" for n in range(1, 5)])
+        self.assertTrue(keeper.is_file(), "something that was not a reel was deleted")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -175,10 +175,24 @@ The unit runs at `Nice=10`, `IOSchedulingClass=idle` and `CPUQuota=300%` - one
 reel at a time, never at the expense of Nextcloud, Jellyfin or n8n. Missed
 firings are not made up, so downtime leaves a gap rather than a burst.
 
-Delivery is unchanged: the package lands in `OUTPUT/READY` and the operator's
-own `vision-mobile-final-sync` / `vision-ipad-sync` timers carry it to the phone
-folder. **Those scripts keep only the newest package** - each sync wipes the
-phone folder first - so a reel every two hours replaces the one before it.
+Delivery goes through the operator's own chain: the package lands in
+`OUTPUT/READY` and their `vision-mobile-final-sync` / `vision-ipad-sync` timers
+carry it to the phone folder. No new sync script, no new timer for delivery.
+
+### Keeping more than the newest reel
+
+`vision-ipad-sync` empties the phone folder before every copy, so on a two-hour
+timer each reel deletes the one before it.
+
+```bash
+sudo ./schedule.sh --keep 12     # the newest 12 reels stay on the phone
+sudo ./schedule.sh --keep off    # back to newest-only
+```
+
+That patches one line of their script, keeps a backup first, and `--keep off`
+restores the original byte for byte. Reels are grouped by timestamp so every
+file of a kept reel survives together, and anything in the folder that is not a
+generated reel is never touched. `--status` reports which mode is in force.
 
 ## Why posts stopped looking alike
 

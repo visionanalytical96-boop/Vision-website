@@ -27,6 +27,7 @@ from vision_ai.skills.ollama_client import OllamaClient  # noqa: E402
 from vision_ai.skills.render_still import Renderer, SceneCopy, save_png  # noqa: E402
 from vision_ai.skills.selector import DesignSelector  # noqa: E402
 
+from . import campaign as campaign_skill  # noqa: E402
 from . import config_env, deliver, music_gen, photo_studio, preset_map  # noqa: E402
 
 _STATE: dict = {}
@@ -70,7 +71,17 @@ def decide(argv: list[str] | None = None) -> dict:
         keep_alive=env.get("OLLAMA_KEEP_ALIVE", "30m"),
         threads=int(config_env.number(env, "OLLAMA_THREADS", 0)),
     )
-    pack = copywriter.build(instrument, design, client, bool(config.ollama["enabled"]))
+    website = env.get("WEBSITE", campaign_skill.DEFAULT_WEBSITE)
+    campaigns = campaign_skill.load(library)
+    chosen, why = campaign_skill.choose(request, campaigns,
+                                        history.recent_values("campaign", 4),
+                                        seed=design["design_fingerprint"])
+    campaign_copy = campaign_skill.copy_for(chosen, instrument, website, design["design_fingerprint"])
+    design["campaign"] = chosen["id"]
+    design["campaign_label"] = chosen["label"]
+    print(f"[brain] campaign: {chosen['label']} ({why})")
+
+    pack = copywriter.build(instrument, design, client, bool(config.ollama["enabled"]), campaign_copy)
     design["copy_source"] = pack.source
 
     # Cut the instrument out of its background when the operator wants that
@@ -287,6 +298,22 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
     choice.music, choice.music_note = track, note
     design["music_track"] = track.name if track else ""
 
+    # Voice-over: the campaign script, spoken by whatever CPU TTS is installed.
+    if config_env.flag(env, "VOICE", False):
+        voice_path, voice_note = audio_skill.synthesize_voice(
+            pack.voice_script,
+            library.by_id("voice_styles", design["voice_style"]) or {},
+            config.path("audio_dir") / f"{stamp}-voice.wav",
+            preference=env.get("VOICE_ENGINE", "auto"),
+            model=env.get("PIPER_MODEL", ""),
+        )
+        choice.voice = voice_path
+        design["voice_track"] = voice_path.name if voice_path else ""
+        print(f"[brain] voice: {voice_note}")
+        if voice_path:
+            # duck the bed so the words stay on top
+            video["music_volume"] = round(float(video["music_volume"]) * 0.45, 2)
+
     print(f"[brain] rendering the reel: 2 scenes, {int(float(video['duration']) * int(video['fps']))} frames "
           f"at {video['width']}x{video['height']} - this takes 20-40s, please do not interrupt",
           flush=True)
@@ -351,7 +378,7 @@ def _info_text(design, instrument, asset, report, result) -> str:
 
 def _record(design: dict, reel: Path) -> dict:
     from datetime import datetime, timezone
-    keys = ("design_family", "background", "composition", "color_palette", "layout", "typography",
+    keys = ("campaign", "design_family", "background", "composition", "color_palette", "layout", "typography",
             "camera", "animation_1", "animation_2", "transition", "effect", "music_style",
             "voice_style", "image_search_query", "image_asset", "image_source",
             "design_fingerprint", "copy_source", "manufacturer", "instrument_model")

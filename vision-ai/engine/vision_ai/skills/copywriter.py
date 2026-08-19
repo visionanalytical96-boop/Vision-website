@@ -78,6 +78,7 @@ def build(
     design: dict,
     client: OllamaClient | None = None,
     use_ollama: bool = True,
+    campaign: dict | None = None,
 ) -> CopyPack:
     rng = _rng(design.get("design_fingerprint", "") or instrument.display_name)
     service = brand.SERVICE_ANGLES.get(instrument.service_id, {})
@@ -109,8 +110,17 @@ def build(
             pack.cta, pack.source = cta.text, "ollama"
         pack.ollama_seconds = round(sum(call["seconds"] for call in client.calls), 2)
 
+    if campaign:
+        # A campaign says what this post is for - it overrides the generic copy.
+        pack.eyebrow = campaign["eyebrow"]
+        pack.headline = campaign["headline"]
+        pack.subhead = campaign["subhead"]
+        pack.chips = list(campaign["chips"])
+        pack.cta = campaign["cta"]
+        pack.source = f"campaign:{campaign['campaign']}"
+
     pack.caption = caption(instrument, pack)
-    pack.voice_script = voice_script(instrument, pack)
+    pack.voice_script = campaign["voice"] if campaign else voice_script(instrument, pack)
     return pack
 
 

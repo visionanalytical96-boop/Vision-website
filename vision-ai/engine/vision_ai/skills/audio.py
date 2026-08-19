@@ -45,8 +45,13 @@ def select_music(style: dict, music_dir: Path, used: list[str] | None = None) ->
     return choice, note
 
 
+VENV_PIPER = "/srv/vision-workspace/vision-ai/brain/piper-venv/bin/piper"
+
+
 def voice_engine(preference: str = "auto") -> str:
     """Which CPU TTS is actually installed."""
+    if Path(VENV_PIPER).is_file():
+        return "piper-venv"
     if preference in {"piper", "espeak"} and shutil.which(preference if preference != "espeak" else "espeak-ng"):
         return preference
     if shutil.which("piper"):

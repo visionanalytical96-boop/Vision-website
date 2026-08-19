@@ -28,7 +28,7 @@ from vision_ai.skills.render_still import Renderer, SceneCopy, save_png  # noqa:
 from vision_ai.skills.selector import DesignSelector  # noqa: E402
 
 from . import campaign as campaign_skill  # noqa: E402
-from . import config_env, deliver, music_gen, photo_studio, preset_map  # noqa: E402
+from . import config_env, deliver, music_gen, photo_studio, preset_map, voices  # noqa: E402
 
 _STATE: dict = {}
 
@@ -300,13 +300,20 @@ def finish(design: dict, ready, stamp: str, post, reel, brain_choice: dict | Non
 
     # Voice-over: the campaign script, spoken by whatever CPU TTS is installed.
     if config_env.flag(env, "VOICE", False):
-        voice_path, voice_note = audio_skill.synthesize_voice(
-            pack.voice_script,
-            library.by_id("voice_styles", design["voice_style"]) or {},
-            config.path("audio_dir") / f"{stamp}-voice.wav",
-            preference=env.get("VOICE_ENGINE", "auto"),
-            model=env.get("PIPER_MODEL", ""),
-        )
+        roster = voices.roster(library)
+        ready = voices.available(roster) or roster
+        voice = voices.choose(ready, _STATE["history"].recent_values("voice_name", 3),
+                              seed=design["design_fingerprint"])
+        design["voice_name"] = voice["id"]
+        design["voice_character"] = voice["character"]
+        voice_path, voice_note = voices.speak(
+            pack.voice_script, voice, config.path("audio_dir") / f"{stamp}-voice.wav")
+        if voice_path is None:  # piper unavailable - fall back to whatever TTS exists
+            voice_path, voice_note = audio_skill.synthesize_voice(
+                pack.voice_script,
+                library.by_id("voice_styles", design["voice_style"]) or {},
+                config.path("audio_dir") / f"{stamp}-voice.wav",
+                preference=env.get("VOICE_ENGINE", "auto"), model=env.get("PIPER_MODEL", ""))
         choice.voice = voice_path
         design["voice_track"] = voice_path.name if voice_path else ""
         print(f"[brain] voice: {voice_note}")
@@ -378,7 +385,7 @@ def _info_text(design, instrument, asset, report, result) -> str:
 
 def _record(design: dict, reel: Path) -> dict:
     from datetime import datetime, timezone
-    keys = ("campaign", "design_family", "background", "composition", "color_palette", "layout", "typography",
+    keys = ("campaign", "voice_name", "design_family", "background", "composition", "color_palette", "layout", "typography",
             "camera", "animation_1", "animation_2", "transition", "effect", "music_style",
             "voice_style", "image_search_query", "image_asset", "image_source",
             "design_fingerprint", "copy_source", "manufacturer", "instrument_model")

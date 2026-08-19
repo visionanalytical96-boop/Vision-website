@@ -1,73 +1,673 @@
 {
   "_comment": "Instrument identity knowledge base. Used to parse an exact manufacturer + model out of a request or an input filename, and to build the exact image-search query. Add models freely - matching is data-driven.",
   "manufacturers": [
-    {"id": "agilent",   "label": "Agilent",   "aliases": ["agilent", "hp", "hewlett packard", "hewlett-packard"]},
-    {"id": "shimadzu",  "label": "Shimadzu",  "aliases": ["shimadzu"]},
-    {"id": "waters",    "label": "Waters",    "aliases": ["waters", "acquity", "alliance", "xevo"]},
-    {"id": "thermo",    "label": "Thermo Fisher Scientific", "aliases": ["thermo", "thermofisher", "thermo fisher", "dionex", "vanquish", "orbitrap", "nicolet"]},
-    {"id": "perkinelmer","label": "PerkinElmer","aliases": ["perkinelmer", "perkin elmer", "clarus", "lambda"]},
-    {"id": "bruker",    "label": "Bruker",    "aliases": ["bruker"]},
-    {"id": "jasco",     "label": "JASCO",     "aliases": ["jasco"]},
-    {"id": "sciex",     "label": "SCIEX",     "aliases": ["sciex", "ab sciex"]},
-    {"id": "hitachi",   "label": "Hitachi",   "aliases": ["hitachi"]},
-    {"id": "metrohm",   "label": "Metrohm",   "aliases": ["metrohm"]},
-    {"id": "malvern",   "label": "Malvern Panalytical", "aliases": ["malvern", "panalytical"]},
-    {"id": "mettler",   "label": "Mettler Toledo", "aliases": ["mettler", "mettler toledo"]}
+    {
+      "id": "agilent",
+      "label": "Agilent",
+      "aliases": [
+        "agilent",
+        "hp",
+        "hewlett packard",
+        "hewlett-packard"
+      ]
+    },
+    {
+      "id": "shimadzu",
+      "label": "Shimadzu",
+      "aliases": [
+        "shimadzu"
+      ]
+    },
+    {
+      "id": "waters",
+      "label": "Waters",
+      "aliases": [
+        "waters",
+        "acquity",
+        "alliance",
+        "xevo"
+      ]
+    },
+    {
+      "id": "thermo",
+      "label": "Thermo Fisher Scientific",
+      "aliases": [
+        "thermo",
+        "thermofisher",
+        "thermo fisher",
+        "dionex",
+        "vanquish",
+        "orbitrap",
+        "nicolet"
+      ]
+    },
+    {
+      "id": "perkinelmer",
+      "label": "PerkinElmer",
+      "aliases": [
+        "perkinelmer",
+        "perkin elmer",
+        "clarus",
+        "lambda"
+      ]
+    },
+    {
+      "id": "bruker",
+      "label": "Bruker",
+      "aliases": [
+        "bruker"
+      ]
+    },
+    {
+      "id": "jasco",
+      "label": "JASCO",
+      "aliases": [
+        "jasco"
+      ]
+    },
+    {
+      "id": "sciex",
+      "label": "SCIEX",
+      "aliases": [
+        "sciex",
+        "ab sciex"
+      ]
+    },
+    {
+      "id": "hitachi",
+      "label": "Hitachi",
+      "aliases": [
+        "hitachi"
+      ]
+    },
+    {
+      "id": "metrohm",
+      "label": "Metrohm",
+      "aliases": [
+        "metrohm"
+      ]
+    },
+    {
+      "id": "malvern",
+      "label": "Malvern Panalytical",
+      "aliases": [
+        "malvern",
+        "panalytical"
+      ]
+    },
+    {
+      "id": "mettler",
+      "label": "Mettler Toledo",
+      "aliases": [
+        "mettler",
+        "mettler toledo"
+      ]
+    }
   ],
   "techniques": [
-    {"id": "hplc",  "label": "HPLC",  "long": "High Performance Liquid Chromatography", "aliases": ["hplc", "uhplc", "uplc", "lc"]},
-    {"id": "gc",    "label": "GC",    "long": "Gas Chromatography",                      "aliases": ["gc", "gas chromatograph"]},
-    {"id": "lcms",  "label": "LC-MS", "long": "Liquid Chromatography Mass Spectrometry", "aliases": ["lcms", "lc-ms", "lc/ms", "lcmsms", "lc-ms/ms"]},
-    {"id": "gcms",  "label": "GC-MS", "long": "Gas Chromatography Mass Spectrometry",    "aliases": ["gcms", "gc-ms", "gc/ms", "gc-ms/ms"]},
-    {"id": "uv",    "label": "UV-Vis","long": "UV-Visible Spectrophotometry",            "aliases": ["uv", "uv-vis", "uvvis", "spectrophotometer"]},
-    {"id": "ir",    "label": "FTIR",  "long": "Fourier Transform Infrared Spectroscopy", "aliases": ["ir", "ftir", "infrared"]},
-    {"id": "aas",   "label": "AAS",   "long": "Atomic Absorption Spectroscopy",          "aliases": ["aas", "atomic absorption"]},
-    {"id": "icpms", "label": "ICP-MS","long": "Inductively Coupled Plasma Mass Spectrometry", "aliases": ["icpms", "icp-ms", "icp ms"]},
-    {"id": "icpoes","label": "ICP-OES","long": "ICP Optical Emission Spectroscopy",      "aliases": ["icpoes", "icp-oes", "icp oes"]},
-    {"id": "ttr",   "label": "Dissolution", "long": "Dissolution Testing",               "aliases": ["dissolution", "tablet dissolution"]},
-    {"id": "kf",    "label": "Karl Fischer","long": "Karl Fischer Titration",            "aliases": ["karl fischer", "kf titrator", "titrator"]},
-    {"id": "balance","label": "Analytical Balance","long": "Analytical Balance",         "aliases": ["balance", "weighing"]}
+    {
+      "id": "hplc",
+      "label": "HPLC",
+      "long": "High Performance Liquid Chromatography",
+      "aliases": [
+        "hplc",
+        "uhplc",
+        "uplc",
+        "lc"
+      ]
+    },
+    {
+      "id": "gc",
+      "label": "GC",
+      "long": "Gas Chromatography",
+      "aliases": [
+        "gc",
+        "gas chromatograph"
+      ]
+    },
+    {
+      "id": "lcms",
+      "label": "LC-MS",
+      "long": "Liquid Chromatography Mass Spectrometry",
+      "aliases": [
+        "lcms",
+        "lc-ms",
+        "lc/ms",
+        "lcmsms",
+        "lc-ms/ms"
+      ]
+    },
+    {
+      "id": "gcms",
+      "label": "GC-MS",
+      "long": "Gas Chromatography Mass Spectrometry",
+      "aliases": [
+        "gcms",
+        "gc-ms",
+        "gc/ms",
+        "gc-ms/ms"
+      ]
+    },
+    {
+      "id": "uv",
+      "label": "UV-Vis",
+      "long": "UV-Visible Spectrophotometry",
+      "aliases": [
+        "uv",
+        "uv-vis",
+        "uvvis",
+        "spectrophotometer"
+      ]
+    },
+    {
+      "id": "ir",
+      "label": "FTIR",
+      "long": "Fourier Transform Infrared Spectroscopy",
+      "aliases": [
+        "ir",
+        "ftir",
+        "infrared"
+      ]
+    },
+    {
+      "id": "aas",
+      "label": "AAS",
+      "long": "Atomic Absorption Spectroscopy",
+      "aliases": [
+        "aas",
+        "atomic absorption"
+      ]
+    },
+    {
+      "id": "icpms",
+      "label": "ICP-MS",
+      "long": "Inductively Coupled Plasma Mass Spectrometry",
+      "aliases": [
+        "icpms",
+        "icp-ms",
+        "icp ms"
+      ]
+    },
+    {
+      "id": "icpoes",
+      "label": "ICP-OES",
+      "long": "ICP Optical Emission Spectroscopy",
+      "aliases": [
+        "icpoes",
+        "icp-oes",
+        "icp oes"
+      ]
+    },
+    {
+      "id": "ttr",
+      "label": "Dissolution",
+      "long": "Dissolution Testing",
+      "aliases": [
+        "dissolution",
+        "tablet dissolution"
+      ]
+    },
+    {
+      "id": "kf",
+      "label": "Karl Fischer",
+      "long": "Karl Fischer Titration",
+      "aliases": [
+        "karl fischer",
+        "kf titrator",
+        "titrator"
+      ]
+    },
+    {
+      "id": "balance",
+      "label": "Analytical Balance",
+      "long": "Analytical Balance",
+      "aliases": [
+        "balance",
+        "weighing"
+      ]
+    }
   ],
   "known_models": [
-    {"manufacturer": "agilent",  "model": "1260 Infinity II", "technique": "hplc",  "patterns": ["1260 ii", "1260 infinity ii", "1260-ii"]},
-    {"manufacturer": "agilent",  "model": "1290 Infinity II", "technique": "hplc",  "patterns": ["1290 ii", "1290 infinity ii"]},
-    {"manufacturer": "agilent",  "model": "1220 Infinity II", "technique": "hplc",  "patterns": ["1220 ii", "1220 infinity ii"]},
-    {"manufacturer": "agilent",  "model": "1200",             "technique": "hplc",  "patterns": ["1200 series", "1200"]},
-    {"manufacturer": "agilent",  "model": "7890B",            "technique": "gc",    "patterns": ["7890b", "7890"]},
-    {"manufacturer": "agilent",  "model": "8890",             "technique": "gc",    "patterns": ["8890"]},
-    {"manufacturer": "agilent",  "model": "5977B GC/MSD",     "technique": "gcms",  "patterns": ["5977b", "5977"]},
-    {"manufacturer": "agilent",  "model": "6470 Triple Quad", "technique": "lcms",  "patterns": ["6470"]},
-    {"manufacturer": "agilent",  "model": "Cary 60",          "technique": "uv",    "patterns": ["cary 60"]},
-    {"manufacturer": "agilent",  "model": "Cary 630 FTIR",    "technique": "ir",    "patterns": ["cary 630"]},
-    {"manufacturer": "shimadzu", "model": "Nexera X3",        "technique": "hplc",  "patterns": ["nexera x3", "nexera"]},
-    {"manufacturer": "shimadzu", "model": "LC-2050",          "technique": "hplc",  "patterns": ["lc-2050", "lc2050"]},
-    {"manufacturer": "shimadzu", "model": "LC-2030C Plus",    "technique": "hplc",  "patterns": ["lc-2030", "lc2030", "i-series"]},
-    {"manufacturer": "shimadzu", "model": "GC-2030",          "technique": "gc",    "patterns": ["gc-2030", "gc2030"]},
-    {"manufacturer": "shimadzu", "model": "GCMS-QP2020 NX",   "technique": "gcms",  "patterns": ["qp2020", "gcms-qp2020"]},
-    {"manufacturer": "shimadzu", "model": "LCMS-8060 NX",     "technique": "lcms",  "patterns": ["lcms-8060", "8060"]},
-    {"manufacturer": "shimadzu", "model": "UV-1900i",         "technique": "uv",    "patterns": ["uv-1900", "uv1900"]},
-    {"manufacturer": "shimadzu", "model": "IRSpirit",         "technique": "ir",    "patterns": ["irspirit"]},
-    {"manufacturer": "waters",   "model": "ACQUITY UPLC H-Class", "technique": "hplc", "patterns": ["acquity h-class", "h-class", "acquity uplc"]},
-    {"manufacturer": "waters",   "model": "Alliance e2695",   "technique": "hplc",  "patterns": ["e2695", "alliance"]},
-    {"manufacturer": "waters",   "model": "Xevo TQ-S",        "technique": "lcms",  "patterns": ["xevo tq-s", "xevo"]},
-    {"manufacturer": "thermo",   "model": "Vanquish Core",    "technique": "hplc",  "patterns": ["vanquish core", "vanquish"]},
-    {"manufacturer": "thermo",   "model": "TRACE 1310",       "technique": "gc",    "patterns": ["trace 1310", "trace1310"]},
-    {"manufacturer": "thermo",   "model": "TSQ 9000",         "technique": "gcms",  "patterns": ["tsq 9000"]},
-    {"manufacturer": "thermo",   "model": "Nicolet iS20",     "technique": "ir",    "patterns": ["nicolet is20", "is20"]},
-    {"manufacturer": "perkinelmer","model": "Clarus 690",     "technique": "gc",    "patterns": ["clarus 690", "clarus"]},
-    {"manufacturer": "perkinelmer","model": "LAMBDA 365",     "technique": "uv",    "patterns": ["lambda 365"]},
-    {"manufacturer": "sciex",    "model": "Triple Quad 6500+","technique": "lcms",  "patterns": ["6500+", "triple quad 6500"]},
-    {"manufacturer": "metrohm",  "model": "870 KF Titrino plus","technique": "kf",  "patterns": ["870 kf", "titrino"]},
-    {"manufacturer": "mettler",  "model": "XPR205",           "technique": "balance","patterns": ["xpr205", "xpr"]}
+    {
+      "manufacturer": "agilent",
+      "model": "1260 Infinity II",
+      "technique": "hplc",
+      "patterns": [
+        "1260 ii",
+        "1260 infinity ii",
+        "1260-ii"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "1290 Infinity II",
+      "technique": "hplc",
+      "patterns": [
+        "1290 ii",
+        "1290 infinity ii"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "1220 Infinity II",
+      "technique": "hplc",
+      "patterns": [
+        "1220 ii",
+        "1220 infinity ii"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "1200",
+      "technique": "hplc",
+      "patterns": [
+        "1200 series",
+        "1200"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "7890B",
+      "technique": "gc",
+      "patterns": [
+        "7890b",
+        "7890"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "8890",
+      "technique": "gc",
+      "patterns": [
+        "8890"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "5977B GC/MSD",
+      "technique": "gcms",
+      "patterns": [
+        "5977b",
+        "5977"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "6470 Triple Quad",
+      "technique": "lcms",
+      "patterns": [
+        "6470"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "Cary 60",
+      "technique": "uv",
+      "patterns": [
+        "cary 60"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "Cary 630 FTIR",
+      "technique": "ir",
+      "patterns": [
+        "cary 630"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "Nexera X3",
+      "technique": "hplc",
+      "patterns": [
+        "nexera x3",
+        "nexera"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LC-2050",
+      "technique": "hplc",
+      "patterns": [
+        "lc-2050",
+        "lc2050"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LC-2030C Plus",
+      "technique": "hplc",
+      "patterns": [
+        "lc-2030",
+        "lc2030",
+        "i-series"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "GC-2030",
+      "technique": "gc",
+      "patterns": [
+        "gc-2030",
+        "gc2030"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "GCMS-QP2020 NX",
+      "technique": "gcms",
+      "patterns": [
+        "qp2020",
+        "gcms-qp2020"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LCMS-8060 NX",
+      "technique": "lcms",
+      "patterns": [
+        "lcms-8060",
+        "8060"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "UV-1900i",
+      "technique": "uv",
+      "patterns": [
+        "uv-1900",
+        "uv1900"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "IRSpirit",
+      "technique": "ir",
+      "patterns": [
+        "irspirit"
+      ]
+    },
+    {
+      "manufacturer": "waters",
+      "model": "ACQUITY UPLC H-Class",
+      "technique": "hplc",
+      "patterns": [
+        "acquity h-class",
+        "h-class",
+        "acquity uplc"
+      ]
+    },
+    {
+      "manufacturer": "waters",
+      "model": "Alliance e2695",
+      "technique": "hplc",
+      "patterns": [
+        "e2695",
+        "alliance"
+      ]
+    },
+    {
+      "manufacturer": "waters",
+      "model": "Xevo TQ-S",
+      "technique": "lcms",
+      "patterns": [
+        "xevo tq-s",
+        "xevo"
+      ]
+    },
+    {
+      "manufacturer": "thermo",
+      "model": "Vanquish Core",
+      "technique": "hplc",
+      "patterns": [
+        "vanquish core",
+        "vanquish"
+      ]
+    },
+    {
+      "manufacturer": "thermo",
+      "model": "TRACE 1310",
+      "technique": "gc",
+      "patterns": [
+        "trace 1310",
+        "trace1310"
+      ]
+    },
+    {
+      "manufacturer": "thermo",
+      "model": "TSQ 9000",
+      "technique": "gcms",
+      "patterns": [
+        "tsq 9000"
+      ]
+    },
+    {
+      "manufacturer": "thermo",
+      "model": "Nicolet iS20",
+      "technique": "ir",
+      "patterns": [
+        "nicolet is20",
+        "is20"
+      ]
+    },
+    {
+      "manufacturer": "perkinelmer",
+      "model": "Clarus 690",
+      "technique": "gc",
+      "patterns": [
+        "clarus 690",
+        "clarus"
+      ]
+    },
+    {
+      "manufacturer": "perkinelmer",
+      "model": "LAMBDA 365",
+      "technique": "uv",
+      "patterns": [
+        "lambda 365"
+      ]
+    },
+    {
+      "manufacturer": "sciex",
+      "model": "Triple Quad 6500+",
+      "technique": "lcms",
+      "patterns": [
+        "6500+",
+        "triple quad 6500"
+      ]
+    },
+    {
+      "manufacturer": "metrohm",
+      "model": "870 KF Titrino plus",
+      "technique": "kf",
+      "patterns": [
+        "870 kf",
+        "titrino"
+      ]
+    },
+    {
+      "manufacturer": "mettler",
+      "model": "XPR205",
+      "technique": "balance",
+      "patterns": [
+        "xpr205",
+        "xpr"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LC-2010CHT",
+      "technique": "hplc",
+      "patterns": [
+        "lc-2010cht",
+        "lc2010cht",
+        "2010cht",
+        "lc-2010 cht"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LC-2010AHT",
+      "technique": "hplc",
+      "patterns": [
+        "lc-2010aht",
+        "lc2010aht",
+        "2010aht"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LC-2010HT",
+      "technique": "hplc",
+      "patterns": [
+        "lc-2010ht",
+        "lc2010ht",
+        "lc-2010",
+        "lc2010",
+        "2010ht"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LC-20AD Prominence",
+      "technique": "hplc",
+      "patterns": [
+        "lc-20ad",
+        "lc20ad",
+        "prominence"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "LC-40 Nexera",
+      "technique": "hplc",
+      "patterns": [
+        "lc-40",
+        "nexera lc-40"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "GC-2010 Plus",
+      "technique": "gc",
+      "patterns": [
+        "gc-2010",
+        "gc2010"
+      ]
+    },
+    {
+      "manufacturer": "shimadzu",
+      "model": "UV-1800",
+      "technique": "uv",
+      "patterns": [
+        "uv-1800",
+        "uv1800"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "1100",
+      "technique": "hplc",
+      "patterns": [
+        "1100 series",
+        "1100"
+      ]
+    },
+    {
+      "manufacturer": "agilent",
+      "model": "6890N",
+      "technique": "gc",
+      "patterns": [
+        "6890n",
+        "6890"
+      ]
+    },
+    {
+      "manufacturer": "waters",
+      "model": "ACQUITY Arc",
+      "technique": "hplc",
+      "patterns": [
+        "acquity arc",
+        "arc system"
+      ]
+    }
   ],
   "services": [
-    {"id": "amc",          "label": "AMC / CMC Contracts",     "keywords": ["amc", "cmc", "annual maintenance", "comprehensive maintenance"]},
-    {"id": "calibration",  "label": "Calibration",             "keywords": ["calibration", "calibrate"]},
-    {"id": "qualification","label": "IQ / OQ / PQ",            "keywords": ["iq", "oq", "pq", "iq/oq/pq", "qualification"]},
-    {"id": "refurbishment","label": "Refurbishment",           "keywords": ["refurbish", "refurbishment", "reconditioned"]},
-    {"id": "spares",       "label": "Spare Parts & Consumables","keywords": ["spare", "spares", "consumable", "column", "accessory", "accessories"]},
-    {"id": "breakdown",    "label": "Breakdown Support",       "keywords": ["breakdown", "repair", "service call"]},
-    {"id": "relocation",   "label": "Instrument Relocation",   "keywords": ["relocation", "shifting", "installation"]},
-    {"id": "training",     "label": "Operator Training",       "keywords": ["training", "operator training"]}
+    {
+      "id": "amc",
+      "label": "AMC / CMC Contracts",
+      "keywords": [
+        "amc",
+        "cmc",
+        "annual maintenance",
+        "comprehensive maintenance"
+      ]
+    },
+    {
+      "id": "calibration",
+      "label": "Calibration",
+      "keywords": [
+        "calibration",
+        "calibrate"
+      ]
+    },
+    {
+      "id": "qualification",
+      "label": "IQ / OQ / PQ",
+      "keywords": [
+        "iq",
+        "oq",
+        "pq",
+        "iq/oq/pq",
+        "qualification"
+      ]
+    },
+    {
+      "id": "refurbishment",
+      "label": "Refurbishment",
+      "keywords": [
+        "refurbish",
+        "refurbishment",
+        "reconditioned"
+      ]
+    },
+    {
+      "id": "spares",
+      "label": "Spare Parts & Consumables",
+      "keywords": [
+        "spare",
+        "spares",
+        "consumable",
+        "column",
+        "accessory",
+        "accessories"
+      ]
+    },
+    {
+      "id": "breakdown",
+      "label": "Breakdown Support",
+      "keywords": [
+        "breakdown",
+        "repair",
+        "service call"
+      ]
+    },
+    {
+      "id": "relocation",
+      "label": "Instrument Relocation",
+      "keywords": [
+        "relocation",
+        "shifting",
+        "installation"
+      ]
+    },
+    {
+      "id": "training",
+      "label": "Operator Training",
+      "keywords": [
+        "training",
+        "operator training"
+      ]
+    }
   ]
 }

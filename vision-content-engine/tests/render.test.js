@@ -6,7 +6,15 @@
  * on a machine without Chromium.
  */
 import { strict as assert } from 'node:assert';
+import { execFileSync } from 'node:child_process';
+import { existsSync, renameSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { after, before, describe, it } from 'node:test';
+
+import { config } from '../src/config/env.js';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
 
 import { DEFAULT_BRANDING } from '../src/config/branding.js';
 import { buildContent } from '../src/domain/content.js';
@@ -98,6 +106,48 @@ describe('rendering', { concurrency: false }, () => {
 			name: 'Agilent 1260 Infinity II Quaternary High Performance Liquid Chromatography System With Diode Array Detection And Vialsampler',
 		});
 		assert.ok(result.validation.ok, result.validation.errors.join('; '));
+	});
+
+	it('still succeeds when glyph metrics are unavailable', async (t) => {
+		if (!available) return t.skip('no rasteriser available');
+		// Simulates a server where calibrate-fonts has not run. Text widths are
+		// then estimated, and on a heavy display face the estimate can be ~70%
+		// low — the retry loop must shrink far enough to recover instead of
+		// failing the generation outright.
+		const metrics = join(config.paths.fonts, 'metrics.json');
+		const backup = `${metrics}.testbak`;
+		if (!existsSync(metrics)) return t.skip('no calibrated metrics to remove');
+
+		renameSync(metrics, backup);
+		try {
+			// text.js caches metrics at import, so measure in a clean child process.
+			const script = `
+				const { DEFAULT_BRANDING } = await import('${pathToFileURL(resolve(HERE, '../src/config/branding.js')).href}');
+				const { buildContent } = await import('${pathToFileURL(resolve(HERE, '../src/domain/content.js')).href}');
+				const { resolveCanvas } = await import('${pathToFileURL(resolve(HERE, '../src/domain/formats.js')).href}');
+				const { renderComposition, closeChromium } = await import('${pathToFileURL(resolve(HERE, '../src/render/renderer.js')).href}');
+				const template = { slug: 'x', family: 'service-highlight', theme: 'dark', config: {} };
+				const content = buildContent(
+					{ name: 'Annual Maintenance Contract', brand: 'Vision Analytical',
+					  features: ['Four visits per year', 'Priority response', 'Genuine parts'] },
+					{ category: { kind: 'service' }, template, branding: DEFAULT_BRANDING },
+				);
+				const r = await renderComposition({
+					template, content, canvas: resolveCanvas({ formatPreset: 'instagram-square' }),
+					branding: DEFAULT_BRANDING, outputFormat: 'png',
+				});
+				await closeChromium();
+				process.stdout.write(JSON.stringify({ ok: r.validation.ok, errors: r.validation.errors }));
+			`;
+			const out = execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+				encoding: 'utf8',
+				timeout: 120_000,
+			});
+			const result = JSON.parse(out.slice(out.indexOf('{')));
+			assert.ok(result.ok, `uncalibrated render failed: ${result.errors.join('; ')}`);
+		} finally {
+			renameSync(backup, metrics);
+		}
 	});
 
 	it('renders a product with no image and warns rather than failing', async (t) => {

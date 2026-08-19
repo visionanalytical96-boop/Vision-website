@@ -13,7 +13,11 @@ import { normaliseOutputFormat } from '../domain/formats.js';
 import { closeChromium, findChromium, getChromium } from './chromium.js';
 import { validateEncodedImage, validateMeasurements } from './validate.js';
 
-const MAX_FIT_ATTEMPTS = 3;
+const MAX_FIT_ATTEMPTS = 5;
+
+// Lower bound on the global type shrink. Reached only when glyph metrics are
+// missing and the estimate was badly wrong; small type beats no output.
+const MIN_TYPE_SCALE = 0.45;
 
 let detected = null;
 
@@ -103,10 +107,14 @@ export async function renderComposition({
 
 		if (validation.ok || attempt === MAX_FIT_ATTEMPTS) break;
 
-		// Shrink type just enough to clear the worst overflow, with a floor so a
-		// pathological input cannot shrink the design into illegibility.
-		const shrink = Math.min(0.92, 1 / (validation.overflowRatio || 1.08));
-		typeScaleFactor = Math.max(0.68, typeScaleFactor * shrink);
+		// Shrink to clear the worst overflow, undershooting slightly so the next
+		// attempt lands inside the box rather than exactly on its edge.
+		//
+		// The floor has to allow a large correction: with uncalibrated fonts the
+		// estimate can be off by 70% on a heavy display face, and a floor that
+		// stops short of that turns a recoverable layout into a hard failure.
+		const shrink = Math.min(0.92, 0.97 / (validation.overflowRatio || 1.08));
+		typeScaleFactor = Math.max(MIN_TYPE_SCALE, typeScaleFactor * shrink);
 	}
 
 	const { buffer, svg, validation, attempt } = lastResult;

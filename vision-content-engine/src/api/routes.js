@@ -14,7 +14,8 @@ import { FAMILY_KEYS } from '../design/templates/index.js';
 import { clearFontCache } from '../design/fonts.js';
 import { currentBranding, generate, generateNext, previewSvg, regenerate } from '../engine/generator.js';
 import { log } from '../engine/logger.js';
-import { publishedFeed, publish, retryPublish } from '../engine/publisher.js';
+import { publishDestinations, publishedFeed, publish, retryPublish } from '../engine/publisher.js';
+import { classifyMedia, instagramConfigured } from '../engine/publishers/instagram.js';
 import { getSchedule, setSchedule, tick } from '../engine/scheduler.js';
 import { DEFAULT_ROTATION } from '../engine/rotation.js';
 import { contentTypeFor, formatBytes, readStored, saveUpload, statStored, workspaceUsage } from '../engine/storage.js';
@@ -374,8 +375,13 @@ router.post('/api/content/:id/regenerate', async (req, res, params) => {
 
 router.post('/api/content/:id/publish', async (req, res, params) => {
 	if (!requireAdmin(req, res)) return undefined;
+	const body = await readJson(req).catch(() => ({}));
+	const allowed = publishDestinations().map((d) => d.id);
+	if (body.destination && !allowed.includes(body.destination)) {
+		return fail(res, 400, `destination must be one of: ${allowed.join(', ')}`);
+	}
 	try {
-		const item = await publish(toId(params.id));
+		const item = await publish(toId(params.id), { destination: body.destination ?? null });
 		return item.status === 'published'
 			? json(res, 200, { content: item })
 			: fail(res, 502, item.error ?? 'Publishing failed', { content: item });
@@ -420,6 +426,44 @@ router.delete('/api/content/:id', async (req, res, params) => {
 /* ------------------------------------------------------------------ *
  * Schedule, settings, logs
  * ------------------------------------------------------------------ */
+
+router.get('/api/destinations', async (req, res) => {
+	if (!requireAdmin(req, res)) return undefined;
+	const destinations = publishDestinations();
+	// Instagram fetches the image itself, so a non-public origin is a hard block.
+	const publicOrigin = config.server.publicUrl;
+	return json(res, 200, {
+		destinations,
+		instagram: {
+			configured: instagramConfigured(),
+			publicUrlSet: /^https:\/\//i.test(publicOrigin),
+			publicUrl: publicOrigin || null,
+			note: /^https:\/\//i.test(publicOrigin)
+				? null
+				: 'Instagram downloads the image from CONTENT_ENGINE_PUBLIC_URL. Set it to a public HTTPS origin.',
+		},
+	});
+});
+
+/** Pre-flight: would this item be accepted by Instagram? */
+router.get('/api/content/:id/instagram-check', async (req, res, params) => {
+	if (!requireAdmin(req, res)) return undefined;
+	const item = content.find(toId(params.id));
+	if (!item) return fail(res, 404, 'Content item not found');
+	const problems = [];
+	if (!instagramConfigured()) problems.push('Instagram credentials are not configured');
+	if (!/^https:\/\//i.test(config.server.publicUrl)) {
+		problems.push('CONTENT_ENGINE_PUBLIC_URL is not a public HTTPS origin');
+	}
+	if (!item.file_name) problems.push('This item has no generated image');
+	let mediaType = null;
+	try {
+		mediaType = classifyMedia(item).mediaType;
+	} catch (err) {
+		problems.push(err.message);
+	}
+	return json(res, 200, { ready: problems.length === 0, mediaType, problems });
+});
 
 router.get('/api/schedule', async (req, res) => {
 	if (!requireAdmin(req, res)) return undefined;

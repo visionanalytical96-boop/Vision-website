@@ -11,7 +11,7 @@
  * repeatedly left the database unmigrated when only font calibration had failed.
  */
 import { spawn } from 'node:child_process';
-import { accessSync, constants, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { accessSync, constants, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -144,10 +144,27 @@ function probe(binary) {
 			{ stdio: ['ignore', 'ignore', 'pipe'] },
 		);
 		let buffer = '';
+		let settled = false;
 		const finish = (result) => {
+			// Both the stderr match and the exit handler can fire; only the first counts.
+			if (settled) return;
+			settled = true;
 			clearTimeout(timer);
-			try { child.kill(); } catch { /* already gone */ }
-			rmSync(profile, { recursive: true, force: true });
+			try {
+				child.kill('SIGKILL');
+			} catch {
+				/* already gone */
+			}
+			// Deferred and best-effort: the browser is still flushing its profile
+			// as it dies, so an immediate delete races it and throws ENOTEMPTY.
+			// A failed cleanup must never abort setup.
+			setTimeout(() => {
+				try {
+					rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+				} catch {
+					/* left behind; removed by the sweep on the next run */
+				}
+			}, 500).unref?.();
 			done(result);
 		};
 		const timer = setTimeout(() => finish(false), 20_000);
@@ -158,6 +175,20 @@ function probe(binary) {
 		child.once('error', () => finish(false));
 		child.once('exit', () => finish(/ws:\/\//.test(buffer)));
 	});
+}
+
+// Sweep probe directories left behind by an earlier run.
+try {
+	const cacheRoot = join(homedir(), '.cache', 'vision-content-engine');
+	if (existsSync(cacheRoot)) {
+		for (const entry of readdirSync(cacheRoot)) {
+			if (entry.startsWith('probe-')) {
+				rmSync(join(cacheRoot, entry), { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+			}
+		}
+	}
+} catch {
+	/* housekeeping only */
 }
 
 let workingBrowser = null;

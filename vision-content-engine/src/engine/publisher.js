@@ -7,8 +7,10 @@
  * system. A publishing failure never destroys the generated artefact.
  */
 import { config, publicAssetUrl } from '../config/env.js';
+import { mergeBranding } from '../config/branding.js';
 import { content, products, publications, settings } from '../db/repositories.js';
 import { log } from './logger.js';
+import { instagramConfigured, publishToInstagram } from './publishers/instagram.js';
 
 /** Payload shared by every destination. */
 export function buildPayload(item) {
@@ -47,7 +49,7 @@ export async function publish(contentId, { destination = null, attempt = 1 } = {
 	if (!item) throw new Error('Content item not found');
 	if (!item.file_name) throw new Error('Nothing to publish: this item has no generated image');
 
-	const target = destination ?? (config.publishing.webhookUrl ? 'webhook' : 'website-feed');
+	const target = destination ?? defaultDestination();
 	content.setStatus(item.id, 'publishing');
 
 	try {
@@ -56,6 +58,8 @@ export async function publish(contentId, { destination = null, attempt = 1 } = {
 
 		if (target === 'webhook') {
 			url = await publishToWebhook(payload);
+		} else if (target === 'instagram') {
+			url = await publishToInstagram(payload, mergeBranding(settings.get('branding', {})));
 		}
 
 		const published = content.setStatus(item.id, 'published', {
@@ -85,6 +89,20 @@ export async function publish(contentId, { destination = null, attempt = 1 } = {
 		log.error('publish.failed', err.message, { contentId: item.id, destination: target, attempt });
 		return failed;
 	}
+}
+
+/** Available destinations, for the admin UI and API validation. */
+export function publishDestinations() {
+	return [
+		{ id: 'website-feed', name: 'Website feed', available: config.publishing.websiteFeedEnabled },
+		{ id: 'instagram', name: 'Instagram', available: instagramConfigured() },
+		{ id: 'webhook', name: 'Webhook', available: Boolean(config.publishing.webhookUrl) },
+	];
+}
+
+function defaultDestination() {
+	if (config.publishing.webhookUrl) return 'webhook';
+	return 'website-feed';
 }
 
 async function publishToWebhook(payload) {

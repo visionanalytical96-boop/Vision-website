@@ -112,6 +112,16 @@ export const config = {
 		webhookToken: str('CONTENT_ENGINE_PUBLISH_WEBHOOK_TOKEN', ''),
 		maxRetries: int('CONTENT_ENGINE_PUBLISH_MAX_RETRIES', 3),
 	},
+	instagram: {
+		// Instagram Graph API. Publishing needs the Instagram *Business* account
+		// id and a long-lived token; the app id/secret are only used to refresh
+		// that token before its 60-day expiry.
+		userId: str('CONTENT_ENGINE_IG_USER_ID', ''),
+		accessToken: str('CONTENT_ENGINE_IG_ACCESS_TOKEN', ''),
+		appId: str('CONTENT_ENGINE_IG_APP_ID', ''),
+		appSecret: str('CONTENT_ENGINE_IG_APP_SECRET', ''),
+		apiVersion: str('CONTENT_ENGINE_IG_API_VERSION', 'v21.0'),
+	},
 	ai: {
 		// Optional and fully independent. Core generation never depends on it.
 		enabled: bool('CONTENT_ENGINE_AI_ENABLED', false),

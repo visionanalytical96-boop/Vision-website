@@ -6,6 +6,7 @@ import { getDatabase, plain, plainAll } from './database.js';
 import { slugify } from '../domain/categories.js';
 
 const JSON_FIELDS = {
+	documents: ['fields'],
 	products: ['specifications', 'features', 'applications', 'compatible_with', 'images', 'documents', 'tags'],
 	templates: ['config'],
 	content_items: ['tags', 'validation'],
@@ -757,9 +758,75 @@ export const logs = {
 	},
 };
 
+
+/* ------------------------------------------------------------------ *
+ * Documents (A4 PDFs)
+ * ------------------------------------------------------------------ */
+
+export const documents = {
+	list({ kind = null, limit = 200, offset = 0 } = {}) {
+		const where = kind ? 'WHERE kind = ?' : '';
+		const params = kind ? [kind] : [];
+		return parseRows(
+			plainAll(
+				getDatabase()
+					.prepare(`SELECT * FROM documents ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+					.all(...params, limit, offset),
+			),
+			'documents',
+		);
+	},
+
+	find(id) {
+		return parseJsonFields(plain(getDatabase().prepare('SELECT * FROM documents WHERE id = ?').get(id)), 'documents');
+	},
+
+	create({ kind, title, fields = {}, status = 'draft', createdBy = null }) {
+		const result = getDatabase()
+			.prepare('INSERT INTO documents (uid, kind, title, fields, status, created_by) VALUES (?, ?, ?, ?, ?, ?)')
+			.run(randomUUID(), kind, title, JSON.stringify(fields ?? {}), status, createdBy);
+		return this.find(result.lastInsertRowid);
+	},
+
+	update(id, { title, fields }) {
+		const current = this.find(id);
+		if (!current) return null;
+		getDatabase()
+			.prepare('UPDATE documents SET title = ?, fields = ?, updated_at = ? WHERE id = ?')
+			.run(title ?? current.title, JSON.stringify(fields ?? current.fields), now(), id);
+		return this.find(id);
+	},
+
+	setStatus(id, status, extra = {}) {
+		const current = this.find(id);
+		if (!current) return null;
+		getDatabase()
+			.prepare('UPDATE documents SET status = ?, file_name = ?, file_size = ?, error = ?, updated_at = ? WHERE id = ?')
+			.run(
+				status,
+				extra.fileName ?? current.file_name,
+				extra.fileSize ?? current.file_size,
+				extra.error !== undefined ? extra.error : current.error,
+				now(),
+				id,
+			);
+		return this.find(id);
+	},
+
+	remove(id) {
+		// Only the record goes; the generated PDF stays on disk.
+		return getDatabase().prepare('DELETE FROM documents WHERE id = ?').run(id).changes;
+	},
+
+	count() {
+		return getDatabase().prepare('SELECT COUNT(*) AS n FROM documents').get().n;
+	},
+};
+
 /* ------------------------------------------------------------------ *
  * Helpers
  * ------------------------------------------------------------------ */
+
 
 /** Prefixes the brand only when the name does not already lead with it. */
 function defaultProductSlug({ brand, name }) {

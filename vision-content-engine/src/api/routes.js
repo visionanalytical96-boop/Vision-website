@@ -21,6 +21,9 @@ import { DEFAULT_ROTATION } from '../engine/rotation.js';
 import { contentTypeFor, formatBytes, readStored, saveUpload, statStored, workspaceUsage } from '../engine/storage.js';
 import { detectBackends } from '../render/renderer.js';
 import { inspectImage } from '../render/image-info.js';
+import { DOCUMENT_FIELDS, DOCUMENT_KEYS } from '../documents/fields.js';
+import { composeDocument, generateDocument } from '../documents/generator.js';
+import { documents } from '../db/repositories.js';
 import { identify, login, logout, requireAdmin } from './auth.js';
 import { fail, json, noContent, readBuffer, readJson, Router, send, toId } from './http.js';
 import { parseMultipart } from './multipart.js';
@@ -421,6 +424,92 @@ router.delete('/api/content/:id', async (req, res, params) => {
 	if (!requireAdmin(req, res)) return undefined;
 	// Only the record is removed; generated files are never deleted implicitly.
 	return content.remove(toId(params.id)) ? noContent(res) : fail(res, 404, 'Content item not found');
+});
+
+
+/* ------------------------------------------------------------------ *
+ * Documents (A4 PDFs)
+ * ------------------------------------------------------------------ */
+
+/** The form schema the admin UI builds its fill-in form from. */
+router.get('/api/document-types', async (req, res) => {
+	if (!requireAdmin(req, res)) return undefined;
+	return json(res, 200, {
+		types: DOCUMENT_KEYS.map((key) => ({
+			key,
+			name: DOCUMENT_FIELDS[key].name,
+			description: DOCUMENT_FIELDS[key].description,
+			fields: DOCUMENT_FIELDS[key].fields,
+		})),
+	});
+});
+
+router.get('/api/documents', async (req, res) => {
+	if (!requireAdmin(req, res)) return undefined;
+	const url = new URL(req.url, 'http://local');
+	const list = documents.list({
+		kind: url.searchParams.get('kind'),
+		limit: Math.min(300, Number(url.searchParams.get('limit')) || 100),
+	});
+	return json(res, 200, {
+		documents: list.map((d) => ({
+			...d,
+			typeName: DOCUMENT_FIELDS[d.kind]?.name ?? d.kind,
+			fileUrl: d.file_name ? publicAssetUrl(d.file_name) : null,
+		})),
+	});
+});
+
+router.get('/api/documents/:id', async (req, res, params) => {
+	if (!requireAdmin(req, res)) return undefined;
+	const doc = documents.find(toId(params.id));
+	if (!doc) return fail(res, 404, 'Document not found');
+	return json(res, 200, {
+		document: { ...doc, fileUrl: doc.file_name ? publicAssetUrl(doc.file_name) : null },
+	});
+});
+
+/** HTML preview — instant, and costs no PDF rendering. */
+router.post('/api/documents/preview', async (req, res) => {
+	if (!requireAdmin(req, res)) return undefined;
+	const body = await readJson(req);
+	if (!DOCUMENT_FIELDS[body.kind]) return fail(res, 400, 'Unknown document type');
+	try {
+		const html = composeDocument(body.kind, body.values ?? {});
+		return send(res, 200, html, {
+			'Content-Type': 'text/html; charset=utf-8',
+			'Cache-Control': 'no-store',
+			// The preview is self-contained; it may not reach anything external.
+			'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:",
+		});
+	} catch (err) {
+		return fail(res, 400, err.message);
+	}
+});
+
+router.post('/api/documents', async (req, res) => {
+	if (!requireAdmin(req, res)) return undefined;
+	const body = await readJson(req);
+	if (!DOCUMENT_FIELDS[body.kind]) return fail(res, 400, 'Unknown document type');
+	try {
+		const out = await generateDocument({
+			kind: body.kind,
+			values: body.values ?? {},
+			title: body.title ?? null,
+			documentId: toId(body.documentId),
+		});
+		return json(res, 201, {
+			document: { ...out.document, fileUrl: publicAssetUrl(out.document.file_name) },
+		});
+	} catch (err) {
+		return fail(res, 422, err.message, { validation: err.validation ?? null });
+	}
+});
+
+router.delete('/api/documents/:id', async (req, res, params) => {
+	if (!requireAdmin(req, res)) return undefined;
+	// Record only; the generated PDF stays on disk.
+	return documents.remove(toId(params.id)) ? noContent(res) : fail(res, 404, 'Document not found');
 });
 
 /* ------------------------------------------------------------------ *

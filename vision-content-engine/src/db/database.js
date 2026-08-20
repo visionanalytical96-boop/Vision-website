@@ -207,6 +207,28 @@ const MIGRATIONS = [
 		CREATE INDEX idx_publications_content ON publications(content_id);
 		`,
 	},
+	{
+		id: '002-documents',
+		sql: `
+		CREATE TABLE documents (
+			id         INTEGER PRIMARY KEY AUTOINCREMENT,
+			uid        TEXT NOT NULL UNIQUE,
+			kind       TEXT NOT NULL,
+			title      TEXT NOT NULL,
+			fields     TEXT NOT NULL DEFAULT '{}',
+			file_name  TEXT,
+			file_size  INTEGER,
+			status     TEXT NOT NULL DEFAULT 'draft',
+			error      TEXT,
+			created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+			created_at TEXT NOT NULL DEFAULT (datetime('now')),
+			updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+		);
+
+		CREATE INDEX idx_documents_kind ON documents(kind, created_at);
+		CREATE INDEX idx_documents_status ON documents(status);
+		`,
+	},
 ];
 
 export function migrate() {

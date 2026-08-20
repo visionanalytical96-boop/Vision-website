@@ -540,11 +540,174 @@ views.logs = async (el) => {
   $('#refresh', el).onclick = () => go('logs');
 };
 
+
+/* ------------------------------------------------------------------ *
+ * Documents — A4 PDFs. The form is built from the server's field
+ * schema, so a new field in fields.js appears here with no UI change.
+ * ------------------------------------------------------------------ */
+views.documents = async (el) => {
+  const [{ types }, { documents }] = await Promise.all([
+    api('/api/document-types'), api('/api/documents')]);
+  state.cache.docTypes = types;
+
+  el.innerHTML = `
+    <div class="head"><div><h1>Documents</h1><div class="sub">${documents.length} बने हुए · A4 PDF</div></div></div>
+    <div class="grid g3" style="margin-bottom:20px">
+      ${types.map(t => `<div class="card">
+        <h2 style="margin-bottom:6px">${esc(t.name)}</h2>
+        <div class="sub" style="margin-bottom:12px">${esc(t.description)}</div>
+        <button class="btn sm" data-new="${esc(t.key)}">New</button>
+      </div>`).join('')}
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <table><thead><tr><th>Document</th><th>Type</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody>
+      ${documents.map(d => `<tr>
+        <td><strong>${esc(d.title)}</strong>${d.error ? `<div class="mono">${esc(d.error.slice(0,70))}</div>` : ''}</td>
+        <td class="mono">${esc(d.typeName)}</td>
+        <td class="mono">${esc(fmtDate(d.created_at))}</td>
+        <td>${statusPill(d.status)}</td>
+        <td><div class="row">
+          ${d.fileUrl ? `<a class="btn sm" href="${esc(d.fileUrl)}" target="_blank" rel="noopener">Open PDF</a>` : ''}
+          <button class="btn sm ghost" data-edit="${d.id}">Edit</button>
+          <button class="btn sm danger" data-del="${d.id}">Delete</button>
+        </div></td></tr>`).join('') || '<tr><td colspan="5" class="empty">अभी कोई document नहीं बना।</td></tr>'}
+      </tbody></table></div>`;
+
+  el.querySelectorAll('[data-new]').forEach(b => b.onclick = () => documentEditor(b.dataset.new, null));
+  el.querySelectorAll('[data-edit]').forEach(b => b.onclick = async () => {
+    const { document: doc } = await api(`/api/documents/${b.dataset.edit}`);
+    documentEditor(doc.kind, doc);
+  });
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    if (!confirm('इस record को हटाएँ? बनी हुई PDF file सुरक्षित रहेगी।')) return;
+    try { await api(`/api/documents/${b.dataset.del}`, { method:'DELETE' }); toast('हटा दिया'); go('documents'); }
+    catch (e) { toast(e.message, true); }
+  });
+};
+
+/** Renders one field from the schema. */
+function docField(f, value) {
+  const id = `f_${f.key}`;
+  const wide = f.width === 'full' ? 'grid-column:1/-1' : '';
+  const hint = f.hint ? `<div class="sub" style="margin-top:3px">${esc(f.hint)}</div>` : '';
+  const label = `<label for="${id}">${esc(f.label)}${f.required ? ' *' : ''}</label>`;
+
+  if (f.type === 'textarea' || f.type === 'lines') {
+    return `<div style="${wide}">${label}<textarea id="${id}">${esc(
+      Array.isArray(value) ? value.join('\n') : (value ?? ''))}</textarea>${hint}</div>`;
+  }
+  if (f.type === 'select') {
+    return `<div style="${wide}">${label}<select id="${id}">
+      <option value=""></option>
+      ${f.options.map(o => `<option ${o === value ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+    </select>${hint}</div>`;
+  }
+  if (f.type === 'table') {
+    const rows = Array.isArray(value) && value.length ? value : [f.columns.map(() => '')];
+    return `<div style="${wide}">${label}
+      <div id="${id}" data-cols="${f.columns.length}">
+        <div class="row mono" style="gap:6px;margin-bottom:4px">
+          ${f.columns.map(c => `<span style="flex:1;font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">${esc(c)}</span>`).join('')}
+          <span style="width:28px"></span>
+        </div>
+        ${rows.map(r => docTableRow(f.columns, r)).join('')}
+      </div>
+      <button type="button" class="btn sm ghost" data-addrow="${id}" style="margin-top:6px">+ Row</button>${hint}</div>`;
+  }
+  const type = f.type === 'date' ? 'date' : 'text';
+  return `<div style="${wide}">${label}<input id="${id}" type="${type}" value="${esc(value ?? '')}">${hint}</div>`;
+}
+
+const docTableRow = (cols, values = []) =>
+  `<div class="row trow" style="gap:6px;margin-bottom:5px">
+    ${cols.map((_, i) => `<input style="flex:1" value="${esc(values[i] ?? '')}">`).join('')}
+    <button type="button" class="btn sm danger delrow" style="width:28px;padding:4px 0">×</button>
+  </div>`;
+
+async function documentEditor(kind, existing) {
+  const type = (state.cache.docTypes ?? []).find(t => t.key === kind);
+  if (!type) return toast('Unknown document type', true);
+  const values = existing?.fields ?? {};
+
+  const modal = h(`<div class="modal"><div class="card">
+    <div class="spread"><h2 style="margin:0">${esc(type.name)}</h2><button class="btn sm ghost" id="x">Close</button></div>
+    <div class="sub" style="margin-bottom:12px">${esc(type.description)}</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:0 14px" id="form">
+      ${type.fields.map(f => docField(f, values[f.key])).join('')}
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn" id="make">Generate PDF</button>
+      <button class="btn ghost" id="prev">Preview</button>
+    </div>
+  </div></div>`);
+  document.body.append(modal);
+  $('#x', modal).onclick = () => modal.remove();
+
+  // Table rows: add and remove.
+  modal.addEventListener('click', (e) => {
+    const add = e.target.closest('[data-addrow]');
+    if (add) {
+      const host = $(`#${add.dataset.addrow}`, modal);
+      const cols = Number(host.dataset.cols);
+      host.insertAdjacentHTML('beforeend', docTableRow(Array.from({ length: cols })));
+      return;
+    }
+    if (e.target.classList.contains('delrow')) {
+      const rows = e.target.closest('[data-cols]').querySelectorAll('.trow');
+      if (rows.length > 1) e.target.closest('.trow').remove();
+      else e.target.closest('.trow').querySelectorAll('input').forEach(i => { i.value = ''; });
+    }
+  });
+
+  const collect = () => {
+    const out = {};
+    for (const f of type.fields) {
+      const node = $(`#f_${f.key}`, modal);
+      if (!node) continue;
+      if (f.type === 'table') {
+        out[f.key] = [...node.querySelectorAll('.trow')]
+          .map(r => [...r.querySelectorAll('input')].map(i => i.value.trim()))
+          .filter(r => r.some(Boolean));
+      } else if (f.type === 'lines') {
+        out[f.key] = node.value.split('\n').map(l => l.trim()).filter(Boolean);
+      } else {
+        out[f.key] = node.value.trim();
+      }
+    }
+    return out;
+  };
+
+  $('#prev', modal).onclick = async () => {
+    try {
+      const html = await api('/api/documents/preview', {
+        method:'POST', body:{ kind, values: collect() }, raw:true });
+      const w = window.open('', '_blank');
+      if (!w) return toast('Preview blocked — popup को अनुमति दो', true);
+      w.document.write(html); w.document.close();
+    } catch (e) { toast(e.message, true); }
+  };
+
+  $('#make', modal).onclick = async (e) => {
+    e.target.disabled = true; e.target.textContent = 'बन रहा है…';
+    try {
+      const r = await api('/api/documents', {
+        method:'POST',
+        body:{ kind, values: collect(), documentId: existing?.id ?? null } });
+      toast('PDF तैयार');
+      window.open(r.document.fileUrl, '_blank');
+      modal.remove(); go('documents');
+    } catch (err) {
+      toast(err.message, true);
+      e.target.disabled = false; e.target.textContent = 'Generate PDF';
+    }
+  };
+}
+
 /* ------------------------------------------------------------------ *
  * Shell
  * ------------------------------------------------------------------ */
 const NAV = [['dashboard','Dashboard'],['templates','Templates'],['products','Products'],
-             ['calendar','Calendar'],['settings','Settings'],['logs','Logs']];
+             ['calendar','Calendar'],['documents','Documents'],['settings','Settings'],['logs','Logs']];
 
 function go(view) { state.view = view; render(); }
 

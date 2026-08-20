@@ -282,6 +282,50 @@ class ChromiumSession {
 	}
 
 	/**
+	 * Renders HTML to a print-ready PDF.
+	 *
+	 * Documents are HTML rather than SVG because they have flowing text, tables
+	 * and page breaks — things a fixed-viewBox SVG cannot do. Chromium's own
+	 * print pipeline handles pagination, so multi-page output needs no extra
+	 * dependency and margins come from the stylesheet's @page rule.
+	 *
+	 * @param {string} html
+	 * @param {{landscape?:boolean, scale?:number}} [opts]
+	 * @returns {Promise<Buffer>}
+	 */
+	async renderPdf(html, { landscape = false, scale = 1 } = {}) {
+		await this.start();
+		const { targetId } = await this.send('Target.createTarget', { url: 'about:blank' });
+		try {
+			const { sessionId } = await this.send('Target.attachToTarget', { targetId, flatten: true });
+			const call = (method, params) => this.send(method, params, sessionId);
+
+			await call('Page.enable');
+			const { frameTree } = await call('Page.getFrameTree');
+			await call('Page.setDocumentContent', { frameId: frameTree.frame.id, html });
+			await call('Runtime.enable');
+			await this.#waitForFonts(call);
+
+			const result = await call('Page.printToPDF', {
+				// A4 in inches; margins are left to the document's own @page rule.
+				paperWidth: 8.27,
+				paperHeight: 11.69,
+				marginTop: 0,
+				marginBottom: 0,
+				marginLeft: 0,
+				marginRight: 0,
+				printBackground: true,
+				preferCSSPageSize: true,
+				landscape,
+				scale,
+			});
+			return Buffer.from(result.data, 'base64');
+		} finally {
+			await this.send('Target.closeTarget', { targetId }).catch(() => {});
+		}
+	}
+
+	/**
 	 * Loads markup and evaluates an expression against it, waiting for embedded
 	 * fonts first. Used by font calibration; not part of the render path.
 	 *

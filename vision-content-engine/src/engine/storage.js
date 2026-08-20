@@ -28,7 +28,10 @@ export function ensureWorkspace() {
  * Builds a unique, descriptive filename.
  * e.g. instrument-sale-agilent-1260-premium-20260818-100000-a82f.png
  */
-export function buildFileName({ category, product, template, outputFormat, at = new Date() }) {
+export function buildFileName({ category, product, template, outputFormat, extension, at = new Date() }) {
+	// `extension` bypasses the image-format normaliser, which would otherwise
+	// coerce a document format such as pdf into png.
+	const ext = extension ?? fileExtension(outputFormat);
 	// 2026-08-18T10:00:00.000Z → 20260818-100000
 	const stamp = at.toISOString().replace(/[-:T]/g, '').slice(0, 14).replace(/^(\d{8})(\d{6})$/, '$1-$2');
 	const parts = [
@@ -38,7 +41,7 @@ export function buildFileName({ category, product, template, outputFormat, at = 
 		stamp,
 		randomBytes(2).toString('hex'),
 	].filter(Boolean);
-	return `${parts.join('-').slice(0, 180)}.${fileExtension(outputFormat)}`;
+	return `${parts.join('-').slice(0, 180)}.${ext}`;
 }
 
 /** Generated files are foldered by year/month to keep directories browsable. */
@@ -56,12 +59,12 @@ function generatedDir(at = new Date()) {
  * Writes a generated image.
  * @returns {{key:string, fileName:string, size:number, checksum:string}}
  */
-export function saveGenerated(buffer, { category, product, template, outputFormat, at = new Date() }) {
+export function saveGenerated(buffer, { category, product, template, outputFormat, extension, at = new Date() }) {
 	const dir = generatedDir(at);
-	let fileName = buildFileName({ category, product, template, outputFormat, at });
+	let fileName = buildFileName({ category, product, template, outputFormat, extension, at });
 	// Collisions are already improbable; this makes overwriting impossible.
 	while (existsSync(join(dir, fileName))) {
-		fileName = buildFileName({ category, product, template, outputFormat, at: new Date() });
+		fileName = buildFileName({ category, product, template, outputFormat, extension, at: new Date() });
 	}
 	const absolute = join(dir, fileName);
 	writeFileSync(absolute, buffer, { flag: 'wx' });

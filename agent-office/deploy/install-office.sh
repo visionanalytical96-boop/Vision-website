@@ -156,7 +156,9 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF
 
-if [ "$PUBLIC" -eq 1 ]; then BIND=""; else BIND="--listen 127.0.0.1"; fi
+# websockify takes the bind address as part of the source argument; there is no
+# --listen flag. Getting this wrong is what took office-novnc down on first install.
+if [ "$PUBLIC" -eq 1 ]; then BIND="0.0.0.0"; else BIND="127.0.0.1"; fi
 cat > /etc/systemd/system/office-novnc.service <<EOF
 [Unit]
 Description=Browser access to the agent office
@@ -164,7 +166,7 @@ After=office-vnc.service
 Requires=office-vnc.service
 [Service]
 User=$OFFICE_USER
-ExecStart=/usr/bin/websockify $BIND $NOVNC_PORT localhost:$VNC_PORT --web=/usr/share/novnc
+ExecStart=/usr/bin/websockify $BIND:$NOVNC_PORT localhost:$VNC_PORT --web=/usr/share/novnc
 Restart=always
 RestartSec=3
 [Install]

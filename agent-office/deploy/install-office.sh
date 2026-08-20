@@ -32,6 +32,7 @@ apt-get update -qq
 apt-get install -y -qq --no-install-recommends \
 	build-essential python3 git curl ca-certificates \
 	xvfb x11vnc websockify novnc openssl \
+	dbus-x11 xkb-data \
 	fonts-dejavu-core fonts-liberation || die "apt install failed"
 # Electron's shared-library needs. Package names differ across releases (libasound2 vs
 # libasound2t64), so install what exists and keep going.
@@ -132,7 +133,9 @@ Environment=DISPLAY=:$DISPLAY_NUM
 Environment=ELECTRON_DISABLE_SECURITY_WARNINGS=1
 # Headless container-style flags: no GPU, no sandbox (no user namespaces here),
 # and /dev/shm is small on most VPSes.
-ExecStart=/usr/bin/npx electron . --no-sandbox --disable-gpu --disable-dev-shm-usage
+# dbus-run-session gives Electron a session bus; without one it retries on every
+# start and floods the journal (seen in our headless launch test).
+ExecStart=/usr/bin/dbus-run-session -- /usr/bin/npx electron . --no-sandbox --disable-gpu --disable-dev-shm-usage
 Restart=always
 RestartSec=5
 [Install]

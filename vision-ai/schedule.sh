@@ -103,6 +103,7 @@ status)
   ;;
 off)
   need_systemd
+  [[ $EUID -eq 0 ]] || { echo "removing the timer needs root - run with sudo" >&2; exit 1; }
   systemctl disable --now "$UNIT.timer" 2>/dev/null || true
   rm -f "$SYSTEMD_DIR/$UNIT.timer" "$SYSTEMD_DIR/$UNIT.service"
   systemctl daemon-reload
@@ -210,6 +211,14 @@ if ! systemd_running; then
   echo
   say "systemd is not running here, so the timer was NOT enabled."
   say "The unit files above are correct - enable them where systemd runs:"
+  say "  sudo systemctl daemon-reload && sudo systemctl enable --now $UNIT.timer"
+  exit 0
+fi
+
+if [[ $EUID -ne 0 ]]; then
+  echo
+  say "not root, so the timer was NOT enabled - the unit files above are correct."
+  say "Enable them with:"
   say "  sudo systemctl daemon-reload && sudo systemctl enable --now $UNIT.timer"
   exit 0
 fi

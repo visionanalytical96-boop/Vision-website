@@ -49,7 +49,25 @@ say(){ printf '  %s\n' "$*"; }
 step(){ printf '\n== %s\n' "$*"; }
 run(){ if [[ $DRY_RUN -eq 1 ]]; then say "[dry-run] $*"; else "$@"; fi; }
 
-[[ $DRY_RUN -eq 0 && $EUID -ne 0 ]] && { echo "run as root or pass --dry-run" >&2; exit 1; }
+# Root is needed for what this actually writes, not as a ritual. With the
+# default paths that means sudo; when the engine, the prefix and the backup
+# directory are all owned by the caller - an unprivileged prefix, or a test
+# harness - there is nothing to elevate for.
+writable_target(){
+  local target="$1"
+  while [[ -n "$target" && "$target" != "/" && ! -e "$target" ]]; do target="$(dirname "$target")"; done
+  [[ -w "$target" ]]
+}
+if [[ $DRY_RUN -eq 0 ]]; then
+  for _target in "$ENGINE" "$PREFIX" "$BACKUP_DIR"; do
+    writable_target "$_target" || {
+      echo "cannot write $_target as $(id -un)." >&2
+      echo "Run with sudo, or point VISION_AI_PREFIX / VISION_ENGINE / VISION_BACKUP_DIR" >&2
+      echo "at paths you own, or pass --dry-run." >&2
+      exit 1
+    }
+  done
+fi
 
 if [[ $REVERT -eq 1 ]]; then
   step "revert"
@@ -199,7 +217,10 @@ if [[ $DRY_RUN -eq 1 ]]; then
 else
   TMP_ENGINE="$(mktemp)"
   (cd "$SRC_DIR" && python3 -m brain.patch_engine "$ENGINE" --brain-parent "$PREFIX" --out "$TMP_ENGINE")
-  if python3 -m py_compile "$TMP_ENGINE"; then
+  # Parse it rather than compile it: py_compile writes bytecode next to the
+  # file, so an unwritable __pycache__ made a perfectly good engine look like a
+  # syntax error and the install was refused for the wrong reason.
+  if python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read(), sys.argv[1])' "$TMP_ENGINE"; then
     install -m 0755 "$TMP_ENGINE" "$ENGINE"
     rm -f "$TMP_ENGINE"
     say "patched $ENGINE (backup: $BACKUP_DIR/vision-ai-content.$STAMP)"

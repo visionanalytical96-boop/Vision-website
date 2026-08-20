@@ -7,6 +7,7 @@ Add -q to skip the ffmpeg filtergraph sweep (the slow part).
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -180,6 +181,13 @@ class PipelineTests(unittest.TestCase):
     def setUpClass(cls):
         if not shutil.which("ffmpeg"):
             raise unittest.SkipTest("ffmpeg is not installed")
+        # The engine refuses to generate from a systemd unit, and anything that
+        # inherits JOURNAL_STREAM or SYSTEMD_EXEC_PID looks like one - a CI
+        # runner, or a shell spawned by a systemd service. This run is a test
+        # asking for it deliberately, so it says so rather than the guard being
+        # loosened for everyone.
+        cls._automation = os.environ.get("VISION_AI_ALLOW_AUTOMATION")
+        os.environ["VISION_AI_ALLOW_AUTOMATION"] = "1"
         cls.tmp = Path(tempfile.mkdtemp())
         cls.config = make_config(cls.tmp)
         photos = cls.tmp / "INPUT/PHOTOS"
@@ -195,6 +203,10 @@ class PipelineTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        if cls._automation is None:
+            os.environ.pop("VISION_AI_ALLOW_AUTOMATION", None)
+        else:
+            os.environ["VISION_AI_ALLOW_AUTOMATION"] = cls._automation
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def test_all_outputs_exist_and_validate(self):

@@ -22,7 +22,8 @@
     "calibrate-fonts": "node scripts/calibrate-fonts.mjs",
     "test:unit": "node --test tests/engine.test.js",
     "check": "node scripts/check.mjs",
-    "install-service": "sudo bash scripts/install-service.sh"
+    "install-service": "sudo bash scripts/install-service.sh",
+    "install-nginx": "sudo bash scripts/install-nginx.sh"
   },
   "optionalDependencies": {},
   "license": "UNLICENSED"

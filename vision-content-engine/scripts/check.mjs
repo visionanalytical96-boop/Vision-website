@@ -24,17 +24,22 @@ const sh = (cmd, args) => {
 
 console.log('\nContent Studio — connectivity check\n');
 
-// 1. Is the local server answering?
+// 1. Is the server answering on the address it was actually told to bind?
+// Probing a hardcoded 127.0.0.1 reports a healthy server as DOWN whenever it
+// has been bound to a specific interface, such as a Tailscale address.
+const bindHost = config.server.host;
+const probeHost = bindHost === '0.0.0.0' || bindHost === '::' ? '127.0.0.1' : bindHost;
 let localOk = false;
 try {
-  const res = await fetch(`http://127.0.0.1:${config.server.port}/healthz`, {
+  const res = await fetch(`http://${probeHost}:${config.server.port}/healthz`, {
     signal: AbortSignal.timeout(5000),
   });
   localOk = res.ok;
-  line('Local server', localOk ? `UP on port ${config.server.port}` : `responded ${res.status}`);
+  line('Local server', localOk ? `UP on ${probeHost}:${config.server.port}` : `responded ${res.status}`);
 } catch {
-  line('Local server', `DOWN — nothing listening on ${config.server.port}`);
+  line('Local server', `DOWN — nothing answering on ${probeHost}:${config.server.port}`);
 }
+line('Bound to', bindHost === '127.0.0.1' ? '127.0.0.1 (this machine only)' : `${bindHost} (reachable from other devices)`);
 
 // 2. Is it running as a managed service, or by hand in a terminal?
 const unit = sh('systemctl', ['is-active', 'vision-content-engine']);
@@ -56,6 +61,10 @@ if (!localOk) {
   console.log('  Make it permanent:');
   console.log('    sudo bash scripts/install-service.sh\n');
 } else {
-  console.log('  All good. If a Tailscale URL still will not load, check that');
-  console.log('  MagicDNS and HTTPS are enabled in the Tailscale admin console.\n');
+  console.log('  All good.');
+  if (bindHost !== '127.0.0.1') {
+    console.log(`  Open from another device:  http://${bindHost}:${config.server.port}\n`);
+  } else {
+    console.log('  Bound to localhost only — reachable from this machine alone.\n');
+  }
 }

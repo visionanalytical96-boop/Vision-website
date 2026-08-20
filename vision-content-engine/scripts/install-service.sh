@@ -20,7 +20,11 @@ fi
 # The service must run as the account that owns the files, not as root, so the
 # workspace and database keep their existing ownership.
 RUN_USER="$(stat -c '%U' "$ENGINE_DIR")"
+USER_HOME="$(getent passwd "$RUN_USER" | cut -d: -f6)"
 NODE_BIN="$(command -v node || true)"
+
+# Created up front so systemd can grant write access to a path that exists.
+install -d -o "$RUN_USER" -g "$RUN_USER" "${USER_HOME}/.cache/vision-content-engine"
 
 if [[ -z "$NODE_BIN" ]]; then
 	echo "node was not found on PATH. Install Node 22 first." >&2
@@ -29,6 +33,7 @@ fi
 
 echo "Engine directory : $ENGINE_DIR"
 echo "Run as user      : $RUN_USER"
+echo "Bind address     : $(grep -E '^CONTENT_ENGINE_HOST=' "$ENGINE_DIR/.env" 2>/dev/null | cut -d= -f2 || echo '127.0.0.1 (default)')"
 echo "Node binary      : $NODE_BIN"
 echo
 
@@ -58,12 +63,15 @@ RestartSec=5
 StandardOutput=journal
 StandardError=journal
 
-# Basic hardening. The engine only ever writes inside its own directory.
+# Basic hardening. ProtectHome makes /home read-only, so both paths the engine
+# writes to have to be granted back explicitly: its own directory (database,
+# generated images) and the cache where the headless browser puts its throwaway
+# profile. Without the second, rendering fails with a permission error.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=read-only
-ReadWritePaths=${ENGINE_DIR}
+ReadWritePaths=${ENGINE_DIR} ${USER_HOME}/.cache/vision-content-engine
 
 [Install]
 WantedBy=multi-user.target

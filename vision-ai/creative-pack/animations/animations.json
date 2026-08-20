@@ -1,0 +1,30 @@
+{
+  "_comment": "Every animation carries BOTH a camera move (applied to the background/instrument layer) and a layer move (applied to the text layer), so every scene shows at least one visible motion. The engine always picks two DIFFERENT animations per reel (see skills/selector.py).",
+  "animations": [
+    {"id": "slow_zoom",        "label": "Slow Zoom",        "camera": {"type": "zoom",     "z_from": 1.00, "z_to": 1.08},                 "layer": {"type": "fade",       "delay": 0.25, "duration": 0.9}},
+    {"id": "push_in",          "label": "Push In",          "camera": {"type": "zoom",     "z_from": 1.00, "z_to": 1.18},                 "layer": {"type": "slide_up",   "delay": 0.30, "duration": 0.8, "distance": 90}},
+    {"id": "pull_out",         "label": "Pull Out",         "camera": {"type": "zoom",     "z_from": 1.18, "z_to": 1.00},                 "layer": {"type": "scale_in",   "delay": 0.25, "duration": 0.9}},
+    {"id": "horizontal_pan",   "label": "Horizontal Pan",   "camera": {"type": "pan_h",    "z_from": 1.12, "z_to": 1.12, "dir": 1},       "layer": {"type": "slide_left", "delay": 0.30, "duration": 0.8, "distance": 120}},
+    {"id": "horizontal_pan_r", "label": "Horizontal Pan R", "camera": {"type": "pan_h",    "z_from": 1.12, "z_to": 1.12, "dir": -1},      "layer": {"type": "slide_right","delay": 0.30, "duration": 0.8, "distance": 120}},
+    {"id": "vertical_pan",     "label": "Vertical Pan",     "camera": {"type": "pan_v",    "z_from": 1.12, "z_to": 1.12, "dir": 1},       "layer": {"type": "fade",       "delay": 0.35, "duration": 0.9}},
+    {"id": "vertical_pan_up",  "label": "Vertical Pan Up",  "camera": {"type": "pan_v",    "z_from": 1.12, "z_to": 1.12, "dir": -1},      "layer": {"type": "slide_up",   "delay": 0.30, "duration": 0.8, "distance": 70}},
+    {"id": "diagonal_move",    "label": "Diagonal Movement","camera": {"type": "pan_diag", "z_from": 1.14, "z_to": 1.14, "dir": 1},       "layer": {"type": "fade",       "delay": 0.30, "duration": 1.0}},
+    {"id": "diagonal_move_r",  "label": "Reverse Diagonal", "camera": {"type": "pan_diag", "z_from": 1.14, "z_to": 1.14, "dir": -1},      "layer": {"type": "slide_down", "delay": 0.30, "duration": 0.8, "distance": 80}},
+    {"id": "light_sweep",      "label": "Light Sweep",      "camera": {"type": "zoom",     "z_from": 1.02, "z_to": 1.10},                 "layer": {"type": "sweep",      "delay": 0.40, "duration": 1.6}},
+    {"id": "parallax",         "label": "Parallax",         "camera": {"type": "pan_h",    "z_from": 1.10, "z_to": 1.16, "dir": 1},       "layer": {"type": "slide_right","delay": 0.20, "duration": 1.2, "distance": 60}},
+    {"id": "image_reveal",     "label": "Image Reveal",     "camera": {"type": "zoom",     "z_from": 1.14, "z_to": 1.04},                 "layer": {"type": "mask_wipe",  "delay": 0.30, "duration": 1.0}},
+    {"id": "text_reveal",      "label": "Text Reveal",      "camera": {"type": "zoom",     "z_from": 1.02, "z_to": 1.07},                 "layer": {"type": "mask_wipe",  "delay": 0.25, "duration": 1.1}},
+    {"id": "floating_cards",   "label": "Floating Cards",   "camera": {"type": "drift",    "z_from": 1.06, "z_to": 1.06},                 "layer": {"type": "float",      "delay": 0.30, "duration": 1.0, "distance": 24}},
+    {"id": "depth_move",       "label": "Depth Movement",   "camera": {"type": "zoom",     "z_from": 1.02, "z_to": 1.16},                 "layer": {"type": "scale_in",   "delay": 0.30, "duration": 1.0}},
+    {"id": "camera_drift",     "label": "Camera Drift",     "camera": {"type": "drift",    "z_from": 1.08, "z_to": 1.08},                 "layer": {"type": "fade",       "delay": 0.35, "duration": 1.0}},
+    {"id": "focus_shift",      "label": "Focus Shift",      "camera": {"type": "zoom",     "z_from": 1.05, "z_to": 1.12, "blur_in": 1.4}, "layer": {"type": "fade",       "delay": 0.60, "duration": 1.0}},
+    {"id": "scale_pulse",      "label": "Scale Pulse",      "camera": {"type": "pulse",    "z_from": 1.05, "z_to": 1.09},                 "layer": {"type": "float",      "delay": 0.25, "duration": 0.9, "distance": 16}},
+    {"id": "masked_reveal",    "label": "Masked Reveal",    "camera": {"type": "zoom",     "z_from": 1.10, "z_to": 1.02},                 "layer": {"type": "mask_wipe",  "delay": 0.20, "duration": 1.2}},
+    {"id": "layer_move",       "label": "Layer Movement",   "camera": {"type": "pan_diag", "z_from": 1.10, "z_to": 1.15, "dir": -1},      "layer": {"type": "slide_left", "delay": 0.25, "duration": 1.0, "distance": 100}},
+    {"id": "hero_rise",        "label": "Hero Rise",        "camera": {"type": "pan_v",    "z_from": 1.16, "z_to": 1.06, "dir": -1},      "layer": {"type": "slide_up",   "delay": 0.30, "duration": 0.9, "distance": 110}},
+    {"id": "slow_drift_zoom",  "label": "Slow Drift Zoom",  "camera": {"type": "drift",    "z_from": 1.04, "z_to": 1.12},                 "layer": {"type": "fade",       "delay": 0.40, "duration": 1.1}},
+    {"id": "wide_to_detail",   "label": "Wide To Detail",   "camera": {"type": "zoom",     "z_from": 1.00, "z_to": 1.22},                 "layer": {"type": "mask_wipe",  "delay": 0.35, "duration": 1.0}},
+    {"id": "detail_to_wide",   "label": "Detail To Wide",   "camera": {"type": "zoom",     "z_from": 1.22, "z_to": 1.00},                 "layer": {"type": "slide_down", "delay": 0.30, "duration": 0.9, "distance": 70}},
+    {"id": "glass_glide",      "label": "Glass Glide",      "camera": {"type": "pan_h",    "z_from": 1.13, "z_to": 1.08, "dir": -1},      "layer": {"type": "sweep",      "delay": 0.50, "duration": 1.8}}
+  ]
+}

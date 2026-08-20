@@ -1,0 +1,19 @@
+# Shimadzu only. One line per firing; the timer walks down and starts again.
+# Each line is exactly what you would type after vision-ai-content.
+# The campaign, design, voice, music and photo rotate on their own - the same
+# line twice does not produce the same reel.
+#
+# Add or remove lines any time; the change is picked up on the next firing.
+# Keep the model spelled the way the photo folder is named, or the engine will
+# not find an authentic photograph and will fall back to a typographic design.
+
+AMC and CMC for Shimadzu LC-2010CHT HPLC
+Service and repair for Shimadzu LC-2010CHT HPLC
+IQ OQ PQ qualification for Shimadzu LC-2010CHT HPLC
+Spare parts and consumables for Shimadzu LC-2010CHT HPLC
+Refurbished Shimadzu LC-2010CHT HPLC
+AMC and CMC for Shimadzu UV-1900i spectrophotometer
+Service and calibration for Shimadzu UV-1900i spectrophotometer
+AMC and CMC for Shimadzu GCMS-QP2020 NX
+Installation and relocation for Shimadzu GCMS-QP2020 NX
+Operator training for Shimadzu LC-2010CHT HPLC

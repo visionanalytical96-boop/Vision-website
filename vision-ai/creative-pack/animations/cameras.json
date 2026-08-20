@@ -1,0 +1,15 @@
+{
+  "_comment": "Camera framing language. Used in Info.txt and as a hint appended to the operator image-search brief - never used to invent hardware.",
+  "cameras": [
+    {"id": "product_35mm",      "label": "35mm Product",           "hint": "product photograph, full instrument in frame"},
+    {"id": "macro_100mm",       "label": "100mm Macro",            "hint": "macro detail of instrument module"},
+    {"id": "wide_24mm",         "label": "24mm Wide Laboratory",   "hint": "instrument in laboratory context"},
+    {"id": "tele_85mm",         "label": "85mm Telephoto",         "hint": "compressed product view, shallow depth"},
+    {"id": "low_angle",         "label": "Low Angle Hero",         "hint": "low angle hero view of instrument"},
+    {"id": "high_angle",        "label": "High Angle Overview",    "hint": "elevated view of instrument stack"},
+    {"id": "three_quarter",     "label": "Three-Quarter View",     "hint": "three-quarter front view of instrument"},
+    {"id": "front_elevation",   "label": "Front Elevation",        "hint": "straight-on front view of instrument"},
+    {"id": "detail_module",     "label": "Module Detail",          "hint": "close view of detector or pump module"},
+    {"id": "bench_context",     "label": "Bench Context",          "hint": "instrument on laboratory bench"}
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "_comment": "Design families. id is stable; label appears in Info.txt. Edit freely - engine reloads on every run.",
+  "families": [
+    {"id": "premium_laboratory",        "label": "Premium Laboratory",         "mood": "clean premium",     "palettes": ["pharma_white", "silver_steel", "deep_navy"]},
+    {"id": "dark_cinematic_lab",        "label": "Dark Cinematic Laboratory",  "mood": "cinematic",         "palettes": ["black_luxury", "graphite_cyan", "dark_premium"]},
+    {"id": "clean_pharmaceutical",      "label": "Clean Pharmaceutical",       "mood": "clinical",          "palettes": ["pharma_white", "clinical_white", "soft_emerald"]},
+    {"id": "futuristic_glass_lab",      "label": "Futuristic Glass Laboratory","mood": "futuristic",        "palettes": ["glass_cyan", "violet_tech", "graphite_cyan"]},
+    {"id": "graphite_technical",        "label": "Graphite Technical",         "mood": "technical",         "palettes": ["graphite_cyan", "silver_steel", "neutral_slate"]},
+    {"id": "black_luxury_corporate",    "label": "Black Luxury Corporate",     "mood": "luxury",            "palettes": ["black_luxury", "gold_black", "dark_premium"]},
+    {"id": "stainless_steel_lab",       "label": "Stainless Steel Laboratory", "mood": "industrial premium","palettes": ["silver_steel", "neutral_slate", "graphite_cyan"]},
+    {"id": "macro_scientific",          "label": "Macro Scientific",           "mood": "macro detail",      "palettes": ["dark_premium", "soft_emerald", "glass_cyan"]},
+    {"id": "modern_editorial",          "label": "Modern Editorial",           "mood": "editorial",         "palettes": ["clinical_white", "neutral_slate", "deep_navy"]},
+    {"id": "clinical_white",            "label": "Clinical White",             "mood": "clinical",          "palettes": ["clinical_white", "pharma_white", "soft_emerald"]},
+    {"id": "deep_navy_corporate",       "label": "Deep Navy Corporate",        "mood": "corporate",         "palettes": ["deep_navy", "silver_steel", "glass_cyan"]},
+    {"id": "metallic_technical",        "label": "Metallic Technical",         "mood": "technical",         "palettes": ["silver_steel", "graphite_cyan", "gold_black"]},
+    {"id": "high_end_pharmaceutical",   "label": "High-End Pharmaceutical",    "mood": "premium clinical",  "palettes": ["pharma_white", "soft_emerald", "deep_navy"]},
+    {"id": "minimal_swiss",             "label": "Minimal Swiss-Style",        "mood": "minimal",           "palettes": ["clinical_white", "neutral_slate", "black_luxury"]},
+    {"id": "dark_glass",                "label": "Dark Glass",                 "mood": "cinematic glass",   "palettes": ["dark_premium", "glass_cyan", "violet_tech"]},
+    {"id": "precision_engineering",     "label": "Precision Engineering",      "mood": "engineering",       "palettes": ["graphite_cyan", "silver_steel", "neutral_slate"]},
+    {"id": "scientific_macro_detail",   "label": "Scientific Macro Detail",    "mood": "macro detail",      "palettes": ["soft_emerald", "dark_premium", "glass_cyan"]},
+    {"id": "luxury_corporate",          "label": "Luxury Corporate",           "mood": "luxury",            "palettes": ["gold_black", "black_luxury", "deep_navy"]},
+    {"id": "industrial_laboratory",     "label": "Industrial Laboratory",      "mood": "industrial",        "palettes": ["neutral_slate", "silver_steel", "graphite_cyan"]},
+    {"id": "future_pharma",             "label": "Future Pharma",              "mood": "futuristic clinical","palettes": ["violet_tech", "glass_cyan", "pharma_white"]}
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "_comment": "Layout controls text geometry only. subject placement comes from composition.",
+  "layouts": [
+    {"id": "L01_lower_stack",      "label": "Lower Stack",              "align": "left",   "anchor": [0.08, 0.66], "width": 0.84, "rule": true,  "eyebrow": true},
+    {"id": "L02_lower_center",     "label": "Lower Centred",            "align": "center", "anchor": [0.10, 0.68], "width": 0.80, "rule": true,  "eyebrow": true},
+    {"id": "L03_upper_left",       "label": "Upper Left",               "align": "left",   "anchor": [0.08, 0.12], "width": 0.72, "rule": false, "eyebrow": true},
+    {"id": "L04_upper_center",     "label": "Upper Centred",            "align": "center", "anchor": [0.10, 0.11], "width": 0.80, "rule": true,  "eyebrow": false},
+    {"id": "L05_banner_bottom",    "label": "Bottom Banner",            "align": "left",   "anchor": [0.08, 0.74], "width": 0.84, "rule": false, "eyebrow": true, "panel": true},
+    {"id": "L06_banner_top",       "label": "Top Banner",               "align": "left",   "anchor": [0.08, 0.09], "width": 0.84, "rule": false, "eyebrow": true, "panel": true},
+    {"id": "L07_side_rail_left",   "label": "Left Side Rail",           "align": "left",   "anchor": [0.07, 0.54], "width": 0.52, "rule": true,  "eyebrow": true},
+    {"id": "L08_side_rail_right",  "label": "Right Side Rail",          "align": "right",  "anchor": [0.41, 0.54], "width": 0.52, "rule": true,  "eyebrow": true},
+    {"id": "L09_glass_card",       "label": "Glass Card",               "align": "left",   "anchor": [0.09, 0.62], "width": 0.82, "rule": false, "eyebrow": true, "panel": true},
+    {"id": "L10_editorial_split",  "label": "Editorial Split",          "align": "left",   "anchor": [0.08, 0.58], "width": 0.60, "rule": true,  "eyebrow": true},
+    {"id": "L11_minimal_bottom",   "label": "Minimal Bottom",           "align": "left",   "anchor": [0.08, 0.80], "width": 0.84, "rule": false, "eyebrow": false},
+    {"id": "L12_stacked_specs",    "label": "Stacked Specs",            "align": "left",   "anchor": [0.08, 0.60], "width": 0.84, "rule": true,  "eyebrow": true, "specs": true},
+    {"id": "L13_centered_hero",    "label": "Centred Hero",             "align": "center", "anchor": [0.10, 0.72], "width": 0.80, "rule": true,  "eyebrow": true},
+    {"id": "L14_corner_badge",     "label": "Corner Badge",             "align": "left",   "anchor": [0.08, 0.70], "width": 0.70, "rule": false, "eyebrow": true, "badge": true},
+    {"id": "L15_wide_caption",     "label": "Wide Caption",             "align": "left",   "anchor": [0.06, 0.76], "width": 0.88, "rule": true,  "eyebrow": false},
+    {"id": "L16_tech_sheet",       "label": "Technical Sheet",          "align": "left",   "anchor": [0.08, 0.56], "width": 0.84, "rule": true,  "eyebrow": true, "specs": true, "panel": true},
+    {"id": "L17_headline_only",    "label": "Headline Only",            "align": "left",   "anchor": [0.08, 0.64], "width": 0.84, "rule": false, "eyebrow": false},
+    {"id": "L18_bottom_dual",      "label": "Bottom Dual Column",       "align": "left",   "anchor": [0.08, 0.70], "width": 0.84, "rule": true,  "eyebrow": true, "specs": true},
+    {"id": "L19_offset_right",     "label": "Offset Right",             "align": "right",  "anchor": [0.30, 0.66], "width": 0.62, "rule": true,  "eyebrow": true},
+    {"id": "L20_service_panel",    "label": "Service Panel",            "align": "left",   "anchor": [0.08, 0.63], "width": 0.84, "rule": false, "eyebrow": true, "panel": true, "specs": true}
+  ]
+}

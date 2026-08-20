@@ -1,0 +1,25 @@
+{
+  "_comment": "stage=still -> rendered by Pillow into the frames. stage=motion -> ffmpeg filter over the finished video. Effects stay subtle by design; strength is 0..1.",
+  "effects": [
+    {"id": "glass",              "label": "Glass",              "stage": "still",  "strength": 0.55},
+    {"id": "glow",               "label": "Glow",               "stage": "still",  "strength": 0.45},
+    {"id": "light_streak",       "label": "Light Streak",       "stage": "motion", "filter": "streak",   "strength": 0.35},
+    {"id": "particle_dust",      "label": "Particle Dust",      "stage": "motion", "filter": "grain",    "strength": 0.10},
+    {"id": "reflection",         "label": "Reflection",         "stage": "still",  "strength": 0.40},
+    {"id": "depth_shadow",       "label": "Depth Shadow",       "stage": "still",  "strength": 0.60},
+    {"id": "lens_flare",         "label": "Lens Flare",         "stage": "motion", "filter": "flare",    "strength": 0.30},
+    {"id": "metallic_highlight", "label": "Metallic Highlight", "stage": "still",  "strength": 0.50},
+    {"id": "soft_bloom",         "label": "Soft Bloom",         "stage": "motion", "filter": "bloom",    "strength": 0.25},
+    {"id": "chromatic_light",    "label": "Chromatic Light",    "stage": "motion", "filter": "chroma",   "strength": 0.20},
+    {"id": "gradient_mesh",      "label": "Gradient Mesh",      "stage": "still",  "strength": 0.50},
+    {"id": "technical_grid",     "label": "Technical Grid",     "stage": "still",  "strength": 0.30},
+    {"id": "floating_particles", "label": "Floating Particles", "stage": "motion", "filter": "particles","strength": 0.16},
+    {"id": "focus_blur",         "label": "Focus Blur",         "stage": "still",  "strength": 0.45},
+    {"id": "vignette_deep",      "label": "Deep Vignette",      "stage": "motion", "filter": "vignette", "strength": 0.35},
+    {"id": "scanline_tech",      "label": "Technical Scanline", "stage": "still",  "strength": 0.22},
+    {"id": "edge_light",         "label": "Edge Light",         "stage": "still",  "strength": 0.48},
+    {"id": "clean_none",         "label": "Clean (No Overlay)", "stage": "none",   "strength": 0.0},
+    {"id": "soft_contrast",      "label": "Soft Contrast Lift", "stage": "motion", "filter": "contrast", "strength": 0.20},
+    {"id": "halo_glow",          "label": "Halo Glow",          "stage": "still",  "strength": 0.42}
+  ]
+}

@@ -1,0 +1,23 @@
+# Secrets. config.env carries the Meta access token, the app secret and the
+# brand contact details. It is written on the server and must never be
+# committed - the installer creates it, this repository never ships one.
+creative-pack/config.env
+
+# Runtime artifacts. These appear inside the bundled creative-pack whenever the
+# engine runs straight from a clone instead of from an install, because the pack
+# is then also the live working directory.
+creative-pack/history/*.jsonl
+creative-pack/history/schedule-position
+creative-pack/schedule-requests.txt
+creative-pack/music/generated/
+creative-pack/images/**/*-studio.png
+
+# Written by the installers on the server, never by hand.
+brain/rembg-venv/
+brain/piper-venv/
+brain/piper-voices/
+brain/run-scheduled.sh
+WHERE-ARE-THE-SCRIPTS.txt
+
+__pycache__/
+*.pyc

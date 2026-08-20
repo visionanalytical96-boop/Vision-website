@@ -1,0 +1,20 @@
+{
+  "_comment": "xfade = the ffmpeg xfade transition used between scene A and scene B.",
+  "transitions": [
+    {"id": "fade",              "label": "Fade",              "xfade": "fade"},
+    {"id": "glass_wipe",        "label": "Glass Wipe",        "xfade": "smoothright"},
+    {"id": "slide_left",        "label": "Slide Left",        "xfade": "slideleft"},
+    {"id": "slide_right",       "label": "Slide Right",       "xfade": "slideright"},
+    {"id": "slide_up",          "label": "Slide Up",          "xfade": "slideup"},
+    {"id": "slide_down",        "label": "Slide Down",        "xfade": "slidedown"},
+    {"id": "light_reveal",      "label": "Light Reveal",      "xfade": "fadewhite"},
+    {"id": "zoom_transition",   "label": "Zoom Transition",   "xfade": "zoomin"},
+    {"id": "mask_reveal",       "label": "Mask Reveal",       "xfade": "circleopen"},
+    {"id": "blur_transition",   "label": "Blur Transition",   "xfade": "hblur"},
+    {"id": "flash_transition",  "label": "Flash Transition",  "xfade": "fadefast"},
+    {"id": "depth_transition",  "label": "Depth Transition",  "xfade": "distance"},
+    {"id": "particle_transition","label": "Particle Transition","xfade": "pixelize"},
+    {"id": "wipe_diagonal",     "label": "Diagonal Wipe",     "xfade": "diagtl"},
+    {"id": "dissolve",          "label": "Dissolve",          "xfade": "dissolve"}
+  ]
+}

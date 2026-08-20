@@ -1,0 +1,25 @@
+{
+  "id": "vision-analytical",
+  "name": "Vision Analytical",
+  "tagline": "Precision instruments, and the people who keep them running - Maharashtra's lab partner",
+  "territory": ["Maharashtra (Pune, Mumbai, Nashik, Aurangabad, Nagpur)", "Gujarat (Ahmedabad, Vadodara, Ankleshwar)"],
+  "lines": [
+    "New instrument sales - HPLC, UHPLC, GC, GC-MS, LC-MS/MS, UV-Vis, FTIR",
+    "Breakdown service, preventive maintenance and spares",
+    "AMC and CMC contracts (silver / gold / platinum tiers)",
+    "Qualification services - IQ, OQ, PQ and requalification",
+    "Column, consumable and standards supply",
+    "Operator training and method transfer support"
+  ],
+  "brands": ["Shimadzu", "Waters", "Agilent", "PerkinElmer", "Thermo Fisher"],
+  "customer_segments": [
+    "Generic pharma QC labs (GMP, USFDA / EU-GMP audited)",
+    "CRO and CDMO analytical development",
+    "Food and water testing labs (FSSAI, NABL)",
+    "Academic and institutional labs",
+    "Speciality chemical and agrochem QC"
+  ],
+  "voice": "Direct, technical, unhurried. We talk like engineers who have opened the instrument, not like a brochure. Short paragraphs. Specifics over adjectives - part numbers, turnaround hours, engineer names. We never oversell a fix we have not diagnosed, and we say plainly when something needs a factory escalation. Indian business English; INR figures written as INR 4,50,000.",
+  "desk_hours": "Mon-Sat 09:30-18:30 IST",
+  "escalation_contact": "Service desk lead"
+}

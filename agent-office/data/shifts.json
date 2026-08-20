@@ -1,0 +1,29 @@
+{
+  "daily": {
+    "description": "The standing morning desk - triage service, chase renewals, work new leads, close with a digest.",
+    "items": [
+      { "role": "service-scheduler", "task": "Triage every open service ticket against SLA, propose engineer and slot for each, and flag anything that will breach.", "priority": "high" },
+      { "role": "lead-research", "task": "Work the new and contacted leads: enrich each with what we can establish from our records, and route the ones worth pursuing.", "priority": "high" },
+      { "role": "amc-renewal", "task": "Find contracts inside the renewal window or already lapsed, and prepare the renewal approach for each.", "priority": "normal" },
+      { "role": "ops-reporter", "task": "Write the end-of-desk digest: pipeline, service exposure, renewals at risk, and what needs a human today.", "priority": "low" }
+    ]
+  },
+  "renewals": {
+    "description": "AMC/CMC renewal push across the whole book.",
+    "items": [
+      { "role": "amc-renewal", "task": "Sweep every contract expiring within the policy window plus all lapsed ones; prepare a renewal approach and outreach for each, tier by tier.", "priority": "high" }
+    ]
+  },
+  "service": {
+    "description": "Service desk only - triage, schedule, and escalate.",
+    "items": [
+      { "role": "service-scheduler", "task": "Triage all open and awaiting-customer tickets, assign engineers by region and skill, and escalate SLA risk.", "priority": "high" }
+    ]
+  },
+  "newbiz": {
+    "description": "New business: research, qualify, quote.",
+    "items": [
+      { "role": "lead-research", "task": "Enrich every lead with status new or contacted and hand the qualified ones onward.", "priority": "high" }
+    ]
+  }
+}

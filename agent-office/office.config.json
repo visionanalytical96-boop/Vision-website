@@ -1,0 +1,23 @@
+{
+  "company": "Vision Analytical",
+  "dryRun": true,
+  "provider": "anthropic",
+  "models": {
+    "planner": "claude-opus-5",
+    "worker": "claude-sonnet-5",
+    "reviewer": "claude-opus-5"
+  },
+  "limits": {
+    "concurrency": 3,
+    "maxWorkItems": 40,
+    "maxHandoffDepth": 3,
+    "maxStepsPerAgent": 8,
+    "maxTokensPerAgent": 4000
+  },
+  "policy": {
+    "quoteApprovalThresholdInr": 1500000,
+    "discountCeilingPct": 12,
+    "amcRenewalLookaheadDays": 75,
+    "serviceSlaHours": { "critical": 24, "high": 48, "normal": 96 }
+  }
+}

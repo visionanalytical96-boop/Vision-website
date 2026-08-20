@@ -1,0 +1,7 @@
+[
+  { "id": "eng_01", "name": "R. Kulkarni", "base": "Pune", "skills": ["HPLC", "UHPLC", "UV-Vis"], "certified_brands": ["Shimadzu", "Waters"], "load_next_7_days": 4, "capacity_per_week": 6 },
+  { "id": "eng_02", "name": "S. Deshmukh", "base": "Mumbai", "skills": ["GC", "GC-MS", "FTIR"], "certified_brands": ["Agilent", "Shimadzu"], "load_next_7_days": 6, "capacity_per_week": 6 },
+  { "id": "eng_03", "name": "A. Patel", "base": "Vadodara", "skills": ["HPLC", "GC", "qualification"], "certified_brands": ["Agilent", "Waters", "Shimadzu"], "load_next_7_days": 2, "capacity_per_week": 5 },
+  { "id": "eng_04", "name": "M. Jadhav", "base": "Aurangabad", "skills": ["LC-MS", "HPLC"], "certified_brands": ["Shimadzu", "Thermo Fisher"], "load_next_7_days": 3, "capacity_per_week": 5 },
+  { "id": "eng_05", "name": "P. Rane", "base": "Nashik", "skills": ["HPLC", "UV-Vis", "qualification"], "certified_brands": ["Shimadzu", "PerkinElmer"], "load_next_7_days": 1, "capacity_per_week": 5 }
+]

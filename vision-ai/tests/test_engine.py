@@ -34,6 +34,11 @@ SWEEP = "-q" not in sys.argv
 def make_config(tmp: Path):
     pack = tmp / "creative-pack"
     shutil.copytree(Path(__file__).resolve().parents[1] / "creative-pack", pack)
+    # Running the engine from a clone writes history into the bundled pack, and
+    # copying that in would make every count in these tests depend on whatever
+    # happens to be lying in the checkout. Start each run from an empty history.
+    for stale in (pack / "history").glob("*.jsonl"):
+        stale.unlink()
     return load_config({"paths": {
         "creative_pack": str(pack),
         "input_photos": str(tmp / "INPUT/PHOTOS"),

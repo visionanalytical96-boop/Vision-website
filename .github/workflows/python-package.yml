@@ -1,40 +1,64 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+# Checks for the Vision Analytical creative engine (vision-ai/), which is the
+# only Python in this repository meant to run on these versions.
+#
+# This used to be GitHub's stock "Python package" starter workflow, which ran
+# `flake8 .` over the whole tree on Python 3.9-3.11. That can never pass here:
+# packages/@n8n/task-runner-python declares requires-python = ">=3.13" and uses
+# PEP 695 `type` aliases, so flake8 on an older interpreter reports E999 on code
+# nobody touched. It failed on master and on every pull request alike.
 
-name: Python package
+name: Vision AI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
+    paths:
+      - "vision-ai/**"
+      - ".github/workflows/python-package.yml"
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
+    paths:
+      - "vision-ai/**"
+      - ".github/workflows/python-package.yml"
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pillow
+          # the reel is built with ffmpeg and the stills need a real TrueType face
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core
+
+      - name: Lint
+        run: |
+          # syntax errors and undefined names only - this is a correctness gate,
+          # not a style one
+          flake8 vision-ai --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 vision-ai --count --exit-zero --max-complexity=12 --max-line-length=110 --statistics
+
+      - name: Brain tests
+        run: python vision-ai/tests/test_brain.py
+
+      - name: Engine tests
+        # includes an ffmpeg sweep of every animation, transition and effect
+        run: python vision-ai/tests/test_engine.py
+
+      - name: Shell scripts parse
+        run: |
+          for script in vision-ai/*.sh; do bash -n "$script"; done

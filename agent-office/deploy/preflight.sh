@@ -1,97 +1,84 @@
 #!/usr/bin/env bash
-# Vision Analytical - VPS readiness check.
+# Preflight check for running the agent office on a Linux VPS.
 # Read-only: installs nothing, changes nothing. Run this FIRST.
-#   ssh root@your-vps 'bash -s' < preflight.sh
+#   bash preflight.sh
 set -uo pipefail
 
-pass=0; warn=0; fail=0
-ok()   { echo "  [ OK ]  $*"; pass=$((pass+1)); }
-note() { echo "  [WARN]  $*"; warn=$((warn+1)); }
-bad()  { echo "  [FAIL]  $*"; fail=$((fail+1)); }
+PASS=0; FAIL=0; WARN=0
+ok()   { printf '  \033[32mOK\033[0m    %s\n' "$1"; PASS=$((PASS+1)); }
+bad()  { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; FAIL=$((FAIL+1)); }
+warn() { printf '  \033[33mWARN\033[0m  %s\n' "$1"; WARN=$((WARN+1)); }
+head2(){ printf '\n\033[1;36m%s\033[0m\n' "$1"; }
 
-echo
-echo "Vision Analytical - VPS readiness check"
-echo "======================================="
-
-echo
-echo "Machine"
-os_name=$(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-unknown}")
-echo "  os:     ${os_name}"
-echo "  kernel: $(uname -r)"
-echo "  arch:   $(uname -m)"
-
-case "$(uname -m)" in
-	x86_64|amd64) ok "64-bit x86 - Electron ships prebuilt binaries for this" ;;
-	aarch64|arm64) note "ARM64 - Electron works but some prebuilt native modules need compiling" ;;
-	*) bad "$(uname -m) is not a supported architecture" ;;
+head2 "System"
+. /etc/os-release 2>/dev/null || true
+ID_LIKE_ALL="${ID:-unknown} ${ID_LIKE:-}"
+case "$ID_LIKE_ALL" in
+	*debian*|*ubuntu*) ok "OS: ${PRETTY_NAME:-$ID} (apt-based - supported)" ;;
+	*) warn "OS: ${PRETTY_NAME:-unknown} - install script targets Debian/Ubuntu; you will need to map packages yourself" ;;
 esac
+[ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "aarch64" ] \
+	&& ok "Arch: $(uname -m)" || warn "Arch: $(uname -m) - Electron may not ship a build for this"
 
-ram_mb=$(free -m 2>/dev/null | awk '/^Mem:/{print $2}')
-if [ -n "${ram_mb:-}" ]; then
-	echo "  ram:    ${ram_mb} MB"
-	if   [ "$ram_mb" -ge 7500 ]; then ok "RAM is comfortable for the GUI plus several agents"
-	elif [ "$ram_mb" -ge 3500 ]; then note "${ram_mb} MB works for 2-3 agents; the office floor will feel slow"
-	else bad "${ram_mb} MB is not enough - Electron alone wants ~1.5 GB, each agent more"; fi
-fi
+RAM_MB=$(free -m | awk '/^Mem:/{print $2}')
+[ "$RAM_MB" -ge 3800 ] && ok "RAM: ${RAM_MB} MB" || bad "RAM: ${RAM_MB} MB - need 4 GB+ (Electron + native compile will OOM below this)"
 
-disk_gb=$(df -BG --output=avail / 2>/dev/null | tail -1 | tr -dc '0-9')
-if [ -n "${disk_gb:-}" ]; then
-	echo "  disk:   ${disk_gb} GB free"
-	if [ "$disk_gb" -ge 15 ]; then ok "disk is fine (build + node_modules ~4 GB)"
-	else bad "${disk_gb} GB free - the build alone needs about 4 GB"; fi
-fi
+DISK_GB=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
+[ "${DISK_GB:-0}" -ge 12 ] && ok "Disk free: ${DISK_GB} GB" || bad "Disk free: ${DISK_GB} GB - need 12 GB+ (node_modules + Electron ~4 GB)"
 
-swap_mb=$(free -m 2>/dev/null | awk '/^Swap:/{print $2}')
-[ "${swap_mb:-0}" -gt 0 ] && ok "swap present (${swap_mb} MB)" || note "no swap - add 2 GB, the Electron build is memory-hungry"
+CORES=$(nproc)
+[ "$CORES" -ge 2 ] && ok "CPU cores: $CORES" || warn "CPU cores: $CORES - build will be slow but should finish"
 
-echo
-echo "Toolchain"
-if command -v node >/dev/null 2>&1; then
-	nv=$(node -v); major=$(echo "$nv" | tr -dc '0-9.' | cut -d. -f1)
-	if [ "$major" -ge 20 ]; then ok "node $nv"
-	elif [ "$major" -ge 18 ]; then note "node $nv meets the minimum; 20 LTS is safer for the native rebuild"
-	else bad "node $nv is too old - need 18+, install 20 LTS"; fi
+SWAP_MB=$(free -m | awk '/^Swap:/{print $2}')
+[ "${SWAP_MB:-0}" -ge 1024 ] && ok "Swap: ${SWAP_MB} MB" || warn "Swap: ${SWAP_MB:-0} MB - add 2 GB swap if RAM is 4 GB, npm install is memory hungry"
+
+head2 "Toolchain"
+if command -v node >/dev/null; then
+	NODE_MAJOR=$(node -v | tr -dc '0-9.' | cut -d. -f1)
+	[ "$NODE_MAJOR" -ge 20 ] && ok "Node: $(node -v)" || bad "Node: $(node -v) - need 20+ (installer can upgrade it)"
 else
-	bad "node not installed - install.sh will add 20 LTS"
+	warn "Node: not installed - the installer will add Node 22"
 fi
+command -v npm >/dev/null && ok "npm: $(npm -v)" || warn "npm: missing (comes with Node)"
+command -v git >/dev/null && ok "git: $(git --version | awk '{print $3}')" || bad "git: missing"
 
-command -v npm  >/dev/null 2>&1 && ok "npm $(npm -v)"        || bad "npm missing"
-command -v git  >/dev/null 2>&1 && ok "git $(git --version | awk '{print $3}')" || bad "git missing"
-command -v make >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1 \
-	&& ok "C/C++ toolchain present (node-pty compiles against it)" \
-	|| bad "build-essential missing - node-pty will not compile"
+MISSING_BUILD=()
+for t in gcc g++ make python3; do command -v "$t" >/dev/null || MISSING_BUILD+=("$t"); done
+[ ${#MISSING_BUILD[@]} -eq 0 ] \
+	&& ok "Build toolchain present (better-sqlite3 and node-pty compile from source)" \
+	|| warn "Build toolchain missing: ${MISSING_BUILD[*]} - installer adds build-essential + python3"
 
-echo
-echo "Headless display stack"
-command -v Xvfb   >/dev/null 2>&1 && ok "Xvfb installed"   || note "Xvfb missing - install.sh adds it (no display = no Electron)"
-command -v x11vnc >/dev/null 2>&1 && ok "x11vnc installed" || note "x11vnc missing - install.sh adds it"
-[ -d /usr/share/novnc ] && ok "noVNC installed" || note "noVNC missing - install.sh adds it (this is what you open in the browser)"
+head2 "Display stack (Electron needs a display, even a virtual one)"
+for t in Xvfb x11vnc websockify; do
+	command -v "$t" >/dev/null && ok "$t: present" || warn "$t: missing - installer will add it"
+done
+[ -d /usr/share/novnc ] && ok "noVNC: present" || warn "noVNC: missing - installer will add it"
 
-echo
-echo "Agent CLI"
-if command -v claude >/dev/null 2>&1; then
-	ok "claude CLI found: $(command -v claude)"
-	if claude --version >/dev/null 2>&1; then ok "claude runs ($(claude --version 2>/dev/null | head -1))"; else note "claude is installed but did not run cleanly"; fi
+head2 "Agent CLI"
+if command -v claude >/dev/null; then
+	ok "Claude Code: $(claude --version 2>/dev/null | head -1)"
+	if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+		ok "CLAUDE_CODE_OAUTH_TOKEN is set"
+	else
+		warn "No CLAUDE_CODE_OAUTH_TOKEN - run 'claude setup-token' on a machine with a browser, then export it here"
+	fi
 else
-	note "claude CLI not installed - install.sh adds it; you log in afterwards"
-fi
-[ -n "${ANTHROPIC_API_KEY:-}" ] && note "ANTHROPIC_API_KEY is set in this shell - the headless harness can use it" \
-	|| note "no ANTHROPIC_API_KEY - fine for the GUI (it uses your Claude Code login), needed for the headless harness"
-
-echo
-echo "Networking"
-if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi "Status: active"; then
-	ok "ufw firewall is active - keep VNC ports closed, reach them over an SSH tunnel"
-else
-	note "no active firewall - do NOT open ports 5900/6080 to the internet"
+	warn "Claude Code CLI missing - installer adds it"
 fi
 
-echo
-echo "======================================="
-echo "  pass: $pass   warnings: $warn   blockers: $fail"
-echo
-if [ "$fail" -gt 0 ]; then
-	echo "  Blockers found. Fix those first, or run install.sh which handles most of them."
+head2 "Network"
+for host in registry.npmjs.org github.com api.anthropic.com; do
+	curl -sS -m 8 -o /dev/null "https://$host" 2>/dev/null && ok "reachable: $host" || bad "unreachable: $host"
+done
+
+for p in 5900 6080; do
+	if ss -ltn 2>/dev/null | grep -q ":$p "; then warn "port $p already in use - installer will need a different one"
+	else ok "port $p free"; fi
+done
+
+printf '\n\033[1m%d passed, %d warnings, %d blockers\033[0m\n' "$PASS" "$WARN" "$FAIL"
+if [ "$FAIL" -gt 0 ]; then
+	printf '\033[31mFix the blockers above before running install-office.sh\033[0m\n\n'
 	exit 1
 fi
-echo "  No blockers. Next: sudo bash install.sh"
+printf '\033[32mServer looks ready. Next: sudo bash install-office.sh\033[0m\n\n'

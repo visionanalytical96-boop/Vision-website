@@ -49,9 +49,6 @@ export function loadRoles(rolesDir) {
 				tools: Array.isArray(meta.tools) ? meta.tools : meta.tools ? [meta.tools] : ['*'],
 				description: meta.description ?? meta.title,
 				model: meta.model,
-				character: meta.character,
-				accent: meta.accent,
-				capabilities: Array.isArray(meta.capabilities) ? meta.capabilities : [],
 				body,
 				file: path,
 			};

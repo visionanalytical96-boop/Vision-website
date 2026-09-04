@@ -1,127 +1,97 @@
-# VPS पर agent office चलाना
+# Running the agent office on a VPS
 
-दो चीज़ें अलग-अलग हैं। दोनों एक ही role charters (`roles/*.md`) से चलती हैं।
+Munder Difflin is an Electron **desktop** app. Upstream ships it local-first and does not
+support headless or server deployment — their own comparison post points server users at a
+different tool. These scripts are our wrapper around that constraint: the app runs on a
+virtual display (Xvfb) and you watch it in a browser over noVNC.
 
-| | क्या है | कहाँ चलती है |
-|---|---|---|
-| **Munder Difflin** | office floor वाली GUI — Michael manager, clones दिखते हैं | desktop app (VPS पर जुगाड़ से) |
-| **agent-office harness** | बिना screen वाला दिमाग़ — shift, review gate, ledger | कहीं भी, server के लिए ही बना है |
+We verified the risky parts on a clean Linux box before writing any of this:
 
-## पहले ये पढ़ें — VPS वाली सच्चाई
+| Step | Result |
+|---|---|
+| `npm install` with native rebuilds (`better-sqlite3`, `node-pty`, `electron-rebuild`) | passed |
+| `npm run build` (main, preload, renderer) | passed |
+| Electron launch on a virtual display, no physical screen | passed - stayed up 45s |
+| `claude setup-token` exists for headless subscription auth | confirmed on CLI v2.1.237 |
 
-Munder Difflin के author ने खुद always-on के लिए **Mac Mini** recommend किया है। पूरे repo में
-Xvfb/VNC/Docker का कोई ज़िक्र नहीं — यानी **Linux VPS पर GUI चलाना unsupported जुगाड़ है**।
+What we have **not** verified: a full run on your actual server, and the app's own
+behaviour over many hours headless. Treat the first day as a shakedown.
 
-काम करता है (Xvfb + noVNC से), पर सच ये है:
-
-- Electron बिना GPU के software rendering करेगा — office floor धीमा चलेगा
-- App update होने पर ये setup टूट सकता है, दोबारा जोड़ना पड़ेगा
-- RAM कम से कम 8 GB — 4 GB पर 2-3 agent से ज़्यादा नहीं
-
-**अगर आपको सिर्फ़ 24/7 काम चाहिए, floor देखना ज़रूरी नहीं** — तो GUI छोड़ दीजिए और नीचे
-"सिर्फ़ harness" वाला हिस्सा पढ़िए। वो VPS के लिए ही बना है, हल्का है, और टूटेगा नहीं।
-
-## Step 1 — VPS जाँचिए (कुछ install नहीं होता)
+## Steps
 
 ```bash
-ssh root@your-vps 'bash -s' < deploy/preflight.sh
+# 1. Readiness check. Installs nothing, changes nothing.
+bash preflight.sh
+
+# 2. Install. Takes 5-15 min, mostly native compilation.
+sudo bash install-office.sh
+
+# 3. Auth. Run this on a machine WITH a browser (your laptop), not the server:
+claude setup-token
+#    Paste the token into /opt/office/.office-env as CLAUDE_CODE_OAUTH_TOKEN=...
+sudo systemctl restart office-app
 ```
 
-RAM, disk, Node, toolchain, Xvfb, claude CLI — सब check करके बता देगा क्या कमी है।
-`blockers: 0` आए तभी आगे बढ़िए।
+## Watching it
 
-## Step 2 — Install
-
-पूरा `agent-office` folder VPS पर copy कीजिए, फिर:
+Browser access binds to **localhost only** by default:
 
 ```bash
-scp -r agent-office root@your-vps:/root/
-ssh root@your-vps 'cd /root/agent-office/deploy && sudo bash install.sh'
+ssh -L 6080:localhost:6080 root@YOUR_SERVER
+# then open http://localhost:6080/vnc.html
 ```
 
-Script ये सब करती है — Node 20, Electron की libraries, Xvfb + x11vnc + noVNC,
-Munder Difflin का source build, Claude Code CLI, और systemd services (reboot के बाद भी चलेंगी)।
+`--public` opens the port to the internet with only the generated VNC password in front of
+it. Use it only behind a firewall rule limited to your own IP, or a TLS reverse proxy.
 
-Build में 10-20 मिनट लग सकते हैं। घबराइए मत।
+For phone use, prefer the office dashboard over noVNC — a full Electron GUI over VNC on a
+phone screen is painful, and the dashboard answers "who is doing what" directly.
 
-## Step 3 — Claude Code login (एक बार)
+## Services
+
+| Unit | Job |
+|---|---|
+| `office-xvfb` | the virtual display |
+| `office-app` | Munder Difflin itself |
+| `office-vnc` | exposes the display over VNC, localhost-bound |
+| `office-novnc` | serves VNC to a browser |
 
 ```bash
-ssh -t office@your-vps 'claude'
+systemctl status office-app
+journalctl -u office-app -f
 ```
 
-जब तक login नहीं होगा, कोई agent काम नहीं करेगा।
+## Running the desk on a schedule, without the GUI
 
-## Step 4 — Office floor खोलिए
-
-VNC जान-बूझकर **सिर्फ़ localhost पर** bound है। Port इंटरनेट पर मत खोलिए — जिसे वो screen मिल गई,
-उसे आपके Claude Code login वाला terminal मिल गया।
+The headless harness does not need Xvfb, VNC or Electron - it is the sober way to get
+24/7 work out of a VPS. Give it a key of its own and put it on a timer:
 
 ```bash
-ssh -L 6080:localhost:6080 office@your-vps
-```
-
-फिर browser में: **http://localhost:6080/vnc.html**
-
-फ़ोन से भी चलेगा — Termius जैसे app में वही tunnel बनाइए।
-
-## Step 5 — अपने 10 clones import कीजिए
-
-Office floor पर → **Add agent** → **import hire...** → `/opt/agent-office/hires/` से file चुनिए।
-
-| File | Floor पर | डेस्क |
-|---|---|---|
-| `chief-of-staff.hire.json` | Michael | काम बाँटता है, बड़े फ़ैसले आप तक लाता है |
-| `service-scheduler.hire.json` | Dwight | Service tickets, engineer visit, SLA |
-| `amc-renewal.hire.json` | Andy | AMC renewals, lapsed contracts |
-| `quotation.hire.json` | Angela | Quotation — सिर्फ़ यही price बोल सकती है |
-| `lead-research.hire.json` | Phyllis | नई enquiry की छानबीन |
-| `qualifier.hire.json` | Oscar | Lead pursue करें या नहीं |
-| `qualification-compliance.hire.json` | Toby | IQ/OQ/PQ, NABL/GMP timing |
-| `outreach-writer.hire.json` | Pam | Email/WhatsApp draft |
-| `ops-reporter.hire.json` | Kevin | शाम का digest |
-| `reviewer.hire.json` | Jim | हर draft की जाँच, भेजने से पहले |
-
-Import से कोई agent अपने आप spawn **नहीं** होता — बस form भर जाता है, आप देखकर spawn करते हैं।
-
-Model: manifest में `claude-sonnet-4-6` / `claude-opus-4-8` भरा है (app की अपनी suggestion list से)।
-आपके Claude Code में नया model हो तो Add Agent dialog में बदल लीजिए — manifest सिर्फ़ pre-fill करता है।
-
-## सिर्फ़ harness (GUI के बिना) — VPS के लिए सबसे सही
-
-```bash
-ssh office@your-vps
-cd /opt/agent-office
-echo 'ANTHROPIC_API_KEY=sk-ant-...' | sudo tee /etc/agent-office.env
+printf 'ANTHROPIC_API_KEY=sk-ant-...\n' | sudo tee /etc/agent-office.env >/dev/null
 sudo chmod 600 /etc/agent-office.env
 
-node bin/office.mjs doctor
-node bin/office.mjs run --shift daily
-node bin/office.mjs inbox
-```
-
-रोज़ अपने आप चलाने के लिए:
-
-```bash
-sudo sed -e 's|@USER@|office|g' -e 's|@HARNESS_DIR@|/opt/agent-office|g' \
+sudo sed -e 's|@USER@|office|g' -e 's|@HARNESS_DIR@|/opt/office/agent-office|g' \
   deploy/systemd/office-shift.service > /etc/systemd/system/office-shift.service
 sudo cp deploy/systemd/office-shift.timer /etc/systemd/system/
 sudo systemctl enable --now office-shift.timer
-systemctl list-timers office-shift
+
+systemctl list-timers office-shift        # when it next runs
+journalctl -u office-shift -f             # what it did
 ```
 
-## रोज़ के command
+The timer fires Mon-Sat at 09:30 box time, so set the server clock to IST
+(`sudo timedatectl set-timezone Asia/Kolkata`) or edit the `OnCalendar` line.
 
-```bash
-systemctl status munder-difflin        # चल रही है?
-journalctl -u munder-difflin -f        # live log
-systemctl restart munder-difflin       # अटक जाए तो
-systemctl stop munder-difflin          # बंद
-```
+Each run leaves a report and an append-only ledger under `agent-office/out/runs/`, and
+every draft lands in `agent-office/out/drafts/` for review - nothing is sent.
 
-## सुरक्षा — तीन बातें कभी मत भूलिए
+## Known rough edges
 
-1. **Port 5900 / 6080 इंटरनेट पर कभी मत खोलिए।** हमेशा SSH tunnel।
-2. **App root से मत चलाइए।** Installer `office` user बनाता है — वही ठीक है।
-3. **Auto mode सोच-समझकर।** वो permission prompts हटा देता है, यानी agent बिना पूछे command चलाएगा।
-   पहले हफ़्ता बिना auto mode के चलाइए, भरोसा बनने के बाद ही चालू कीजिए।
+- **Not vendor-supported.** An upstream change can break the headless path; the app also
+  auto-updates, which we have not tested in this configuration.
+- **RAM.** 4 GB is the floor, and `npm install` is the peak. Add 2 GB swap on a 4 GB box.
+- **Secrets.** The agent token sits in a 0600 file readable by the `office` user. Anyone
+  with root on this box, or with the VNC password, can drive your agents and your
+  subscription. Firewall accordingly.
+- **Autonomy.** Auto mode bypasses permission prompts. Keep the office pointed at a repo
+  you can revert, and keep the review gate on anything customer-facing.

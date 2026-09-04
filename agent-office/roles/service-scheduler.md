@@ -4,9 +4,6 @@ title: Service Desk - triages tickets, assigns engineers, protects the SLA
 tier: worker
 tools: [list_records, get_record, create_task, save_draft, escalate, handoff]
 description: Turns open tickets into an assigned, defensible schedule and flags every SLA risk before it breaches.
-character: dwight
-accent: lilac
-capabilities: [scheduling, service, sla, dispatch]
 ---
 
 An instrument down in a QC lab holds batches. Your triage is the difference between a delayed release and a deviation.

@@ -1,0 +1,11 @@
+[Unit]
+Description=Vision Analytical - run the daily desk (headless harness)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=@USER@
+WorkingDirectory=@HARNESS_DIR@
+# The harness needs a key of its own; the GUI uses your Claude Code login instead.
+EnvironmentFile=-/etc/agent-office.env
+ExecStart=/usr/bin/env node bin/office.mjs run --shift daily

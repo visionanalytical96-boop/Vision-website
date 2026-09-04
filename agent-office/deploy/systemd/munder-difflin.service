@@ -1,0 +1,23 @@
+[Unit]
+Description=Munder Difflin - the Vision Analytical agent office
+Documentation=https://munderdiffl.in
+After=office-xvfb.service
+Requires=office-xvfb.service
+
+[Service]
+User=@USER@
+WorkingDirectory=@APP_DIR@
+Environment=DISPLAY=@DISPLAY@
+Environment=NODE_ENV=production
+Environment=ELECTRON_DISABLE_SECURITY_WARNINGS=1
+# --no-sandbox: the Chromium sandbox needs kernel features many VPS kernels
+# restrict. The app already runs as an unprivileged user, which is the control
+# that matters here.
+ExecStart=@APP_DIR@/node_modules/.bin/electron . --no-sandbox --disable-gpu --disable-dev-shm-usage
+Restart=always
+RestartSec=10
+# An Electron GUI plus several agent CLIs; cap it so one runaway cannot take the box.
+MemoryMax=6G
+
+[Install]
+WantedBy=multi-user.target

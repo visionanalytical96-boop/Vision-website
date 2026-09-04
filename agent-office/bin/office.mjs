@@ -17,6 +17,7 @@ Vision Analytical - agent office
   office inbox                Show drafts waiting for a human, newest first
   office doctor               Check config, data, roles and provider readiness
   office sync-agents          Mirror the roles into .claude/agents/ as subagents
+  office sync-hires           Generate Munder Difflin hire manifests into hires/
 
 Run options
   --goal "<text>"     Hand a goal to the chief of staff, who plans and delegates
@@ -208,6 +209,10 @@ async function main() {
 			return cmdInbox();
 		case 'doctor':
 			return cmdDoctor();
+		case 'sync-hires': {
+			const { syncHires } = await import('../src/sync-hires.mjs');
+			return syncHires();
+		}
 		case 'sync-agents': {
 			const { syncClaudeAgents } = await import('../src/sync-claude-agents.mjs');
 			return syncClaudeAgents();

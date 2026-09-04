@@ -116,15 +116,36 @@ works your book instead; `office doctor` tells you if the shape is wrong.
 A CRM adapter would slot in at `src/store.mjs` - it is the only module that touches
 records, and every tool goes through it.
 
+## Running it inside Munder Difflin
+
+The same charters also ship as [Munder Difflin](https://munderdiffl.in) hire manifests, so the
+office can run as a watchable floor of clones instead of a headless queue:
+
+```bash
+node bin/office.mjs sync-hires    # regenerate hires/ from roles/*.md
+```
+
+`hires/*.hire.json` validate against the published `munder-difflin/hire@1` schema (checked in
+`test/hires.test.mjs` against a copy of the upstream schema). Import one from the office floor:
+**Add agent -> import hire...**. Importing never spawns anything - it only pre-fills the dialog.
+
+Each desk keeps its own sprite and routing tags, so Michael (chief-of-staff) can delegate to
+Dwight (service), Angela (quotation), Andy (renewals) and the rest by capability.
+
+`deploy/` carries a VPS kit: `preflight.sh` checks the box, `install.sh` builds the app and
+registers systemd units behind an SSH tunnel, and `deploy/README.md` walks through it in Hindi.
+Read the caveat at the top of that file first - the upstream project targets a desktop, not a
+headless server.
+
 ## Testing
 
 ```bash
 node --test test/*.test.mjs
 ```
 
-37 tests cover the role loader and tool grants, the queue's priority and budget, the
+42 tests cover the role loader and tool grants, the queue's priority and budget, the
 tool-use loop (tool errors, step exhaustion, API failure, tool isolation), the store's
-sandbox, the tool guardrails, and full offline runs including the review gate. The
+sandbox, the tool guardrails, full offline runs including the review gate, and the generated hire manifests against the upstream schema. The
 live Anthropic HTTP call is the one path not covered - it needs a key.
 
 ## Configuration

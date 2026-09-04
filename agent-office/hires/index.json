@@ -1,0 +1,67 @@
+{
+  "office": "Vision Analytical",
+  "generated": "2026-09-04",
+  "note": "Generated from agent-office/roles/*.md by `office sync-hires`. Edit the charter, not these files.",
+  "hires": [
+    {
+      "file": "amc-renewal.hire.json",
+      "name": "Andy",
+      "desk": "amc-renewal",
+      "description": "AMC Desk - Finds contracts at risk, decides the renewal approach account by account, and prepares the ask."
+    },
+    {
+      "file": "chief-of-staff.hire.json",
+      "name": "Michael",
+      "desk": "chief-of-staff",
+      "description": "Chief of Staff - Turns a goal into a delegated plan across the office. Never does the specialist work itself."
+    },
+    {
+      "file": "lead-research.hire.json",
+      "name": "Phyllis",
+      "desk": "lead-research",
+      "description": "Lead Researcher - Enriches leads and accounts from our own records, separates fact from enquiry-form wishful thinking, and routes onward."
+    },
+    {
+      "file": "ops-reporter.hire.json",
+      "name": "Kevin",
+      "desk": "ops-reporter",
+      "description": "Ops Reporter - Compresses the day's state of the book into a one-screen digest with numbers and named risks."
+    },
+    {
+      "file": "outreach-writer.hire.json",
+      "name": "Pam",
+      "desk": "outreach-writer",
+      "description": "Outreach Writer - Writes email and WhatsApp drafts in the firm's voice. Carries decisions; never makes them."
+    },
+    {
+      "file": "qualification-compliance.hire.json",
+      "name": "Toby",
+      "desk": "qualification-compliance",
+      "description": "Qualification Desk - Plans qualification work against the customer's actual regulatory regime, and never claims a compliance outcome we cannot evidence."
+    },
+    {
+      "file": "qualifier.hire.json",
+      "name": "Oscar",
+      "desk": "qualifier",
+      "description": "Qualifier - Applies lab-instrument qualification: application fit, installed base, compliance driver, timing, and who signs."
+    },
+    {
+      "file": "quotation.hire.json",
+      "name": "Angela",
+      "desk": "quotation",
+      "description": "Quotation Desk - Turns a qualified requirement into a line-item quotation sourced entirely from the pricebook."
+    },
+    {
+      "file": "reviewer.hire.json",
+      "name": "Jim",
+      "desk": "reviewer",
+      "description": "Reviewer - Checks drafts against the firm's hard rules and records approve / revise / reject with specific issues."
+    },
+    {
+      "file": "service-scheduler.hire.json",
+      "name": "Dwight",
+      "desk": "service-scheduler",
+      "description": "Service Desk - Turns open tickets into an assigned, defensible schedule and flags every SLA risk before it breaches."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the Vision Analytical morning desk every working day
+
+[Timer]
+# 09:30 IST = 04:00 UTC. Set the box to IST and this reads plainly instead.
+OnCalendar=Mon-Sat 09:30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

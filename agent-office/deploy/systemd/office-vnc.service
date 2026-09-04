@@ -1,0 +1,16 @@
+[Unit]
+Description=VNC server for the agent office display
+After=office-xvfb.service
+Requires=office-xvfb.service
+
+[Service]
+User=@USER@
+Environment=DISPLAY=@DISPLAY@
+# -localhost is load-bearing: the raw VNC port must never be reachable from
+# outside the box. Reach it through an SSH tunnel.
+ExecStart=/usr/bin/x11vnc -display @DISPLAY@ -rfbport @VNC_PORT@ -localhost -forever -shared -nopw -noxdamage
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
